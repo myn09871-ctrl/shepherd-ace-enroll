@@ -1,4 +1,5 @@
 import { ArrowRight, Award, Users, BookOpen } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import schoolCrest from "@/assets/school-crest.jpeg";
 import schoolBuilding from "@/assets/school-building.webp";
@@ -57,10 +58,10 @@ const Hero = () => {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 animate-fade-up animation-delay-400">
               <Button variant="hero" size="xl" asChild>
-                <a href="#contact" className="flex items-center gap-2">
+                <Link to="/admission" className="flex items-center gap-2">
                   <span>Enroll Now - FREE Admission</span>
                   <ArrowRight className="h-5 w-5" />
-                </a>
+                </Link>
               </Button>
               <Button variant="heroOutline" size="xl" asChild>
                 <a href="#programs">Explore Programs</a>

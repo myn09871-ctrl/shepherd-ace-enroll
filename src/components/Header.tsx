@@ -21,6 +21,7 @@ const Header = () => {
     { href: "#results", label: "Results" },
     { href: "#programs", label: "Programs" },
     { href: "/gallery", label: "Gallery", isRoute: true },
+    { href: "/admission", label: "Admission", isRoute: true },
     { href: "#about", label: "About Us" },
     { href: "#contact", label: "Contact" },
   ];
@@ -86,7 +87,7 @@ const Header = () => {
               <span className="hidden lg:inline">0208163186</span>
             </a>
             <Button variant="hero" size="lg" asChild>
-              <a href="#contact">Enroll Now</a>
+              <Link to="/admission">Enroll Now</Link>
             </Button>
           </div>
 
@@ -134,7 +135,7 @@ const Header = () => {
                   0208163186
                 </a>
                 <Button variant="hero" size="lg" asChild className="w-full">
-                  <a href="#contact">Enroll Now</a>
+                  <Link to="/admission">Enroll Now</Link>
                 </Button>
               </div>
             </nav>
