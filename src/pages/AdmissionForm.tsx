@@ -152,18 +152,27 @@ const AdmissionForm = () => {
         pdf.setFontSize(10);
       };
       
-      const addField = (label: string, value: string | undefined) => {
+      const addField = (label: string, value: string | boolean | undefined | null) => {
         if (yPos > 280) {
           pdf.addPage();
           yPos = 20;
         }
-        pdf.text(`${label}: ${value || "N/A"}`, margin, yPos);
+        // Display the exact value entered, empty string for blank fields
+        let displayValue = "";
+        if (typeof value === "boolean") {
+          displayValue = value ? "Yes" : "No";
+        } else if (value !== undefined && value !== null && value !== "") {
+          displayValue = String(value);
+        }
+        pdf.text(`${label}: ${displayValue}`, margin, yPos);
         yPos += lineHeight;
       };
       
       // Student Information
       addSection("STUDENT INFORMATION");
-      addField("Full Name", `${page1Data.student_surname} ${page1Data.student_first_name} ${page1Data.student_middle_name || ""}`);
+      addField("Surname", page1Data.student_surname);
+      addField("First Name", page1Data.student_first_name);
+      addField("Middle Name", page1Data.student_middle_name);
       addField("Date of Birth", page1Data.student_dob);
       addField("Gender", page1Data.student_gender);
       addField("Nationality", page1Data.student_nationality);
@@ -172,11 +181,40 @@ const AdmissionForm = () => {
       
       // Primary Guardian
       addSection("PRIMARY GUARDIAN");
-      addField("Name", page1Data.guardian1_full_name);
+      addField("Full Name", page1Data.guardian1_full_name);
       addField("Relationship", page1Data.guardian1_relationship);
-      addField("Phone", page1Data.guardian1_phone_primary);
+      addField("Occupation", page1Data.guardian1_occupation);
+      addField("Employer", page1Data.guardian1_employer);
+      addField("Primary Phone", page1Data.guardian1_phone_primary);
+      addField("Secondary Phone", page1Data.guardian1_phone_secondary);
       addField("Email", page1Data.guardian1_email);
-      addField("Address", page1Data.guardian1_address);
+      addField("Residential Address", page1Data.guardian1_address);
+      addField("Nearest Landmark", page1Data.guardian1_landmark);
+      addField("Workplace Address", page1Data.guardian1_workplace_address);
+      addField("Workplace Phone", page1Data.guardian1_workplace_phone);
+      yPos += 5;
+      
+      // Secondary Guardian
+      if (page1Data.guardian2_full_name) {
+        addSection("SECONDARY GUARDIAN / EMERGENCY CONTACT");
+        addField("Full Name", page1Data.guardian2_full_name);
+        addField("Relationship", page1Data.guardian2_relationship);
+        addField("Primary Phone", page1Data.guardian2_phone_primary);
+        addField("Secondary Phone", page1Data.guardian2_phone_secondary);
+        addField("Email", page1Data.guardian2_email);
+        addField("Address", page1Data.guardian2_address);
+        addField("Is Emergency Contact", page1Data.guardian2_is_emergency_contact);
+        yPos += 5;
+      }
+      
+      // Educational Background
+      addSection("EDUCATIONAL BACKGROUND");
+      addField("First Time Enrollment", page1Data.is_first_time_enrollment);
+      addField("Previous School Name", page1Data.previous_school_name);
+      addField("Previous School Location", page1Data.previous_school_location);
+      addField("Last Grade Completed", page1Data.last_grade_completed);
+      addField("Academic Performance", page1Data.academic_performance);
+      addField("Reason for Changing School", page1Data.reason_for_change);
       yPos += 5;
       
       // Program Selection
@@ -185,7 +223,7 @@ const AdmissionForm = () => {
       addField("Educational Level", programLabel);
       addField("Intended Start Date", page1Data.intended_start_date);
       if (page1Data.career_training_interests?.length) {
-        addField("Career Training", page1Data.career_training_interests.join(", "));
+        addField("Career Training Interests", page1Data.career_training_interests.join(", "));
       }
       yPos += 5;
       
@@ -193,19 +231,42 @@ const AdmissionForm = () => {
       pdf.addPage();
       yPos = 20;
       addSection("HEALTH INFORMATION");
-      addField("Medical Conditions", page2Data.has_medical_conditions ? "Yes" : "No");
-      if (page2Data.has_medical_conditions && page2Data.medical_conditions_details) {
-        addField("Details", page2Data.medical_conditions_details);
+      addField("Has Medical Conditions", page2Data.has_medical_conditions);
+      if (page2Data.medical_conditions?.length) {
+        addField("Medical Conditions", page2Data.medical_conditions.join(", "));
       }
-      addField("Allergies", page2Data.has_allergies ? "Yes" : "No");
-      addField("Immunizations Up to Date", page2Data.immunization_up_to_date ? "Yes" : "No");
+      addField("Medical Conditions Details", page2Data.medical_conditions_details);
+      addField("Has Allergies", page2Data.has_allergies);
+      addField("Allergies Description", page2Data.allergies);
+      addField("Current Medications", page2Data.current_medications);
+      addField("Immunizations Up to Date", page2Data.immunization_up_to_date);
+      addField("Medical Authorization Granted", page2Data.medical_authorization);
       yPos += 5;
       
-      // Consent
+      // Special Needs
+      addSection("SPECIAL NEEDS");
+      addField("Has Special Needs", page2Data.has_special_needs);
+      if (page2Data.special_needs_types?.length) {
+        addField("Special Needs Types", page2Data.special_needs_types.join(", "));
+      }
+      addField("Special Needs Details", page2Data.special_needs_details);
+      yPos += 5;
+      
+      // Financial & Transportation
+      addSection("FINANCIAL & TRANSPORTATION");
+      addField("Financial Terms Acknowledged", page2Data.financial_acknowledgment);
+      addField("Interested in Financial Assistance", page2Data.financial_assistance_interest);
+      addField("Transportation Method", page2Data.transportation_method);
+      addField("Pickup Location", page2Data.pickup_location);
+      yPos += 5;
+      
+      // Consent & Declarations
       addSection("CONSENT & DECLARATIONS");
       addField("Truthfulness Declaration", page2Data.consent_truthfulness ? "Agreed" : "Not Agreed");
       addField("Media Consent", page2Data.consent_media ? "Agreed" : "Not Agreed");
       addField("Records Authorization", page2Data.consent_records ? "Agreed" : "Not Agreed");
+      addField("Discipline Policy Consent", page2Data.consent_discipline ? "Agreed" : "Not Agreed");
+      addField("Emergency Treatment Consent", page2Data.consent_emergency ? "Agreed" : "Not Agreed");
       addField("Terms & Conditions", page2Data.consent_terms ? "Agreed" : "Not Agreed");
       
       // Footer
