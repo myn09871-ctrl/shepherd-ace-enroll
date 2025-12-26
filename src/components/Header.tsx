@@ -62,19 +62,20 @@ const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3">
             <img
               src={schoolCrest}
               alt="Good Shepherd International School Crest"
-              className="h-14 w-auto object-contain"
+              className="h-10 sm:h-14 w-auto object-contain flex-shrink-0"
             />
-            <div className="hidden sm:block">
-              <h1 className={`font-heading font-extrabold text-lg md:text-xl leading-tight tracking-wide uppercase transition-colors ${
+            <div className="flex flex-col min-w-0">
+              <h1 className={`font-heading font-extrabold text-xs sm:text-lg md:text-xl leading-tight tracking-wide uppercase transition-colors truncate ${
                 isScrolled ? "text-primary" : "text-white"
               }`}>
-                Good Shepherd International School
+                <span className="hidden sm:inline">Good Shepherd International School</span>
+                <span className="sm:hidden">Good Shepherd Int'l School</span>
               </h1>
-              <p className={`text-xs md:text-sm font-heading italic font-medium tracking-widest transition-colors ${
+              <p className={`text-[10px] sm:text-xs md:text-sm font-heading italic font-medium tracking-wider sm:tracking-widest transition-colors ${
                 isScrolled ? "text-secondary" : "text-white/90"
               }`}>
                 In God We Trust

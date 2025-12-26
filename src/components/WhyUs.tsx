@@ -49,38 +49,38 @@ const WhyUs = () => {
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Left Column - Content */}
           <div>
-            <div className="inline-flex items-center gap-2 bg-accent/10 text-accent-foreground rounded-full px-4 py-2 mb-6 animate-fade-up">
-              <Heart className="h-4 w-4 text-accent" />
-              <span className="text-sm font-semibold">Why Choose Us</span>
+            <div className="inline-flex items-center gap-2 bg-accent/10 text-accent-foreground rounded-full px-3 py-1.5 sm:px-4 sm:py-2 mb-4 sm:mb-6 animate-fade-up">
+              <Heart className="h-3 w-3 sm:h-4 sm:w-4 text-accent" />
+              <span className="text-xs sm:text-sm font-semibold">Why Choose Us</span>
             </div>
             
-            <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 animate-fade-up animation-delay-100">
+            <h2 className="font-heading text-xl sm:text-2xl lg:text-4xl font-bold text-foreground mb-4 sm:mb-6 animate-fade-up animation-delay-100">
               Join the <span className="text-primary">Winning Team</span> for 
               Your Child's Success
             </h2>
             
-            <p className="text-lg text-muted-foreground mb-10 animate-fade-up animation-delay-200">
+            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mb-6 sm:mb-10 animate-fade-up animation-delay-200">
               At Good Shepherd International School, we don't just educate – we 
               transform lives. Our proven track record of academic excellence, 
               combined with character development, creates well-rounded graduates 
               ready for the future.
             </p>
 
-            <div className="grid sm:grid-cols-2 gap-6">
+            <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
               {features.map((feature, index) => (
                 <div
                   key={feature.title}
-                  className="flex gap-4 animate-fade-up"
+                  className="flex gap-3 sm:gap-4 animate-fade-up"
                   style={{ animationDelay: `${(index + 3) * 100}ms` }}
                 >
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <feature.icon className="h-6 w-6 text-primary" />
+                  <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <feature.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground mb-1">
+                    <h3 className="font-semibold text-sm sm:text-base text-foreground mb-1">
                       {feature.title}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       {feature.description}
                     </p>
                   </div>
