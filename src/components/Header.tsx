@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { Menu, X, Phone } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import schoolCrest from "@/assets/school-crest.jpeg";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,6 +28,29 @@ const Header = () => {
     { href: "#contact", label: "Contact" },
   ];
 
+  // Handle navigation for anchor links from any page
+  const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    setIsMobileMenuOpen(false);
+    
+    if (location.pathname !== "/") {
+      // Navigate to home first, then scroll to section
+      navigate("/");
+      setTimeout(() => {
+        const element = document.querySelector(href);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+    } else {
+      // Already on home, just scroll
+      const element = document.querySelector(href);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -44,10 +69,14 @@ const Header = () => {
               className="h-14 w-auto object-contain"
             />
             <div className="hidden sm:block">
-              <h1 className="font-heading font-extrabold text-lg md:text-xl text-primary leading-tight tracking-wide uppercase">
+              <h1 className={`font-heading font-extrabold text-lg md:text-xl leading-tight tracking-wide uppercase transition-colors ${
+                isScrolled ? "text-primary" : "text-white"
+              }`}>
                 Good Shepherd International School
               </h1>
-              <p className="text-xs md:text-sm text-secondary font-heading italic font-medium tracking-widest">
+              <p className={`text-xs md:text-sm font-heading italic font-medium tracking-widest transition-colors ${
+                isScrolled ? "text-secondary" : "text-white/90"
+              }`}>
                 In God We Trust
               </p>
             </div>
@@ -60,8 +89,8 @@ const Header = () => {
                 <Link
                   key={link.href}
                   to={link.href}
-                  className={`font-medium transition-colors hover:text-primary ${
-                    isScrolled ? "text-foreground" : "text-foreground"
+                  className={`font-medium transition-colors hover:text-secondary ${
+                    isScrolled ? "text-foreground" : "text-white"
                   }`}
                 >
                   {link.label}
@@ -70,8 +99,9 @@ const Header = () => {
                 <a
                   key={link.href}
                   href={link.href}
-                  className={`font-medium transition-colors hover:text-primary ${
-                    isScrolled ? "text-foreground" : "text-foreground"
+                  onClick={(e) => handleAnchorClick(e, link.href)}
+                  className={`font-medium transition-colors hover:text-secondary ${
+                    isScrolled ? "text-foreground" : "text-white"
                   }`}
                 >
                   {link.label}
@@ -82,7 +112,9 @@ const Header = () => {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <a href="tel:0208163186" className="flex items-center gap-2 text-primary font-medium">
+            <a href="tel:0208163186" className={`flex items-center gap-2 font-medium transition-colors ${
+              isScrolled ? "text-primary" : "text-white"
+            }`}>
               <Phone className="h-4 w-4" />
               <span className="hidden lg:inline">0208163186</span>
             </a>
@@ -94,7 +126,7 @@ const Header = () => {
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden p-2 text-foreground"
+            className={`lg:hidden p-2 transition-colors ${isScrolled ? "text-foreground" : "text-white"}`}
             aria-label="Toggle menu"
           >
             {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -119,7 +151,7 @@ const Header = () => {
                   <a
                     key={link.href}
                     href={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={(e) => handleAnchorClick(e, link.href)}
                     className="font-medium text-foreground hover:text-primary py-2 transition-colors"
                   >
                     {link.label}

@@ -1,8 +1,30 @@
 import { Phone, MapPin, Heart } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import schoolCrest from "@/assets/school-crest.jpeg";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    
+    if (location.pathname !== "/") {
+      navigate("/");
+      setTimeout(() => {
+        const element = document.querySelector(href);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+    } else {
+      const element = document.querySelector(href);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
 
   return (
     <footer className="bg-foreground text-primary-foreground">
@@ -49,12 +71,29 @@ const Footer = () => {
                 <li key={link.href}>
                   <a
                     href={link.href}
+                    onClick={(e) => handleAnchorClick(e, link.href)}
                     className="text-primary-foreground/70 hover:text-primary-foreground transition-colors"
                   >
                     {link.label}
                   </a>
                 </li>
               ))}
+              <li>
+                <Link
+                  to="/admission"
+                  className="text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+                >
+                  Admission
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/gallery"
+                  className="text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+                >
+                  Gallery
+                </Link>
+              </li>
             </ul>
           </div>
 

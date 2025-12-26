@@ -10,6 +10,7 @@ import {
   Anchor,
   ArrowRight 
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import nurseryClass from "@/assets/nursery-class.webp";
 import computerLab from "@/assets/computer-lab.webp";
@@ -178,10 +179,10 @@ const Programs = () => {
         {/* CTA */}
         <div className="text-center mt-12">
           <Button variant="default" size="xl" asChild>
-            <a href="#contact" className="flex items-center gap-2">
+            <Link to="/admission" className="flex items-center gap-2">
               <span>Apply for Admission</span>
               <ArrowRight className="h-5 w-5" />
-            </a>
+            </Link>
           </Button>
         </div>
       </div>
