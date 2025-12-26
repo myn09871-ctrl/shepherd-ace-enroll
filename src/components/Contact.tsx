@@ -19,19 +19,19 @@ const Contact = () => {
     <section id="contact" className="py-20 lg:py-32 bg-muted/30">
       <div className="container mx-auto px-4">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-2 mb-6 animate-fade-up">
-            <MessageCircle className="h-4 w-4" />
-            <span className="text-sm font-semibold">Get In Touch</span>
+        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-12 lg:mb-16">
+          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-3 py-1.5 sm:px-4 sm:py-2 mb-4 sm:mb-6 animate-fade-up">
+            <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="text-xs sm:text-sm font-semibold">Get In Touch</span>
           </div>
           
-          <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 animate-fade-up animation-delay-100">
+          <h2 className="font-heading text-xl sm:text-2xl lg:text-4xl font-bold text-foreground mb-4 sm:mb-6 animate-fade-up animation-delay-100">
             Admission is{" "}
             <span className="text-accent">FREE</span> – 
             <span className="text-primary"> Rush Now!</span>
           </h2>
           
-          <p className="text-lg text-muted-foreground animate-fade-up animation-delay-200">
+          <p className="text-sm sm:text-base lg:text-lg text-muted-foreground animate-fade-up animation-delay-200">
             Take the first step towards your child's bright future. 
             Contact us today to learn more about enrollment opportunities.
           </p>
