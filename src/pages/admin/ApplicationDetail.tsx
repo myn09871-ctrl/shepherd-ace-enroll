@@ -28,24 +28,55 @@ interface Application {
   guardian1_email: string;
   guardian1_address: string;
   guardian1_occupation: string | null;
+  guardian1_employer: string | null;
+  guardian1_landmark: string | null;
+  guardian1_workplace_address: string | null;
+  guardian1_workplace_phone: string | null;
+  guardian1_is_primary_contact: boolean | null;
   guardian2_full_name: string | null;
   guardian2_relationship: string | null;
   guardian2_phone_primary: string | null;
+  guardian2_phone_secondary: string | null;
+  guardian2_email: string | null;
+  guardian2_address: string | null;
+  guardian2_is_emergency_contact: boolean | null;
+  is_first_time_enrollment: boolean | null;
   program_level: string;
   intended_start_date: string | null;
+  career_training_interests: string[] | null;
   previous_school_name: string | null;
   previous_school_location: string | null;
   last_grade_completed: string | null;
+  academic_performance: string | null;
+  reason_for_change: string | null;
   has_medical_conditions: boolean | null;
   medical_conditions: string[] | null;
+  medical_conditions_details: string | null;
   has_allergies: boolean | null;
   allergies: unknown;
+  current_medications: unknown;
   immunization_up_to_date: boolean | null;
+  medical_authorization: boolean | null;
+  has_special_needs: boolean | null;
+  special_needs_types: string[] | null;
+  special_needs_details: string | null;
+  financial_acknowledgment: boolean | null;
+  financial_assistance_interest: boolean | null;
+  transportation_method: string | null;
+  pickup_location: string | null;
+  consent_truthfulness: boolean | null;
+  consent_media: boolean | null;
+  consent_records: boolean | null;
+  consent_discipline: boolean | null;
+  consent_emergency: boolean | null;
+  consent_terms: boolean | null;
   birth_certificate_url: string | null;
   vaccination_card_url: string | null;
   academic_records_url: string | null;
+  residence_proof_url: string | null;
   status: string;
   created_at: string;
+  updated_at: string;
 }
 
 interface AdminNote {
@@ -171,44 +202,189 @@ const ApplicationDetail = () => {
     if (!application) return;
 
     const doc = new jsPDF();
+    const margin = 15;
+    const pageWidth = 210;
+    const labelWidth = 55;
+    const valueWidth = pageWidth - margin * 2 - labelWidth - 5;
+    const lineHeight = 5;
     let yPos = 20;
 
-    doc.setFontSize(18);
-    doc.text("Good Shepherd International School", 105, yPos, { align: "center" });
-    yPos += 8;
-    doc.setFontSize(14);
-    doc.text("Enrollment Application", 105, yPos, { align: "center" });
-    yPos += 15;
+    const formatValue = (value: unknown): string => {
+      if (Array.isArray(value)) return value.length > 0 ? value.join(", ") : "—";
+      if (typeof value === "boolean") return value ? "Yes" : "No";
+      if (value !== undefined && value !== null && value !== "") return String(value);
+      return "—";
+    };
 
+    const addSection = (title: string) => {
+      if (yPos > 260) {
+        doc.addPage();
+        yPos = 20;
+      }
+      yPos += 4;
+      doc.setFillColor(230, 240, 250);
+      doc.rect(margin, yPos - 4, pageWidth - margin * 2, 7, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text(title, margin + 2, yPos);
+      yPos += 7;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+    };
+
+    const addField = (label: string, value: unknown) => {
+      if (yPos > 280) {
+        doc.addPage();
+        yPos = 20;
+      }
+      doc.setFont("helvetica", "bold");
+      doc.text(`${label}:`, margin, yPos);
+      doc.setFont("helvetica", "normal");
+      const displayValue = formatValue(value);
+      const splitText = doc.splitTextToSize(displayValue, valueWidth);
+      doc.text(splitText, margin + labelWidth, yPos);
+      yPos += lineHeight * Math.max(1, splitText.length);
+    };
+
+    // Header
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("GOOD SHEPHERD INTERNATIONAL SCHOOL", 105, yPos, { align: "center" });
+    yPos += 6;
     doc.setFontSize(10);
-    doc.text(`Reference: ${application.reference_number}`, 20, yPos);
-    doc.text(`Status: ${application.status}`, 150, yPos);
-    yPos += 15;
-
+    doc.setFont("helvetica", "italic");
+    doc.text("In God We Trust", 105, yPos, { align: "center" });
+    yPos += 5;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text("Mallam, New Gbawe - 100 meters from LAFA Police Station", 105, yPos, { align: "center" });
+    yPos += 10;
+    
     doc.setFontSize(12);
-    doc.text("Student Information", 20, yPos);
-    yPos += 8;
-    doc.setFontSize(10);
-    doc.text(`Name: ${application.student_first_name} ${application.student_surname}`, 25, yPos);
+    doc.setFont("helvetica", "bold");
+    doc.text("ADMISSION APPLICATION FORM", 105, yPos, { align: "center" });
     yPos += 6;
-    doc.text(`Date of Birth: ${format(new Date(application.student_dob), "MMMM d, yyyy")}`, 25, yPos);
-    yPos += 6;
-    doc.text(`Gender: ${application.student_gender}`, 25, yPos);
-    yPos += 6;
-    doc.text(`Program: ${application.program_level}`, 25, yPos);
-    yPos += 15;
+    doc.setFontSize(9);
+    doc.text(`Reference: ${application.reference_number}`, 105, yPos, { align: "center" });
+    yPos += 5;
+    doc.text(`Status: ${application.status.toUpperCase()} | Date: ${format(new Date(application.created_at), "MMMM d, yyyy")}`, 105, yPos, { align: "center" });
+    yPos += 10;
 
-    doc.setFontSize(12);
-    doc.text("Guardian Information", 20, yPos);
-    yPos += 8;
-    doc.setFontSize(10);
-    doc.text(`Name: ${application.guardian1_full_name}`, 25, yPos);
-    yPos += 6;
-    doc.text(`Phone: ${application.guardian1_phone_primary}`, 25, yPos);
-    yPos += 6;
-    doc.text(`Email: ${application.guardian1_email}`, 25, yPos);
+    // SECTION 1: Student Information
+    addSection("SECTION 1: STUDENT INFORMATION");
+    addField("Surname", application.student_surname);
+    addField("First Name", application.student_first_name);
+    addField("Middle Name(s)", application.student_middle_name);
+    addField("Date of Birth", application.student_dob ? format(new Date(application.student_dob), "MMMM d, yyyy") : "—");
+    addField("Gender", application.student_gender);
+    addField("Nationality", application.student_nationality);
+    addField("Place of Birth", application.student_place_of_birth);
 
-    doc.save(`application-${application.reference_number}.pdf`);
+    // SECTION 2: Primary Guardian
+    addSection("SECTION 2: PRIMARY PARENT/GUARDIAN");
+    addField("Relationship to Student", application.guardian1_relationship);
+    addField("Full Name", application.guardian1_full_name);
+    addField("Occupation", application.guardian1_occupation);
+    addField("Employer/Business", application.guardian1_employer);
+    addField("Primary Phone", application.guardian1_phone_primary);
+    addField("Secondary Phone", application.guardian1_phone_secondary);
+    addField("Email Address", application.guardian1_email);
+    addField("Residential Address", application.guardian1_address);
+    addField("Nearest Landmark", application.guardian1_landmark);
+    addField("Workplace Address", application.guardian1_workplace_address);
+    addField("Workplace Phone", application.guardian1_workplace_phone);
+
+    // SECTION 3: Secondary Guardian
+    addSection("SECTION 3: SECONDARY PARENT/GUARDIAN");
+    addField("Full Name", application.guardian2_full_name);
+    addField("Relationship to Student", application.guardian2_relationship);
+    addField("Primary Phone", application.guardian2_phone_primary);
+    addField("Secondary Phone", application.guardian2_phone_secondary);
+    addField("Email Address", application.guardian2_email);
+    addField("Address", application.guardian2_address);
+    addField("Is Emergency Contact", application.guardian2_is_emergency_contact);
+
+    // SECTION 4: Educational Background
+    addSection("SECTION 4: EDUCATIONAL BACKGROUND");
+    addField("First Time Enrollment", application.is_first_time_enrollment);
+    addField("Previous School Name", application.previous_school_name);
+    addField("Previous School Location", application.previous_school_location);
+    addField("Last Grade/Class Completed", application.last_grade_completed);
+    addField("Academic Performance", application.academic_performance);
+    addField("Reason for Changing School", application.reason_for_change);
+
+    // SECTION 5: Program Selection
+    addSection("SECTION 5: PROGRAM SELECTION");
+    addField("Educational Level/Class", application.program_level);
+    addField("Intended Start Date", application.intended_start_date);
+    addField("Career Training Interests", application.career_training_interests);
+
+    // SECTION 6: Health Information
+    addSection("SECTION 6: HEALTH INFORMATION");
+    addField("Has Medical Conditions", application.has_medical_conditions);
+    addField("Medical Conditions", application.medical_conditions);
+    addField("Medical Conditions Details", application.medical_conditions_details);
+    addField("Has Allergies", application.has_allergies);
+    const allergiesDesc = application.allergies && typeof application.allergies === "object" 
+      ? (application.allergies as Record<string, string>).description 
+      : application.allergies;
+    addField("Allergies Description", allergiesDesc);
+    const medsDesc = application.current_medications && typeof application.current_medications === "object"
+      ? (application.current_medications as Record<string, string>).description
+      : application.current_medications;
+    addField("Current Medications", medsDesc);
+    addField("Immunizations Up to Date", application.immunization_up_to_date);
+    addField("Medical Treatment Authorization", application.medical_authorization);
+
+    // SECTION 7: Special Needs
+    addSection("SECTION 7: SPECIAL EDUCATIONAL NEEDS");
+    addField("Has Special Needs", application.has_special_needs);
+    addField("Types of Special Needs", application.special_needs_types);
+    addField("Special Needs Details", application.special_needs_details);
+
+    // SECTION 8: Financial & Transportation
+    addSection("SECTION 8: FINANCIAL & TRANSPORTATION");
+    addField("Financial Terms Acknowledged", application.financial_acknowledgment);
+    addField("Interested in Financial Aid", application.financial_assistance_interest);
+    addField("Transportation Method", application.transportation_method);
+    addField("Pickup/Drop-off Location", application.pickup_location);
+
+    // SECTION 9: Declarations & Consent
+    addSection("SECTION 9: DECLARATIONS & CONSENT");
+    addField("Truthfulness Declaration", application.consent_truthfulness);
+    addField("Media/Photo Consent", application.consent_media);
+    addField("Records Authorization", application.consent_records);
+    addField("Discipline Policy Consent", application.consent_discipline);
+    addField("Emergency Treatment Consent", application.consent_emergency);
+    addField("Terms & Conditions Accepted", application.consent_terms);
+
+    // SECTION 10: Documents
+    addSection("SECTION 10: UPLOADED DOCUMENTS");
+    addField("Birth Certificate", application.birth_certificate_url ? "Uploaded" : "Not uploaded");
+    addField("Vaccination Card", application.vaccination_card_url ? "Uploaded" : "Not uploaded");
+    addField("Academic Records", application.academic_records_url ? "Uploaded" : "Not uploaded");
+    addField("Proof of Residence", application.residence_proof_url ? "Uploaded" : "Not uploaded");
+
+    // Footer
+    yPos += 8;
+    if (yPos > 270) {
+      doc.addPage();
+      yPos = 20;
+    }
+    doc.setDrawColor(200);
+    doc.line(margin, yPos, pageWidth - margin, yPos);
+    yPos += 6;
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "italic");
+    doc.text("This is an official document of Good Shepherd International School.", 105, yPos, { align: "center" });
+    doc.text("For office use only - Do not alter.", 105, yPos + 4, { align: "center" });
+
+    doc.save(`GSIS_Application_${application.reference_number}.pdf`);
+    
+    toast({
+      title: "PDF Generated",
+      description: "Complete application form has been downloaded",
+    });
   };
 
   if (loading) {
