@@ -114,14 +114,14 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-heading font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Welcome to the admin portal</p>
+        <h1 className="text-xl font-heading font-bold text-foreground">Dashboard</h1>
+        <p className="text-sm text-muted-foreground">Welcome to the admin portal</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatsCard
           title="Applications Today"
           value={stats.todayCount}
@@ -149,21 +149,21 @@ const Dashboard = () => {
       </div>
 
       {/* Two Column Layout */}
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-3 gap-4">
         {/* Recent Activity */}
-        <div className="lg:col-span-2 bg-card rounded-xl border border-border shadow-soft">
-          <div className="p-6 border-b border-border">
-            <h2 className="text-lg font-semibold text-foreground">Recent Applications</h2>
+        <div className="lg:col-span-2 bg-card rounded-lg border border-border shadow-soft">
+          <div className="p-4 border-b border-border">
+            <h2 className="text-sm font-semibold text-foreground">Recent Applications</h2>
           </div>
           <div className="divide-y divide-border">
             {recentApplications.length === 0 ? (
-              <div className="p-6 text-center text-muted-foreground">
+              <div className="p-4 text-center text-sm text-muted-foreground">
                 No applications yet
               </div>
             ) : (
               recentApplications.map((app) => (
-                <div key={app.id} className="p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-4">
+                <div key={app.id} className="p-3 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-3">
                     <div className={`h-2 w-2 rounded-full ${
                       app.status === "pending" ? "bg-blue-500" :
                       app.status === "under_review" ? "bg-yellow-500" :
@@ -171,15 +171,15 @@ const Dashboard = () => {
                       "bg-red-500"
                     }`} />
                     <div>
-                      <p className="font-medium text-foreground">
+                      <p className="text-sm font-medium text-foreground">
                         {app.student_first_name} {app.student_surname}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {app.program_level} • {format(new Date(app.created_at), "MMM d, h:mm a")}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <StatusBadge status={app.status} size="sm" />
                     <Button variant="ghost" size="sm" asChild>
                       <Link to={`/admin/applications/${app.id}`}>
@@ -192,8 +192,8 @@ const Dashboard = () => {
             )}
           </div>
           {recentApplications.length > 0 && (
-            <div className="p-4 border-t border-border">
-              <Button variant="outline" className="w-full" asChild>
+            <div className="p-3 border-t border-border">
+              <Button variant="outline" size="sm" className="w-full text-sm" asChild>
                 <Link to="/admin/applications">View All Applications</Link>
               </Button>
             </div>
@@ -201,20 +201,21 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-card rounded-xl border border-border shadow-soft">
-          <div className="p-6 border-b border-border">
-            <h2 className="text-lg font-semibold text-foreground">Quick Actions</h2>
+        <div className="bg-card rounded-lg border border-border shadow-soft">
+          <div className="p-4 border-b border-border">
+            <h2 className="text-sm font-semibold text-foreground">Quick Actions</h2>
           </div>
-          <div className="p-4 space-y-3">
+          <div className="p-3 space-y-2">
             {quickActions.map((action) => (
               <Button
                 key={action.label}
                 variant="outline"
-                className="w-full justify-start gap-3"
+                size="sm"
+                className="w-full justify-start gap-2 text-sm"
                 asChild
               >
                 <Link to={action.href}>
-                  <action.icon className="h-5 w-5" />
+                  <action.icon className="h-4 w-4" />
                   {action.label}
                 </Link>
               </Button>
