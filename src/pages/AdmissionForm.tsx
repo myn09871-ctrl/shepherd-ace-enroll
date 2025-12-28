@@ -134,146 +134,155 @@ const AdmissionForm = () => {
       pdf.text("ADMISSION APPLICATION FORM", 105, 48, { align: "center" });
       pdf.setFontSize(10);
       pdf.text(`Reference: ${referenceNumber}`, 105, 55, { align: "center" });
+      pdf.text(`Date: ${new Date().toLocaleDateString()}`, 105, 61, { align: "center" });
       
-      let yPos = 70;
-      const lineHeight = 7;
-      const margin = 20;
+      let yPos = 75;
+      const lineHeight = 6;
+      const margin = 15;
+      const labelWidth = 60;
+      const pageWidth = 210;
+      const valueWidth = pageWidth - margin * 2 - labelWidth - 5;
       
       const addSection = (title: string) => {
         if (yPos > 260) {
           pdf.addPage();
           yPos = 20;
         }
+        yPos += 4;
+        pdf.setFillColor(230, 240, 250);
+        pdf.rect(margin, yPos - 5, pageWidth - margin * 2, 8, "F");
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(12);
-        pdf.text(title, margin, yPos);
-        yPos += lineHeight;
+        pdf.setFontSize(11);
+        pdf.text(title, margin + 3, yPos);
+        yPos += 8;
         pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(10);
+        pdf.setFontSize(9);
       };
       
-      const addField = (label: string, value: string | boolean | undefined | null) => {
+      const addField = (label: string, value: string | boolean | undefined | null | string[]) => {
         if (yPos > 280) {
           pdf.addPage();
           yPos = 20;
         }
-        // Display the exact value entered, empty string for blank fields
+        // Always show the label (question)
+        pdf.setFont("helvetica", "bold");
+        pdf.text(`${label}:`, margin, yPos);
+        pdf.setFont("helvetica", "normal");
+        
+        // Display the exact value entered
         let displayValue = "";
-        if (typeof value === "boolean") {
+        if (Array.isArray(value)) {
+          displayValue = value.length > 0 ? value.join(", ") : "—";
+        } else if (typeof value === "boolean") {
           displayValue = value ? "Yes" : "No";
         } else if (value !== undefined && value !== null && value !== "") {
           displayValue = String(value);
+        } else {
+          displayValue = "—";
         }
-        pdf.text(`${label}: ${displayValue}`, margin, yPos);
-        yPos += lineHeight;
+        
+        // Wrap text if too long
+        const splitText = pdf.splitTextToSize(displayValue, valueWidth);
+        pdf.text(splitText, margin + labelWidth, yPos);
+        yPos += lineHeight * Math.max(1, splitText.length);
       };
       
-      // Student Information
-      addSection("STUDENT INFORMATION");
+      // SECTION 1: Student Information
+      addSection("SECTION 1: STUDENT INFORMATION");
       addField("Surname", page1Data.student_surname);
       addField("First Name", page1Data.student_first_name);
-      addField("Middle Name", page1Data.student_middle_name);
+      addField("Middle Name(s)", page1Data.student_middle_name);
       addField("Date of Birth", page1Data.student_dob);
       addField("Gender", page1Data.student_gender);
       addField("Nationality", page1Data.student_nationality);
       addField("Place of Birth", page1Data.student_place_of_birth);
-      yPos += 5;
       
-      // Primary Guardian
-      addSection("PRIMARY GUARDIAN");
+      // SECTION 2: Primary Guardian
+      addSection("SECTION 2: PRIMARY PARENT/GUARDIAN");
+      addField("Relationship to Student", page1Data.guardian1_relationship);
       addField("Full Name", page1Data.guardian1_full_name);
-      addField("Relationship", page1Data.guardian1_relationship);
       addField("Occupation", page1Data.guardian1_occupation);
-      addField("Employer", page1Data.guardian1_employer);
+      addField("Employer/Business", page1Data.guardian1_employer);
       addField("Primary Phone", page1Data.guardian1_phone_primary);
       addField("Secondary Phone", page1Data.guardian1_phone_secondary);
-      addField("Email", page1Data.guardian1_email);
+      addField("Email Address", page1Data.guardian1_email);
       addField("Residential Address", page1Data.guardian1_address);
       addField("Nearest Landmark", page1Data.guardian1_landmark);
       addField("Workplace Address", page1Data.guardian1_workplace_address);
       addField("Workplace Phone", page1Data.guardian1_workplace_phone);
-      yPos += 5;
       
-      // Secondary Guardian
-      if (page1Data.guardian2_full_name) {
-        addSection("SECONDARY GUARDIAN / EMERGENCY CONTACT");
-        addField("Full Name", page1Data.guardian2_full_name);
-        addField("Relationship", page1Data.guardian2_relationship);
-        addField("Primary Phone", page1Data.guardian2_phone_primary);
-        addField("Secondary Phone", page1Data.guardian2_phone_secondary);
-        addField("Email", page1Data.guardian2_email);
-        addField("Address", page1Data.guardian2_address);
-        addField("Is Emergency Contact", page1Data.guardian2_is_emergency_contact);
-        yPos += 5;
-      }
+      // SECTION 3: Secondary Guardian
+      addSection("SECTION 3: SECONDARY PARENT/GUARDIAN (OPTIONAL)");
+      addField("Full Name", page1Data.guardian2_full_name);
+      addField("Relationship to Student", page1Data.guardian2_relationship);
+      addField("Primary Phone", page1Data.guardian2_phone_primary);
+      addField("Secondary Phone", page1Data.guardian2_phone_secondary);
+      addField("Email Address", page1Data.guardian2_email);
+      addField("Address", page1Data.guardian2_address);
+      addField("Is Emergency Contact", page1Data.guardian2_is_emergency_contact);
       
-      // Educational Background
-      addSection("EDUCATIONAL BACKGROUND");
+      // SECTION 4: Educational Background
+      pdf.addPage();
+      yPos = 20;
+      addSection("SECTION 4: EDUCATIONAL BACKGROUND");
       addField("First Time Enrollment", page1Data.is_first_time_enrollment);
       addField("Previous School Name", page1Data.previous_school_name);
       addField("Previous School Location", page1Data.previous_school_location);
-      addField("Last Grade Completed", page1Data.last_grade_completed);
+      addField("Last Grade/Class Completed", page1Data.last_grade_completed);
       addField("Academic Performance", page1Data.academic_performance);
       addField("Reason for Changing School", page1Data.reason_for_change);
-      yPos += 5;
       
-      // Program Selection
-      addSection("PROGRAM SELECTION");
+      // SECTION 5: Program Selection
+      addSection("SECTION 5: PROGRAM SELECTION");
       const programLabel = programLevels.find(p => p.value === page1Data.program_level)?.label || page1Data.program_level;
-      addField("Educational Level", programLabel);
+      addField("Educational Level/Class", programLabel);
       addField("Intended Start Date", page1Data.intended_start_date);
-      if (page1Data.career_training_interests?.length) {
-        addField("Career Training Interests", page1Data.career_training_interests.join(", "));
-      }
-      yPos += 5;
+      addField("Career Training Interests", page1Data.career_training_interests);
       
-      // Health Information
-      pdf.addPage();
-      yPos = 20;
-      addSection("HEALTH INFORMATION");
+      // SECTION 6: Health Information
+      addSection("SECTION 6: HEALTH INFORMATION");
       addField("Has Medical Conditions", page2Data.has_medical_conditions);
-      if (page2Data.medical_conditions?.length) {
-        addField("Medical Conditions", page2Data.medical_conditions.join(", "));
-      }
+      addField("Medical Conditions", page2Data.medical_conditions);
       addField("Medical Conditions Details", page2Data.medical_conditions_details);
       addField("Has Allergies", page2Data.has_allergies);
       addField("Allergies Description", page2Data.allergies);
       addField("Current Medications", page2Data.current_medications);
       addField("Immunizations Up to Date", page2Data.immunization_up_to_date);
-      addField("Medical Authorization Granted", page2Data.medical_authorization);
-      yPos += 5;
+      addField("Medical Treatment Authorization", page2Data.medical_authorization);
       
-      // Special Needs
-      addSection("SPECIAL NEEDS");
+      // SECTION 7: Special Needs
+      addSection("SECTION 7: SPECIAL EDUCATIONAL NEEDS");
       addField("Has Special Needs", page2Data.has_special_needs);
-      if (page2Data.special_needs_types?.length) {
-        addField("Special Needs Types", page2Data.special_needs_types.join(", "));
-      }
+      addField("Types of Special Needs", page2Data.special_needs_types);
       addField("Special Needs Details", page2Data.special_needs_details);
-      yPos += 5;
       
-      // Financial & Transportation
-      addSection("FINANCIAL & TRANSPORTATION");
+      // SECTION 8: Financial & Transportation
+      pdf.addPage();
+      yPos = 20;
+      addSection("SECTION 8: FINANCIAL & TRANSPORTATION");
       addField("Financial Terms Acknowledged", page2Data.financial_acknowledgment);
-      addField("Interested in Financial Assistance", page2Data.financial_assistance_interest);
+      addField("Interested in Financial Aid", page2Data.financial_assistance_interest);
       addField("Transportation Method", page2Data.transportation_method);
-      addField("Pickup Location", page2Data.pickup_location);
-      yPos += 5;
+      addField("Pickup/Drop-off Location", page2Data.pickup_location);
       
-      // Consent & Declarations
-      addSection("CONSENT & DECLARATIONS");
-      addField("Truthfulness Declaration", page2Data.consent_truthfulness ? "Agreed" : "Not Agreed");
-      addField("Media Consent", page2Data.consent_media ? "Agreed" : "Not Agreed");
-      addField("Records Authorization", page2Data.consent_records ? "Agreed" : "Not Agreed");
-      addField("Discipline Policy Consent", page2Data.consent_discipline ? "Agreed" : "Not Agreed");
-      addField("Emergency Treatment Consent", page2Data.consent_emergency ? "Agreed" : "Not Agreed");
-      addField("Terms & Conditions", page2Data.consent_terms ? "Agreed" : "Not Agreed");
+      // SECTION 9: Declarations & Consent
+      addSection("SECTION 9: DECLARATIONS & CONSENT");
+      addField("Truthfulness Declaration", page2Data.consent_truthfulness);
+      addField("Media/Photo Consent", page2Data.consent_media);
+      addField("Records Authorization", page2Data.consent_records);
+      addField("Discipline Policy Consent", page2Data.consent_discipline);
+      addField("Emergency Treatment Consent", page2Data.consent_emergency);
+      addField("Terms & Conditions Accepted", page2Data.consent_terms);
       
       // Footer
-      yPos = 270;
+      yPos = 260;
+      pdf.setDrawColor(200);
+      pdf.line(margin, yPos, pageWidth - margin, yPos);
+      yPos += 8;
       pdf.setFontSize(8);
-      pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, margin, yPos);
-      pdf.text("Thank you for choosing Good Shepherd International School.", 105, yPos + 5, { align: "center" });
+      pdf.setFont("helvetica", "italic");
+      pdf.text("This is an official document of Good Shepherd International School.", 105, yPos, { align: "center" });
+      pdf.text("For office use only - Do not alter.", 105, yPos + 5, { align: "center" });
       
       pdf.save(`GSIS_Application_${referenceNumber}.pdf`);
       toast.success("PDF downloaded successfully!");
