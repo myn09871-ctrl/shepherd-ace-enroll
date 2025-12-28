@@ -187,6 +187,16 @@
     animation: float 3s ease-in-out infinite;
   }
 
+  .animate-shimmer {
+    animation: shimmer 2s linear infinite;
+    background: linear-gradient(90deg, transparent, hsla(0 0% 100% / 0.1), transparent);
+    background-size: 200% 100%;
+  }
+
+  .animate-parallax-slow {
+    will-change: transform;
+  }
+
   .animation-delay-100 {
     animation-delay: 100ms;
   }
@@ -209,6 +219,18 @@
 
   .animation-delay-600 {
     animation-delay: 600ms;
+  }
+
+  .hover-lift {
+    @apply transition-all duration-300;
+  }
+
+  .hover-lift:hover {
+    @apply -translate-y-2 shadow-elevated;
+  }
+
+  .hover-glow:hover {
+    box-shadow: 0 0 30px hsla(210 80% 50% / 0.4);
   }
 }
 
@@ -280,5 +302,23 @@
   }
   50% {
     transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes rotate-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }

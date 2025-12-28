@@ -1,35 +1,69 @@
 import { ArrowRight, Award, Users, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState, useRef } from "react";
 import schoolCrest from "@/assets/school-crest.jpeg";
 import schoolBuilding from "@/assets/school-building.webp";
 
 const Hero = () => {
+  const [scrollY, setScrollY] = useState(0);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (sectionRef.current) {
+        const rect = sectionRef.current.getBoundingClientRect();
+        if (rect.bottom > 0) {
+          setScrollY(window.scrollY);
+        }
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <section
+      ref={sectionRef}
       id="home"
       className="relative min-h-screen flex items-center overflow-hidden"
     >
-      {/* Background Image */}
+      {/* Background Image with Parallax */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${schoolBuilding})` }}
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-100"
+        style={{ 
+          backgroundImage: `url(${schoolBuilding})`,
+          transform: `translateY(${scrollY * 0.4}px) scale(1.1)`,
+        }}
       >
         <div className="absolute inset-0 bg-hero-gradient opacity-90" />
       </div>
 
-      {/* Decorative Elements */}
-      <div className="absolute top-20 right-10 w-72 h-72 bg-secondary/20 rounded-full blur-3xl animate-float" />
-      <div className="absolute bottom-20 left-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float animation-delay-500" />
+      {/* Animated Decorative Elements with Parallax */}
+      <div 
+        className="absolute top-20 right-10 w-72 h-72 bg-secondary/20 rounded-full blur-3xl animate-float"
+        style={{ transform: `translateY(${scrollY * -0.2}px)` }}
+      />
+      <div 
+        className="absolute bottom-20 left-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float animation-delay-500"
+        style={{ transform: `translateY(${scrollY * -0.15}px)` }}
+      />
+      <div 
+        className="absolute top-1/2 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-2xl animate-pulse"
+        style={{ transform: `translateY(${scrollY * -0.25}px)` }}
+      />
 
       {/* Content */}
       <div className="container mx-auto px-4 pt-24 pb-16 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Column - Text Content */}
-          <div className="text-primary-foreground space-y-4 sm:space-y-6 lg:space-y-8">
+          <div 
+            className="text-primary-foreground space-y-4 sm:space-y-6 lg:space-y-8"
+            style={{ transform: `translateY(${scrollY * -0.1}px)` }}
+          >
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 animate-fade-up">
-              <Award className="h-3 w-3 sm:h-4 sm:w-4 text-accent" />
+            <div className="inline-flex items-center gap-2 bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 animate-fade-up hover:scale-105 transition-transform duration-300">
+              <Award className="h-3 w-3 sm:h-4 sm:w-4 text-accent animate-pulse" />
               <span className="text-xs sm:text-sm font-medium">
                 100% BECE Distinction Rate
               </span>
@@ -38,7 +72,10 @@ const Hero = () => {
             {/* Heading */}
             <h1 className="font-heading text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight animate-fade-up animation-delay-100">
               Nurturing{" "}
-              <span className="text-accent">Excellence</span>
+              <span className="text-accent relative">
+                Excellence
+                <span className="absolute -inset-1 bg-accent/20 blur-lg rounded-lg -z-10" />
+              </span>
               <br />
               Building Futures
             </h1>
@@ -57,67 +94,74 @@ const Hero = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 animate-fade-up animation-delay-400">
-              <Button variant="hero" size="default" className="text-xs sm:text-sm" asChild>
+              <Button variant="hero" size="default" className="text-xs sm:text-sm group" asChild>
                 <Link to="/admission" className="flex items-center gap-2">
                   <span>Enroll Now - FREE Admission</span>
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
-              <Button variant="heroOutline" size="default" className="text-xs sm:text-sm" asChild>
+              <Button variant="heroOutline" size="default" className="text-xs sm:text-sm hover:scale-105 transition-transform" asChild>
                 <a href="#programs">Explore Programs</a>
               </Button>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6 pt-4 sm:pt-6 lg:pt-8 border-t border-primary-foreground/20 animate-fade-up animation-delay-500">
-              <div>
-                <div className="flex items-center gap-1 sm:gap-2 mb-1">
-                  <Award className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-accent" />
-                  <span className="font-heading text-lg sm:text-xl lg:text-2xl font-bold">100%</span>
+              {[
+                { icon: Award, value: "100%", label: "BECE Pass Rate" },
+                { icon: Users, value: "500+", label: "Students" },
+                { icon: BookOpen, value: "15+", label: "Years of Excellence" },
+              ].map((stat, index) => (
+                <div 
+                  key={stat.label}
+                  className="group hover:scale-105 transition-transform duration-300"
+                  style={{ animationDelay: `${600 + index * 100}ms` }}
+                >
+                  <div className="flex items-center gap-1 sm:gap-2 mb-1">
+                    <stat.icon className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-accent group-hover:scale-110 transition-transform" />
+                    <span className="font-heading text-lg sm:text-xl lg:text-2xl font-bold">{stat.value}</span>
+                  </div>
+                  <p className="text-[10px] sm:text-xs lg:text-sm text-primary-foreground/70">{stat.label}</p>
                 </div>
-                <p className="text-[10px] sm:text-xs lg:text-sm text-primary-foreground/70">BECE Pass Rate</p>
-              </div>
-              <div>
-                <div className="flex items-center gap-1 sm:gap-2 mb-1">
-                  <Users className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-accent" />
-                  <span className="font-heading text-lg sm:text-xl lg:text-2xl font-bold">500+</span>
-                </div>
-                <p className="text-[10px] sm:text-xs lg:text-sm text-primary-foreground/70">Students</p>
-              </div>
-              <div>
-                <div className="flex items-center gap-1 sm:gap-2 mb-1">
-                  <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-accent" />
-                  <span className="font-heading text-lg sm:text-xl lg:text-2xl font-bold">15+</span>
-                </div>
-                <p className="text-[10px] sm:text-xs lg:text-sm text-primary-foreground/70">Years of Excellence</p>
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* Right Column - Crest */}
-          <div className="hidden lg:flex justify-center items-center">
-            <div className="relative">
+          {/* Right Column - Crest with Parallax */}
+          <div 
+            className="hidden lg:flex justify-center items-center"
+            style={{ transform: `translateY(${scrollY * -0.2}px)` }}
+          >
+            <div className="relative group">
               {/* Glow Effect */}
-              <div className="absolute inset-0 bg-accent/30 blur-3xl rounded-full scale-75" />
+              <div className="absolute inset-0 bg-accent/30 blur-3xl rounded-full scale-75 group-hover:scale-90 transition-transform duration-500" />
+              
+              {/* Rotating Ring */}
+              <div className="absolute inset-0 border-4 border-dashed border-primary-foreground/10 rounded-full scale-150 animate-spin" style={{ animationDuration: "30s" }} />
               
               {/* Crest */}
               <img
                 src={schoolCrest}
                 alt="Good Shepherd International School Crest"
-                className="relative z-10 w-80 h-auto drop-shadow-2xl animate-float"
+                className="relative z-10 w-80 h-auto drop-shadow-2xl animate-float group-hover:scale-105 transition-transform duration-500"
               />
               
               {/* Decorative Ring */}
               <div className="absolute inset-0 border-4 border-primary-foreground/20 rounded-full scale-125 animate-pulse" />
+              
+              {/* Floating particles */}
+              <div className="absolute -top-4 -right-4 w-3 h-3 bg-accent rounded-full animate-float" />
+              <div className="absolute -bottom-6 -left-6 w-4 h-4 bg-secondary/50 rounded-full animate-float animation-delay-300" />
+              <div className="absolute top-1/2 -right-8 w-2 h-2 bg-primary-foreground/50 rounded-full animate-float animation-delay-600" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Scroll Indicator */}
+      {/* Scroll Indicator with better animation */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-        <div className="w-6 h-10 border-2 border-primary-foreground/50 rounded-full flex justify-center">
-          <div className="w-1 h-3 bg-primary-foreground/50 rounded-full mt-2 animate-pulse" />
+        <div className="w-6 h-10 border-2 border-primary-foreground/50 rounded-full flex justify-center backdrop-blur-sm">
+          <div className="w-1 h-3 bg-primary-foreground/70 rounded-full mt-2 animate-pulse" />
         </div>
       </div>
     </section>
