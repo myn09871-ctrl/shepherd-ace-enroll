@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { ParentAuthProvider } from "@/hooks/useParentAuth";
 import Index from "./pages/Index";
 import Gallery from "./pages/Gallery";
 import AdmissionForm from "./pages/AdmissionForm";
@@ -21,37 +22,66 @@ import Messages from "./pages/admin/Messages";
 import Reports from "./pages/admin/Reports";
 import Settings from "./pages/admin/Settings";
 
+// Parent Portal imports
+import PortalLogin from "./pages/portal/PortalLogin";
+import ParentLayout from "./components/parent/ParentLayout";
+import PortalDashboard from "./pages/portal/PortalDashboard";
+import PortalAcademics from "./pages/portal/PortalAcademics";
+import PortalAttendance from "./pages/portal/PortalAttendance";
+import PortalAnnouncements from "./pages/portal/PortalAnnouncements";
+import PortalDocuments from "./pages/portal/PortalDocuments";
+import PortalFees from "./pages/portal/PortalFees";
+import PortalTimetable from "./pages/portal/PortalTimetable";
+import PortalMessages from "./pages/portal/PortalMessages";
+import PortalProfile from "./pages/portal/PortalProfile";
+
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/gallery" element={<Gallery />} />
-            <Route path="/admission" element={<AdmissionForm />} />
-            
-            {/* Admin Routes */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="applications" element={<Applications />} />
-              <Route path="applications/:id" element={<ApplicationDetail />} />
-              <Route path="students" element={<Students />} />
-              <Route path="content" element={<Content />} />
-              <Route path="messages" element={<Messages />} />
-              <Route path="reports" element={<Reports />} />
-              <Route path="settings" element={<Settings />} />
-            </Route>
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <ParentAuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/gallery" element={<Gallery />} />
+              <Route path="/admission" element={<AdmissionForm />} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="applications" element={<Applications />} />
+                <Route path="applications/:id" element={<ApplicationDetail />} />
+                <Route path="students" element={<Students />} />
+                <Route path="content" element={<Content />} />
+                <Route path="messages" element={<Messages />} />
+                <Route path="reports" element={<Reports />} />
+                <Route path="settings" element={<Settings />} />
+              </Route>
+
+              {/* Parent Portal Routes */}
+              <Route path="/portal/login" element={<PortalLogin />} />
+              <Route path="/portal" element={<ParentLayout />}>
+                <Route index element={<PortalDashboard />} />
+                <Route path="academics" element={<PortalAcademics />} />
+                <Route path="attendance" element={<PortalAttendance />} />
+                <Route path="announcements" element={<PortalAnnouncements />} />
+                <Route path="documents" element={<PortalDocuments />} />
+                <Route path="fees" element={<PortalFees />} />
+                <Route path="timetable" element={<PortalTimetable />} />
+                <Route path="messages" element={<PortalMessages />} />
+                <Route path="profile" element={<PortalProfile />} />
+              </Route>
+              
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </ParentAuthProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
