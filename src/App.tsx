@@ -17,6 +17,12 @@ import Dashboard from "./pages/admin/Dashboard";
 import Applications from "./pages/admin/Applications";
 import ApplicationDetail from "./pages/admin/ApplicationDetail";
 import Students from "./pages/admin/Students";
+import StudentPortals from "./pages/admin/StudentPortals";
+import GradesManagement from "./pages/admin/GradesManagement";
+import AttendanceManagement from "./pages/admin/AttendanceManagement";
+import AnnouncementsManagement from "./pages/admin/AnnouncementsManagement";
+import FeesManagement from "./pages/admin/FeesManagement";
+import SubjectsManagement from "./pages/admin/SubjectsManagement";
 import Content from "./pages/admin/Content";
 import Messages from "./pages/admin/Messages";
 import Reports from "./pages/admin/Reports";
@@ -57,6 +63,12 @@ const App = () => (
                 <Route path="applications" element={<Applications />} />
                 <Route path="applications/:id" element={<ApplicationDetail />} />
                 <Route path="students" element={<Students />} />
+                <Route path="portals" element={<StudentPortals />} />
+                <Route path="grades" element={<GradesManagement />} />
+                <Route path="attendance" element={<AttendanceManagement />} />
+                <Route path="announcements" element={<AnnouncementsManagement />} />
+                <Route path="fees" element={<FeesManagement />} />
+                <Route path="subjects" element={<SubjectsManagement />} />
                 <Route path="content" element={<Content />} />
                 <Route path="messages" element={<Messages />} />
                 <Route path="reports" element={<Reports />} />
