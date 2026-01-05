@@ -98,50 +98,50 @@ const Dashboard = () => {
   };
 
   const quickActions = [
-    { label: "View All Applications", icon: FileText, href: "/admin/applications" },
-    { label: "Add New Student", icon: UserPlus, href: "/admin/students/new" },
-    { label: "Update Website Content", icon: Globe, href: "/admin/content" },
-    { label: "Send Email to Parents", icon: Mail, href: "/admin/messages" },
+    { label: "View Applications", icon: FileText, href: "/admin/applications" },
+    { label: "Add Student", icon: UserPlus, href: "/admin/students/new" },
+    { label: "Update Content", icon: Globe, href: "/admin/content" },
+    { label: "Send Email", icon: Mail, href: "/admin/messages" },
     { label: "View Reports", icon: BarChart3, href: "/admin/reports" },
   ];
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-xl font-heading font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Welcome to the admin portal</p>
+        <h1 className="text-lg md:text-xl font-heading font-bold text-foreground">Dashboard</h1>
+        <p className="text-xs md:text-sm text-muted-foreground">Welcome to the admin portal</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
         <StatsCard
-          title="Applications Today"
+          title="Today"
           value={stats.todayCount}
           icon={FileText}
           variant="info"
         />
         <StatsCard
-          title="Pending Review"
+          title="Pending"
           value={stats.pendingCount}
           icon={Clock}
           variant="warning"
         />
         <StatsCard
-          title="Approved This Week"
+          title="Approved"
           value={stats.approvedThisWeek}
           icon={FileText}
           variant="success"
         />
         <StatsCard
-          title="Total Enrolled"
+          title="Enrolled"
           value={stats.totalEnrolled}
           icon={FileText}
           variant="default"
@@ -149,41 +149,41 @@ const Dashboard = () => {
       </div>
 
       {/* Two Column Layout */}
-      <div className="grid lg:grid-cols-3 gap-4">
+      <div className="grid lg:grid-cols-3 gap-3 md:gap-4">
         {/* Recent Activity */}
         <div className="lg:col-span-2 bg-card rounded-lg border border-border shadow-soft">
-          <div className="p-4 border-b border-border">
-            <h2 className="text-sm font-semibold text-foreground">Recent Applications</h2>
+          <div className="p-3 md:p-4 border-b border-border">
+            <h2 className="text-xs md:text-sm font-semibold text-foreground">Recent Applications</h2>
           </div>
           <div className="divide-y divide-border">
             {recentApplications.length === 0 ? (
-              <div className="p-4 text-center text-sm text-muted-foreground">
+              <div className="p-4 text-center text-xs md:text-sm text-muted-foreground">
                 No applications yet
               </div>
             ) : (
-              recentApplications.map((app) => (
-                <div key={app.id} className="p-3 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className={`h-2 w-2 rounded-full ${
+              recentApplications.slice(0, 5).map((app) => (
+                <div key={app.id} className="p-2 md:p-3 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-2 md:gap-3 min-w-0">
+                    <div className={`h-2 w-2 rounded-full flex-shrink-0 ${
                       app.status === "pending" ? "bg-blue-500" :
                       app.status === "under_review" ? "bg-yellow-500" :
                       app.status === "approved" ? "bg-green-500" :
                       "bg-red-500"
                     }`} />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
+                    <div className="min-w-0">
+                      <p className="text-xs md:text-sm font-medium text-foreground truncate">
                         {app.student_first_name} {app.student_surname}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        {app.program_level} • {format(new Date(app.created_at), "MMM d, h:mm a")}
+                      <p className="text-[10px] md:text-xs text-muted-foreground truncate">
+                        {app.program_level} • {format(new Date(app.created_at), "MMM d")}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
                     <StatusBadge status={app.status} size="sm" />
-                    <Button variant="ghost" size="sm" asChild>
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0" asChild>
                       <Link to={`/admin/applications/${app.id}`}>
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-3 w-3 md:h-4 md:w-4" />
                       </Link>
                     </Button>
                   </div>
@@ -192,9 +192,9 @@ const Dashboard = () => {
             )}
           </div>
           {recentApplications.length > 0 && (
-            <div className="p-3 border-t border-border">
-              <Button variant="outline" size="sm" className="w-full text-sm" asChild>
-                <Link to="/admin/applications">View All Applications</Link>
+            <div className="p-2 md:p-3 border-t border-border">
+              <Button variant="outline" size="sm" className="w-full text-xs md:text-sm h-8" asChild>
+                <Link to="/admin/applications">View All</Link>
               </Button>
             </div>
           )}
@@ -202,20 +202,20 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <div className="bg-card rounded-lg border border-border shadow-soft">
-          <div className="p-4 border-b border-border">
-            <h2 className="text-sm font-semibold text-foreground">Quick Actions</h2>
+          <div className="p-3 md:p-4 border-b border-border">
+            <h2 className="text-xs md:text-sm font-semibold text-foreground">Quick Actions</h2>
           </div>
-          <div className="p-3 space-y-2">
+          <div className="p-2 md:p-3 space-y-1 md:space-y-2">
             {quickActions.map((action) => (
               <Button
                 key={action.label}
                 variant="outline"
                 size="sm"
-                className="w-full justify-start gap-2 text-sm"
+                className="w-full justify-start gap-2 text-xs md:text-sm h-8 md:h-9"
                 asChild
               >
                 <Link to={action.href}>
-                  <action.icon className="h-4 w-4" />
+                  <action.icon className="h-3 w-3 md:h-4 md:w-4" />
                   {action.label}
                 </Link>
               </Button>

@@ -49,6 +49,15 @@ export const programSchema = z.object({
   intended_start_date: z.string().optional(),
 });
 
+// Portal account schema for admission form (without refine to allow merge)
+export const portalAccountBaseSchema = z.object({
+  portal_email: z.string().email("Valid email is required for portal access"),
+  portal_password: z.string().min(8, "Password must be at least 8 characters"),
+  portal_password_confirm: z.string().min(8, "Please confirm your password"),
+  security_question: z.string().min(1, "Please select a security question"),
+  security_answer: z.string().min(2, "Security answer is required"),
+});
+
 export const healthSchema = z.object({
   has_medical_conditions: z.boolean().default(false),
   medical_conditions: z.array(z.string()).default([]),
@@ -82,7 +91,23 @@ export const consentSchema = z.object({
   consent_terms: z.boolean().refine(val => val === true, "Required"),
 });
 
-export const page1Schema = studentInfoSchema.merge(guardian1Schema).merge(guardian2Schema).merge(educationSchema).merge(programSchema);
+// Create base page1 schema without password confirmation validation
+const page1BaseSchema = studentInfoSchema
+  .merge(guardian1Schema)
+  .merge(guardian2Schema)
+  .merge(educationSchema)
+  .merge(programSchema)
+  .merge(portalAccountBaseSchema);
+
+// Add password confirmation validation with refine
+export const page1Schema = page1BaseSchema.refine(
+  (data) => data.portal_password === data.portal_password_confirm,
+  {
+    message: "Passwords do not match",
+    path: ["portal_password_confirm"],
+  }
+);
+
 export const page2Schema = healthSchema.merge(specialNeedsSchema).merge(financialTransportSchema).merge(consentSchema);
 
 export type Page1Data = z.infer<typeof page1Schema>;
@@ -141,6 +166,15 @@ export const specialNeedsOptions = [
   "Visual or Hearing Impairments",
   "Behavioral Challenges",
   "Other",
+];
+
+export const securityQuestions = [
+  "What is your mother's maiden name?",
+  "What city were you born in?",
+  "What was the name of your first pet?",
+  "What is your favorite teacher's name?",
+  "What is your favorite childhood memory location?",
+  "What was the make of your first car?",
 ];
 
 export const generateReferenceNumber = () => {
