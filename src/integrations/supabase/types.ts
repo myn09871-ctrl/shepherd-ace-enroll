@@ -205,12 +205,16 @@ export type Database = {
           medical_conditions: string[] | null
           medical_conditions_details: string | null
           pickup_location: string | null
+          portal_email: string | null
+          portal_password_hash: string | null
           previous_school_location: string | null
           previous_school_name: string | null
           program_level: string
           reason_for_change: string | null
           reference_number: string
           residence_proof_url: string | null
+          security_answer: string | null
+          security_question: string | null
           special_needs_details: string | null
           special_needs_types: string[] | null
           status: string
@@ -274,12 +278,16 @@ export type Database = {
           medical_conditions?: string[] | null
           medical_conditions_details?: string | null
           pickup_location?: string | null
+          portal_email?: string | null
+          portal_password_hash?: string | null
           previous_school_location?: string | null
           previous_school_name?: string | null
           program_level: string
           reason_for_change?: string | null
           reference_number: string
           residence_proof_url?: string | null
+          security_answer?: string | null
+          security_question?: string | null
           special_needs_details?: string | null
           special_needs_types?: string[] | null
           status?: string
@@ -343,12 +351,16 @@ export type Database = {
           medical_conditions?: string[] | null
           medical_conditions_details?: string | null
           pickup_location?: string | null
+          portal_email?: string | null
+          portal_password_hash?: string | null
           previous_school_location?: string | null
           previous_school_name?: string | null
           program_level?: string
           reason_for_change?: string | null
           reference_number?: string
           residence_proof_url?: string | null
+          security_answer?: string | null
+          security_question?: string | null
           special_needs_details?: string | null
           special_needs_types?: string[] | null
           status?: string
@@ -547,6 +559,12 @@ export type Database = {
           id: string
           is_active: boolean
           last_login_at: string | null
+          notification_announcements: boolean | null
+          notification_attendance: boolean | null
+          notification_email: boolean | null
+          notification_fees: boolean | null
+          notification_grades: boolean | null
+          notification_sms: boolean | null
           parent_name: string
           phone_primary: string | null
           phone_secondary: string | null
@@ -563,6 +581,12 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_login_at?: string | null
+          notification_announcements?: boolean | null
+          notification_attendance?: boolean | null
+          notification_email?: boolean | null
+          notification_fees?: boolean | null
+          notification_grades?: boolean | null
+          notification_sms?: boolean | null
           parent_name: string
           phone_primary?: string | null
           phone_secondary?: string | null
@@ -579,6 +603,12 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_login_at?: string | null
+          notification_announcements?: boolean | null
+          notification_attendance?: boolean | null
+          notification_email?: boolean | null
+          notification_fees?: boolean | null
+          notification_grades?: boolean | null
+          notification_sms?: boolean | null
           parent_name?: string
           phone_primary?: string | null
           phone_secondary?: string | null

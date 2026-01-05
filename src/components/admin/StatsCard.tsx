@@ -28,23 +28,23 @@ const StatsCard = ({ title, value, icon: Icon, trend, variant = "default" }: Sta
   };
 
   return (
-    <div className={cn("rounded-lg border border-border p-4 shadow-soft", variantStyles[variant])}>
+    <div className={cn("rounded-lg border border-border p-2.5 md:p-4 shadow-soft", variantStyles[variant])}>
       <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium text-muted-foreground">{title}</p>
-          <p className="text-xl font-bold text-foreground mt-1">{value}</p>
+        <div className="min-w-0">
+          <p className="text-[10px] md:text-xs font-medium text-muted-foreground truncate">{title}</p>
+          <p className="text-lg md:text-xl font-bold text-foreground mt-0.5 md:mt-1">{value}</p>
           {trend && (
             <p className={cn(
-              "text-xs mt-1 flex items-center gap-1",
+              "text-[10px] md:text-xs mt-0.5 md:mt-1 flex items-center gap-1",
               trend.isPositive ? "text-green-600" : "text-red-600"
             )}>
               <span>{trend.isPositive ? "↑" : "↓"}</span>
-              <span>{Math.abs(trend.value)}% from yesterday</span>
+              <span>{Math.abs(trend.value)}%</span>
             </p>
           )}
         </div>
-        <div className={cn("p-2 rounded-lg", iconStyles[variant])}>
-          <Icon className="h-4 w-4" />
+        <div className={cn("p-1.5 md:p-2 rounded-lg flex-shrink-0", iconStyles[variant])}>
+          <Icon className="h-3.5 w-3.5 md:h-4 md:w-4" />
         </div>
       </div>
     </div>

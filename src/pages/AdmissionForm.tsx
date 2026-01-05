@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
@@ -66,6 +66,12 @@ const AdmissionForm = () => {
       program_level: "",
       career_training_interests: [],
       intended_start_date: "",
+      // Portal account fields
+      portal_email: "",
+      portal_password: "",
+      portal_password_confirm: "",
+      security_question: "",
+      security_answer: "",
     },
   });
 
@@ -164,12 +170,10 @@ const AdmissionForm = () => {
           pdf.addPage();
           yPos = 20;
         }
-        // Always show the label (question)
         pdf.setFont("helvetica", "bold");
         pdf.text(`${label}:`, margin, yPos);
         pdf.setFont("helvetica", "normal");
         
-        // Display the exact value entered
         let displayValue = "";
         if (Array.isArray(value)) {
           displayValue = value.length > 0 ? value.join(", ") : "—";
@@ -181,7 +185,6 @@ const AdmissionForm = () => {
           displayValue = "—";
         }
         
-        // Wrap text if too long
         const splitText = pdf.splitTextToSize(displayValue, valueWidth);
         pdf.text(splitText, margin + labelWidth, yPos);
         yPos += lineHeight * Math.max(1, splitText.length);
@@ -220,11 +223,16 @@ const AdmissionForm = () => {
       addField("Email Address", page1Data.guardian2_email);
       addField("Address", page1Data.guardian2_address);
       addField("Is Emergency Contact", page1Data.guardian2_is_emergency_contact);
+
+      // SECTION 4: Portal Account
+      addSection("SECTION 4: PARENT PORTAL ACCOUNT");
+      addField("Portal Email", page1Data.portal_email);
+      addField("Security Question", page1Data.security_question);
       
-      // SECTION 4: Educational Background
+      // SECTION 5: Educational Background
       pdf.addPage();
       yPos = 20;
-      addSection("SECTION 4: EDUCATIONAL BACKGROUND");
+      addSection("SECTION 5: EDUCATIONAL BACKGROUND");
       addField("First Time Enrollment", page1Data.is_first_time_enrollment);
       addField("Previous School Name", page1Data.previous_school_name);
       addField("Previous School Location", page1Data.previous_school_location);
@@ -232,15 +240,15 @@ const AdmissionForm = () => {
       addField("Academic Performance", page1Data.academic_performance);
       addField("Reason for Changing School", page1Data.reason_for_change);
       
-      // SECTION 5: Program Selection
-      addSection("SECTION 5: PROGRAM SELECTION");
+      // SECTION 6: Program Selection
+      addSection("SECTION 6: PROGRAM SELECTION");
       const programLabel = programLevels.find(p => p.value === page1Data.program_level)?.label || page1Data.program_level;
       addField("Educational Level/Class", programLabel);
       addField("Intended Start Date", page1Data.intended_start_date);
       addField("Career Training Interests", page1Data.career_training_interests);
       
-      // SECTION 6: Health Information
-      addSection("SECTION 6: HEALTH INFORMATION");
+      // SECTION 7: Health Information
+      addSection("SECTION 7: HEALTH INFORMATION");
       addField("Has Medical Conditions", page2Data.has_medical_conditions);
       addField("Medical Conditions", page2Data.medical_conditions);
       addField("Medical Conditions Details", page2Data.medical_conditions_details);
@@ -250,23 +258,23 @@ const AdmissionForm = () => {
       addField("Immunizations Up to Date", page2Data.immunization_up_to_date);
       addField("Medical Treatment Authorization", page2Data.medical_authorization);
       
-      // SECTION 7: Special Needs
-      addSection("SECTION 7: SPECIAL EDUCATIONAL NEEDS");
+      // SECTION 8: Special Needs
+      addSection("SECTION 8: SPECIAL EDUCATIONAL NEEDS");
       addField("Has Special Needs", page2Data.has_special_needs);
       addField("Types of Special Needs", page2Data.special_needs_types);
       addField("Special Needs Details", page2Data.special_needs_details);
       
-      // SECTION 8: Financial & Transportation
+      // SECTION 9: Financial & Transportation
       pdf.addPage();
       yPos = 20;
-      addSection("SECTION 8: FINANCIAL & TRANSPORTATION");
+      addSection("SECTION 9: FINANCIAL & TRANSPORTATION");
       addField("Financial Terms Acknowledged", page2Data.financial_acknowledgment);
       addField("Interested in Financial Aid", page2Data.financial_assistance_interest);
       addField("Transportation Method", page2Data.transportation_method);
       addField("Pickup/Drop-off Location", page2Data.pickup_location);
       
-      // SECTION 9: Declarations & Consent
-      addSection("SECTION 9: DECLARATIONS & CONSENT");
+      // SECTION 10: Declarations & Consent
+      addSection("SECTION 10: DECLARATIONS & CONSENT");
       addField("Truthfulness Declaration", page2Data.consent_truthfulness);
       addField("Media/Photo Consent", page2Data.consent_media);
       addField("Records Authorization", page2Data.consent_records);
@@ -341,6 +349,12 @@ const AdmissionForm = () => {
         program_level: page1Data.program_level,
         career_training_interests: page1Data.career_training_interests,
         intended_start_date: page1Data.intended_start_date || null,
+        // Portal account fields
+        portal_email: page1Data.portal_email,
+        portal_password_hash: page1Data.portal_password, // Will be hashed by edge function on approval
+        security_question: page1Data.security_question,
+        security_answer: page1Data.security_answer,
+        // Page 2 data
         has_medical_conditions: page2Data.has_medical_conditions,
         medical_conditions: page2Data.medical_conditions,
         medical_conditions_details: page2Data.medical_conditions_details || null,
