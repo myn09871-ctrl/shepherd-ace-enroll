@@ -3,18 +3,12 @@ import {
   LayoutDashboard,
   FileText,
   Users,
-  UserCog,
-  BookOpen,
-  CalendarCheck,
+  GraduationCap,
   Megaphone,
-  DollarSign,
-  BookMarked,
   Globe,
   Mail,
-  BarChart3,
   Settings,
   LogOut,
-  GraduationCap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,15 +18,10 @@ const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/applications", label: "Applications", icon: FileText },
   { href: "/admin/students", label: "Students", icon: Users },
-  { href: "/admin/portals", label: "Parent Portals", icon: UserCog },
-  { href: "/admin/grades", label: "Grades", icon: BookOpen },
-  { href: "/admin/attendance", label: "Attendance", icon: CalendarCheck },
+  { href: "/admin/results", label: "Results", icon: GraduationCap },
   { href: "/admin/announcements", label: "Announcements", icon: Megaphone },
-  { href: "/admin/fees", label: "Fees", icon: DollarSign },
-  { href: "/admin/subjects", label: "Subjects", icon: BookMarked },
-  { href: "/admin/content", label: "Website", icon: Globe },
   { href: "/admin/messages", label: "Messages", icon: Mail },
-  { href: "/admin/reports", label: "Reports", icon: BarChart3 },
+  { href: "/admin/content", label: "Website", icon: Globe },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
@@ -62,12 +51,12 @@ const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 h-full w-64 bg-card border-r border-border z-50 transition-transform duration-300 lg:translate-x-0",
+          "fixed left-0 top-0 h-full w-64 bg-card border-r border-border z-50 transition-transform duration-300 lg:translate-x-0 flex flex-col",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* Logo */}
-        <div className="p-6 border-b border-border">
+        <div className="p-4 border-b border-border flex-shrink-0">
           <Link to="/admin" className="flex items-center gap-3" onClick={onClose}>
             <img
               src={schoolCrest}
@@ -83,44 +72,39 @@ const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
           </Link>
         </div>
 
-        {/* Navigation */}
-        <nav className="p-4 space-y-2">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.href || 
-              (item.href !== "/admin" && location.pathname.startsWith(item.href));
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                onClick={onClose}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors",
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
+        {/* Navigation - scrollable */}
+        <nav className="flex-1 overflow-y-auto p-3">
+          <div className="space-y-1">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.href || 
+                (item.href !== "/admin" && location.pathname.startsWith(item.href));
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  onClick={onClose}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  <item.icon className="h-4 w-4" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
         </nav>
 
-        {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
-          <Link
-            to="/"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors mb-2"
-          >
-            <GraduationCap className="h-5 w-5" />
-            <span>View Website</span>
-          </Link>
+        {/* Footer - fixed at bottom */}
+        <div className="p-3 border-t border-border flex-shrink-0">
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-destructive hover:bg-destructive/10 transition-colors w-full"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors w-full"
           >
-            <LogOut className="h-5 w-5" />
+            <LogOut className="h-4 w-4" />
             <span>Logout</span>
           </button>
         </div>

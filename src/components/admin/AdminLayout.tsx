@@ -32,6 +32,9 @@ const AdminLayout = () => {
     );
   }
 
+  // Extract admin name from email or use "Admin"
+  const adminName = user.email?.split("@")[0]?.replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase()) || "Admin";
+
   return (
     <div className="min-h-screen bg-background">
       <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
@@ -40,7 +43,7 @@ const AdminLayout = () => {
       <div className="lg:ml-64">
         {/* Top Bar */}
         <header className="sticky top-0 z-30 bg-card border-b border-border">
-          <div className="flex items-center justify-between px-4 h-16">
+          <div className="flex items-center justify-between px-4 h-14">
             <Button
               variant="ghost"
               size="icon"
@@ -52,20 +55,20 @@ const AdminLayout = () => {
 
             <div className="flex-1" />
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-1 right-1 h-2 w-2 bg-destructive rounded-full" />
               </Button>
               <div className="text-sm">
-                <p className="font-medium text-foreground">{user.email}</p>
+                <p className="font-medium text-foreground">{adminName}</p>
               </div>
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="p-6">
+        <main className="p-4 md:p-6">
           <Outlet />
         </main>
       </div>

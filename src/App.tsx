@@ -10,33 +10,26 @@ import Gallery from "./pages/Gallery";
 import AdmissionForm from "./pages/AdmissionForm";
 import NotFound from "./pages/NotFound";
 
-// Admin imports
+// Admin imports - cleaned up
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminLayout from "./components/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Applications from "./pages/admin/Applications";
 import ApplicationDetail from "./pages/admin/ApplicationDetail";
 import Students from "./pages/admin/Students";
-import StudentPortals from "./pages/admin/StudentPortals";
-import GradesManagement from "./pages/admin/GradesManagement";
-import AttendanceManagement from "./pages/admin/AttendanceManagement";
+import Results from "./pages/admin/Results";
 import AnnouncementsManagement from "./pages/admin/AnnouncementsManagement";
-import FeesManagement from "./pages/admin/FeesManagement";
-import SubjectsManagement from "./pages/admin/SubjectsManagement";
 import Content from "./pages/admin/Content";
 import Messages from "./pages/admin/Messages";
-import Reports from "./pages/admin/Reports";
 import Settings from "./pages/admin/Settings";
 
-// Parent Portal imports
+// Parent Portal imports - cleaned up
 import PortalLogin from "./pages/portal/PortalLogin";
 import ParentLayout from "./components/parent/ParentLayout";
 import PortalDashboard from "./pages/portal/PortalDashboard";
 import PortalAcademics from "./pages/portal/PortalAcademics";
-import PortalAttendance from "./pages/portal/PortalAttendance";
 import PortalAnnouncements from "./pages/portal/PortalAnnouncements";
 import PortalDocuments from "./pages/portal/PortalDocuments";
-import PortalFees from "./pages/portal/PortalFees";
 import PortalTimetable from "./pages/portal/PortalTimetable";
 import PortalMessages from "./pages/portal/PortalMessages";
 import PortalProfile from "./pages/portal/PortalProfile";
@@ -56,34 +49,27 @@ const App = () => (
               <Route path="/gallery" element={<Gallery />} />
               <Route path="/admission" element={<AdmissionForm />} />
               
-              {/* Admin Routes */}
+              {/* Admin Routes - Cleaned */}
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="applications" element={<Applications />} />
                 <Route path="applications/:id" element={<ApplicationDetail />} />
                 <Route path="students" element={<Students />} />
-                <Route path="portals" element={<StudentPortals />} />
-                <Route path="grades" element={<GradesManagement />} />
-                <Route path="attendance" element={<AttendanceManagement />} />
+                <Route path="results" element={<Results />} />
                 <Route path="announcements" element={<AnnouncementsManagement />} />
-                <Route path="fees" element={<FeesManagement />} />
-                <Route path="subjects" element={<SubjectsManagement />} />
                 <Route path="content" element={<Content />} />
                 <Route path="messages" element={<Messages />} />
-                <Route path="reports" element={<Reports />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
 
-              {/* Parent Portal Routes */}
+              {/* Parent Portal Routes - Cleaned */}
               <Route path="/portal/login" element={<PortalLogin />} />
               <Route path="/portal" element={<ParentLayout />}>
                 <Route index element={<PortalDashboard />} />
                 <Route path="academics" element={<PortalAcademics />} />
-                <Route path="attendance" element={<PortalAttendance />} />
                 <Route path="announcements" element={<PortalAnnouncements />} />
                 <Route path="documents" element={<PortalDocuments />} />
-                <Route path="fees" element={<PortalFees />} />
                 <Route path="timetable" element={<PortalTimetable />} />
                 <Route path="messages" element={<PortalMessages />} />
                 <Route path="profile" element={<PortalProfile />} />

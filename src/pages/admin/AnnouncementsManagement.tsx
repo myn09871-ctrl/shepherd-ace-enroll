@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Edit, Trash2, Megaphone, Eye, EyeOff } from "lucide-react";
+import { Plus, Edit, Trash2, Megaphone, Eye, EyeOff, Globe, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,6 +32,7 @@ interface Announcement {
   category: string;
   target_audience: string;
   target_class: string | null;
+  visibility: string;
   is_published: boolean;
   requires_acknowledgment: boolean;
   published_at: string | null;
@@ -51,6 +52,7 @@ const AnnouncementsManagement = () => {
     title: "",
     content: "",
     category: "general",
+    visibility: "internal",
     target_audience: "all",
     target_class: "",
     requires_acknowledgment: false,
@@ -88,6 +90,7 @@ const AnnouncementsManagement = () => {
       title: "",
       content: "",
       category: "general",
+      visibility: "internal",
       target_audience: "all",
       target_class: "",
       requires_acknowledgment: false,
@@ -102,6 +105,7 @@ const AnnouncementsManagement = () => {
       title: announcement.title,
       content: announcement.content,
       category: announcement.category,
+      visibility: announcement.visibility || "internal",
       target_audience: announcement.target_audience,
       target_class: announcement.target_class || "",
       requires_acknowledgment: announcement.requires_acknowledgment,
@@ -126,6 +130,7 @@ const AnnouncementsManagement = () => {
         title: form.title,
         content: form.content,
         category: form.category,
+        visibility: form.visibility,
         target_audience: form.target_audience,
         target_class: form.target_audience === "specific_class" ? form.target_class : null,
         requires_acknowledgment: form.requires_acknowledgment,
@@ -241,12 +246,12 @@ const AnnouncementsManagement = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-heading font-bold text-foreground">Announcements</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage parent portal announcements</p>
+          <h1 className="text-xl md:text-2xl font-heading font-bold text-foreground">Announcements</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage school announcements</p>
         </div>
-        <Button onClick={openCreateDialog}>
+        <Button onClick={openCreateDialog} size="sm">
           <Plus className="h-4 w-4 mr-2" />
-          New Announcement
+          New
         </Button>
       </div>
 
@@ -264,15 +269,30 @@ const AnnouncementsManagement = () => {
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {announcements.map((announcement) => (
             <div
               key={announcement.id}
-              className="bg-card rounded-xl border border-border p-4 hover:shadow-card transition-shadow"
+              className="bg-card rounded-lg border border-border p-4 hover:shadow-card transition-shadow"
             >
               <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    {/* Visibility badge */}
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                        announcement.visibility === "public"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-blue-100 text-blue-800"
+                      }`}
+                    >
+                      {announcement.visibility === "public" ? (
+                        <Globe className="h-3 w-3" />
+                      ) : (
+                        <Lock className="h-3 w-3" />
+                      )}
+                      {announcement.visibility === "public" ? "Public" : "Internal"}
+                    </span>
                     <span
                       className={`px-2 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(
                         announcement.category
@@ -289,23 +309,16 @@ const AnnouncementsManagement = () => {
                     >
                       {announcement.is_published ? "Published" : "Draft"}
                     </span>
-                    {announcement.target_audience !== "all" && (
-                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {announcement.target_audience === "specific_class"
-                          ? announcement.target_class
-                          : announcement.target_audience}
-                      </span>
-                    )}
                   </div>
-                  <h3 className="font-semibold text-foreground">{announcement.title}</h3>
+                  <h3 className="font-semibold text-foreground truncate">{announcement.title}</h3>
                   <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                     {announcement.content}
                   </p>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Created: {format(new Date(announcement.created_at), "MMM d, yyyy 'at' h:mm a")}
+                    {format(new Date(announcement.created_at), "MMM d, yyyy")}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 flex-shrink-0">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -338,17 +351,53 @@ const AnnouncementsManagement = () => {
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingAnnouncement ? "Edit Announcement" : "New Announcement"}
             </DialogTitle>
             <DialogDescription>
-              Create an announcement for parents in the portal
+              {form.visibility === "public" 
+                ? "Public announcements appear on the website and parent portal"
+                : "Internal announcements are only visible in the parent portal"
+              }
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
+            {/* Visibility - IMPORTANT */}
+            <div className="space-y-2">
+              <Label>Visibility *</Label>
+              <Select
+                value={form.visibility}
+                onValueChange={(value) => setForm({ ...form, visibility: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="internal">
+                    <div className="flex items-center gap-2">
+                      <Lock className="h-4 w-4" />
+                      Internal (Portal Only)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="public">
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4" />
+                      Public (Website + Portal)
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {form.visibility === "public" 
+                  ? "Will be visible on the public website and parent portal"
+                  : "Only visible to logged-in parents in the portal"
+                }
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label>Title *</Label>
               <Input
@@ -435,7 +484,7 @@ const AnnouncementsManagement = () => {
                 }
               />
               <Label htmlFor="requires_ack" className="text-sm">
-                Require parents to acknowledge this announcement
+                Require parents to acknowledge
               </Label>
             </div>
 

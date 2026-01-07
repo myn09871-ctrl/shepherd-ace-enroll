@@ -703,6 +703,7 @@ export type Database = {
           target_class: string | null
           target_student_id: string | null
           title: string
+          visibility: string
         }
         Insert: {
           attachment_url?: string | null
@@ -718,6 +719,7 @@ export type Database = {
           target_class?: string | null
           target_student_id?: string | null
           title: string
+          visibility?: string
         }
         Update: {
           attachment_url?: string | null
@@ -733,6 +735,7 @@ export type Database = {
           target_class?: string | null
           target_student_id?: string | null
           title?: string
+          visibility?: string
         }
         Relationships: [
           {
