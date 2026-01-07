@@ -2,10 +2,8 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
   GraduationCap, 
-  Calendar, 
   Megaphone, 
   Folder, 
-  CreditCard, 
   Clock, 
   Mail, 
   Settings, 
@@ -26,13 +24,12 @@ interface Student {
   photo_url: string | null;
 }
 
+// Removed Attendance and Fees - only core features
 const navItems = [
   { href: "/portal", label: "Dashboard", icon: LayoutDashboard },
   { href: "/portal/academics", label: "Academic Performance", icon: GraduationCap },
-  { href: "/portal/attendance", label: "Attendance Record", icon: Calendar },
   { href: "/portal/announcements", label: "Announcements", icon: Megaphone },
   { href: "/portal/documents", label: "Documents", icon: Folder },
-  { href: "/portal/fees", label: "Fees & Payments", icon: CreditCard },
   { href: "/portal/timetable", label: "Timetable", icon: Clock },
   { href: "/portal/messages", label: "Messages", icon: Mail },
   { href: "/portal/profile", label: "Profile Settings", icon: Settings },
@@ -63,95 +60,93 @@ const ParentSidebar = ({ isOpen, onClose, student }: ParentSidebarProps) => {
 
       <aside className={`
         fixed top-0 left-0 z-50 h-full w-64 bg-card border-r border-border
-        transform transition-transform duration-200 ease-in-out
+        transform transition-transform duration-200 ease-in-out flex flex-col
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
       `}>
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-border">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-border flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <img src={schoolCrest} alt="School Crest" className="h-10 w-10 rounded-full object-cover" />
+            <div>
+              <h2 className="font-semibold text-sm text-foreground">Parent Portal</h2>
+              <p className="text-xs text-muted-foreground">Good Shepherd Int'l</p>
+            </div>
+          </div>
+          <Button variant="ghost" size="icon" className="lg:hidden" onClick={onClose}>
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+
+        {/* Student Card */}
+        {student && (
+          <div className="p-4 border-b border-border flex-shrink-0">
             <div className="flex items-center gap-3">
-              <img src={schoolCrest} alt="School Crest" className="h-10 w-10 rounded-full object-cover" />
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                {student.photo_url ? (
+                  <img src={student.photo_url} alt="" className="h-12 w-12 rounded-full object-cover" />
+                ) : (
+                  <span className="text-lg font-semibold text-primary">
+                    {student.first_name[0]}{student.surname[0]}
+                  </span>
+                )}
+              </div>
               <div>
-                <h2 className="font-semibold text-sm text-foreground">Parent Portal</h2>
-                <p className="text-xs text-muted-foreground">Good Shepherd Int'l</p>
+                <p className="font-medium text-sm text-foreground">
+                  {student.first_name} {student.surname}
+                </p>
+                <p className="text-xs text-muted-foreground">{student.current_class}</p>
+                <p className="text-xs text-primary">{student.student_id}</p>
               </div>
             </div>
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={onClose}>
-              <X className="h-5 w-5" />
-            </Button>
           </div>
+        )}
 
-          {/* Student Card */}
-          {student && (
-            <div className="p-4 border-b border-border">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  {student.photo_url ? (
-                    <img src={student.photo_url} alt="" className="h-12 w-12 rounded-full object-cover" />
-                  ) : (
-                    <span className="text-lg font-semibold text-primary">
-                      {student.first_name[0]}{student.surname[0]}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <p className="font-medium text-sm text-foreground">
-                    {student.first_name} {student.surname}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{student.current_class}</p>
-                  <p className="text-xs text-primary">{student.student_id}</p>
-                </div>
-              </div>
-            </div>
-          )}
+        {/* Navigation - scrollable */}
+        <nav className="flex-1 overflow-y-auto p-3">
+          <ul className="space-y-1">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.href || 
+                (item.href !== "/portal" && location.pathname.startsWith(item.href));
+              return (
+                <li key={item.href}>
+                  <Link
+                    to={item.href}
+                    onClick={onClose}
+                    className={`
+                      flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors
+                      ${isActive 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                      }
+                    `}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
 
-          {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-4">
-            <ul className="space-y-1">
-              {navItems.map((item) => {
-                const isActive = location.pathname === item.href || 
-                  (item.href !== "/portal" && location.pathname.startsWith(item.href));
-                return (
-                  <li key={item.href}>
-                    <Link
-                      to={item.href}
-                      onClick={onClose}
-                      className={`
-                        flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors
-                        ${isActive 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                        }
-                      `}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {item.label}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-
-          {/* Footer */}
-          <div className="p-4 border-t border-border space-y-2">
-            <Link to="/" className="w-full">
-              <Button variant="outline" className="w-full justify-start" size="sm">
-                <Home className="h-4 w-4 mr-2" />
-                Visit Website
-              </Button>
-            </Link>
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10" 
-              size="sm"
-              onClick={handleSignOut}
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
+        {/* Footer - fixed */}
+        <div className="p-3 border-t border-border space-y-1 flex-shrink-0">
+          <Link to="/" className="w-full">
+            <Button variant="outline" className="w-full justify-start" size="sm">
+              <Home className="h-4 w-4 mr-2" />
+              Visit Website
             </Button>
-          </div>
+          </Link>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10" 
+            size="sm"
+            onClick={handleSignOut}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
         </div>
       </aside>
     </>

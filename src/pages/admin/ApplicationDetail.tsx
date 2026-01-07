@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Check, X, MessageSquare, Printer, Save } from "lucide-react";
+import { ArrowLeft, Check, X, MessageSquare, Printer, Save, UserPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import StatusBadge from "@/components/admin/StatusBadge";
@@ -95,6 +95,7 @@ const ApplicationDetail = () => {
   const [newNote, setNewNote] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [creatingPortal, setCreatingPortal] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -161,6 +162,50 @@ const ApplicationDetail = () => {
         description: "Failed to update status",
         variant: "destructive",
       });
+    }
+  };
+
+  // Approve and create student portal automatically
+  const approveAndCreatePortal = async () => {
+    if (!application) return;
+    
+    setCreatingPortal(true);
+    try {
+      // Call the edge function to create student and parent portal
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-student-portal`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ applicationId: application.id }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to create portal");
+      }
+
+      toast({
+        title: "Application Approved & Portal Created!",
+        description: `Student ID: ${result.studentId}. Portal login sent to ${result.portalEmail}`,
+      });
+
+      // Refresh application data
+      setApplication((prev) => prev ? { ...prev, status: "enrolled" } : null);
+    } catch (error: any) {
+      console.error("Error creating portal:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create portal. Try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setCreatingPortal(false);
     }
   };
 
@@ -576,19 +621,34 @@ const ApplicationDetail = () => {
           <div className="bg-card rounded-xl border border-border p-6">
             <h2 className="font-semibold text-lg mb-4">Actions</h2>
             <div className="space-y-3">
-              <Button
-                variant="default"
-                className="w-full justify-start gap-2 bg-green-600 hover:bg-green-700"
-                onClick={() => updateStatus("approved")}
-                disabled={application.status === "approved"}
-              >
-                <Check className="h-4 w-4" />
-                Approve Application
-              </Button>
+              {/* Main action - Approve & Create Portal */}
+              {application.status !== "enrolled" && (
+                <Button
+                  variant="default"
+                  className="w-full justify-start gap-2 bg-primary hover:bg-primary/90"
+                  onClick={approveAndCreatePortal}
+                  disabled={creatingPortal || application.status === "enrolled"}
+                >
+                  {creatingPortal ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <UserPlus className="h-4 w-4" />
+                  )}
+                  {creatingPortal ? "Creating Portal..." : "Approve & Create Portal"}
+                </Button>
+              )}
+              
+              {application.status === "enrolled" && (
+                <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">
+                  ✓ Student enrolled and portal created
+                </div>
+              )}
+              
               <Button
                 variant="outline"
                 className="w-full justify-start gap-2 text-yellow-600 border-yellow-600 hover:bg-yellow-50"
                 onClick={() => updateStatus("under_review")}
+                disabled={application.status === "enrolled"}
               >
                 <MessageSquare className="h-4 w-4" />
                 Request More Info
@@ -597,7 +657,7 @@ const ApplicationDetail = () => {
                 variant="outline"
                 className="w-full justify-start gap-2 text-red-600 border-red-600 hover:bg-red-50"
                 onClick={() => updateStatus("rejected")}
-                disabled={application.status === "rejected"}
+                disabled={application.status === "rejected" || application.status === "enrolled"}
               >
                 <X className="h-4 w-4" />
                 Reject Application
