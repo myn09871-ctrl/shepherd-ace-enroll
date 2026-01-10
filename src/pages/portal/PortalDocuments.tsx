@@ -18,7 +18,7 @@ interface Document {
 }
 
 const PortalDocuments = () => {
-  const { student } = useParentAuth();
+  const { currentStudent: student } = useParentAuth();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
 

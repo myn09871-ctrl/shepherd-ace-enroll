@@ -190,10 +190,28 @@ const ApplicationDetail = () => {
         throw new Error(result.error || "Failed to create portal");
       }
 
+      // Show detailed success message based on backend response
+      const emailStatus = result.emailSent 
+        ? `Welcome email sent to ${result.portalEmail}` 
+        : `Portal created but email failed: ${result.emailError || "Unknown error"}`;
+      
+      const accountType = result.isNewParent 
+        ? "New parent account created" 
+        : "Student linked to existing parent account";
+
       toast({
-        title: "Application Approved & Portal Created!",
-        description: `Student ID: ${result.studentId}. Portal login sent to ${result.portalEmail}`,
+        title: "✅ Enrollment Complete!",
+        description: `${result.studentName} - ${result.studentId}. ${accountType}. ${emailStatus}`,
       });
+
+      // Show additional warning if email failed
+      if (!result.emailSent) {
+        toast({
+          title: "⚠️ Email Not Sent",
+          description: `Please manually share login credentials with ${result.portalEmail}. Password: ${result.tempPassword || "(existing account)"}`,
+          variant: "destructive",
+        });
+      }
 
       // Refresh application data
       setApplication((prev) => prev ? { ...prev, status: "enrolled" } : null);
