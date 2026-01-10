@@ -5,7 +5,7 @@ import { useParentAuth } from "@/hooks/useParentAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 const PortalTimetable = () => {
-  const { student } = useParentAuth();
+  const { currentStudent: student } = useParentAuth();
   const [timetable, setTimetable] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 

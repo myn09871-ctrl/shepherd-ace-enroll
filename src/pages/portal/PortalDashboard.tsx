@@ -33,7 +33,7 @@ interface RecentActivity {
 }
 
 const PortalDashboard = () => {
-  const { student, parentAccount } = useParentAuth();
+  const { currentStudent: student, parentAccount } = useParentAuth();
   const [stats, setStats] = useState<DashboardStats>({
     termAverage: null,
     attendancePercentage: 0,

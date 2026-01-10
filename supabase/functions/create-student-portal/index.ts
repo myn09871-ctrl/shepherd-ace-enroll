@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,7 +20,12 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    
+    const gmailPassword = Deno.env.get("GMAIL_APP_PASSWORD");
+
+    if (!gmailPassword) {
+      throw new Error("Email configuration missing. Please configure GMAIL_APP_PASSWORD.");
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { applicationId }: CreatePortalRequest = await req.json();
@@ -37,6 +43,10 @@ serve(async (req) => {
 
     if (appError || !application) {
       throw new Error("Application not found");
+    }
+
+    if (application.status === "enrolled") {
+      throw new Error("This application has already been processed");
     }
 
     // 2. Generate unique student ID (GSIS-YEAR-XXX)
@@ -76,7 +86,7 @@ serve(async (req) => {
 
     // 4. Check if parent account exists by email
     const portalEmail = application.portal_email || application.guardian1_email;
-    
+
     const { data: existingParent } = await supabase
       .from("parent_accounts")
       .select("user_id")
@@ -85,11 +95,12 @@ serve(async (req) => {
 
     let userId = existingParent?.user_id;
     let tempPassword = "";
+    let isNewParent = !existingParent;
 
     // 5. If no existing parent, create auth user
     if (!userId) {
-      // Generate temp password if not provided in application
-      tempPassword = application.portal_password_hash || 
+      // Generate temp password
+      tempPassword = application.portal_password_hash ||
         Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
 
       const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
@@ -137,16 +148,113 @@ serve(async (req) => {
       console.error("Application update error:", updateError);
     }
 
+    // 8. Send welcome email via Gmail SMTP
+    let emailSent = false;
+    let emailError = "";
+
+    try {
+      const client = new SMTPClient({
+        connection: {
+          hostname: "smtp.gmail.com",
+          port: 587,
+          tls: true,
+          auth: {
+            username: "info.goodshepherdschoolgh@gmail.com",
+            password: gmailPassword,
+          },
+        },
+      });
+
+      const studentName = `${application.student_first_name} ${application.student_surname}`;
+      const portalUrl = "https://goodshepherdgh.lovable.app/portal/login";
+
+      const emailBody = isNewParent
+        ? `Dear ${application.guardian1_full_name},
+
+Welcome to Good Shepherd International School!
+
+We are pleased to inform you that ${studentName}'s enrollment has been approved.
+
+STUDENT DETAILS:
+Student ID: ${studentId}
+Name: ${studentName}
+Class: ${application.program_level}
+Academic Year: ${year}/${year + 1}
+
+PARENT PORTAL LOGIN:
+Email: ${portalEmail}
+Temporary Password: ${tempPassword}
+Portal URL: ${portalUrl}
+
+Please log in to the Parent Portal to view your child's academic progress, announcements, and more.
+
+For security, we recommend changing your password after your first login.
+
+If you have any questions, please contact us at info.goodshepherdschoolgh@gmail.com
+
+Best regards,
+Good Shepherd International School
+Admissions Office`
+        : `Dear ${application.guardian1_full_name},
+
+Welcome to Good Shepherd International School!
+
+We are pleased to inform you that ${studentName} has been enrolled successfully.
+
+STUDENT DETAILS:
+Student ID: ${studentId}
+Name: ${studentName}
+Class: ${application.program_level}
+Academic Year: ${year}/${year + 1}
+
+Since you already have a Parent Portal account, ${studentName} has been linked to your existing account. You can now view all your children's information from the same portal login.
+
+Portal URL: ${portalUrl}
+
+If you have any questions, please contact us at info.goodshepherdschoolgh@gmail.com
+
+Best regards,
+Good Shepherd International School
+Admissions Office`;
+
+      await client.send({
+        from: "Good Shepherd International School <info.goodshepherdschoolgh@gmail.com>",
+        to: portalEmail,
+        subject: `Welcome to Good Shepherd International School - ${studentName} Enrollment Confirmed`,
+        content: emailBody,
+      });
+
+      await client.close();
+      emailSent = true;
+
+      // Log the sent email
+      await supabase.from("sent_emails").insert({
+        recipient_email: portalEmail,
+        recipient_type: "parent",
+        subject: `Welcome - ${studentName} Enrollment Confirmed`,
+        body: emailBody,
+        application_id: applicationId,
+      });
+
+    } catch (mailErr) {
+      console.error("Email send error:", mailErr);
+      emailError = mailErr instanceof Error ? mailErr.message : "Failed to send email";
+    }
+
     // Return success with portal info
     return new Response(
       JSON.stringify({
         success: true,
         studentId,
+        studentName: `${application.student_first_name} ${application.student_surname}`,
         portalEmail,
-        tempPassword: tempPassword || "(existing account)",
-        message: existingParent 
-          ? "Student linked to existing parent account" 
-          : "New parent portal created",
+        tempPassword: isNewParent ? tempPassword : null,
+        isNewParent,
+        emailSent,
+        emailError: emailError || null,
+        message: isNewParent
+          ? "New parent portal created successfully"
+          : "Student linked to existing parent account",
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

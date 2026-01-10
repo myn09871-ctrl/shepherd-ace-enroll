@@ -30,8 +30,11 @@ interface ParentAuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  parentAccount: ParentAccount | null;
-  student: Student | null;
+  parentAccounts: ParentAccount[];
+  students: Student[];
+  currentStudent: Student | null;
+  parentAccount: ParentAccount | null; // Current parent account for the selected student
+  setCurrentStudent: (student: Student) => void;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
@@ -42,38 +45,62 @@ export const ParentAuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [parentAccount, setParentAccount] = useState<ParentAccount | null>(null);
-  const [student, setStudent] = useState<Student | null>(null);
+  const [parentAccounts, setParentAccounts] = useState<ParentAccount[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [currentStudent, setCurrentStudentState] = useState<Student | null>(null);
+
+  // Get parent account for the current student
+  const parentAccount = parentAccounts.find(
+    (pa) => pa.student_id === currentStudent?.id
+  ) || parentAccounts[0] || null;
+
+  const setCurrentStudent = (student: Student) => {
+    setCurrentStudentState(student);
+    // Persist selection in localStorage
+    localStorage.setItem("currentStudentId", student.id);
+  };
 
   const fetchParentData = async (userId: string) => {
     try {
-      // Fetch parent account
+      // Fetch all parent accounts for this user
       const { data: parentData, error: parentError } = await supabase
         .from("parent_accounts")
         .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
+        .eq("user_id", userId);
 
       if (parentError) throw parentError;
-      
-      if (parentData) {
-        setParentAccount(parentData as ParentAccount);
 
-        // Update last login
+      if (parentData && parentData.length > 0) {
+        setParentAccounts(parentData as ParentAccount[]);
+
+        // Update last login for all accounts
+        const parentIds = parentData.map((p) => p.id);
         await supabase
           .from("parent_accounts")
           .update({ last_login_at: new Date().toISOString() })
-          .eq("id", parentData.id);
+          .in("id", parentIds);
 
-        // Fetch student data
-        const { data: studentData, error: studentError } = await supabase
+        // Fetch all linked students
+        const studentIds = parentData.map((p) => p.student_id);
+        const { data: studentsData, error: studentsError } = await supabase
           .from("students")
           .select("*")
-          .eq("id", parentData.student_id)
-          .maybeSingle();
+          .in("id", studentIds);
 
-        if (studentError) throw studentError;
-        setStudent(studentData as Student);
+        if (studentsError) throw studentsError;
+
+        if (studentsData) {
+          setStudents(studentsData as Student[]);
+
+          // Restore last selected student or default to first
+          const savedStudentId = localStorage.getItem("currentStudentId");
+          const savedStudent = studentsData.find((s) => s.id === savedStudentId);
+          setCurrentStudentState(savedStudent || studentsData[0] || null);
+        }
+      } else {
+        setParentAccounts([]);
+        setStudents([]);
+        setCurrentStudentState(null);
       }
     } catch (error) {
       console.error("Error fetching parent data:", error);
@@ -85,14 +112,15 @@ export const ParentAuthProvider = ({ children }: { children: ReactNode }) => {
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         if (session?.user) {
           setTimeout(() => {
             fetchParentData(session.user.id);
           }, 0);
         } else {
-          setParentAccount(null);
-          setStudent(null);
+          setParentAccounts([]);
+          setStudents([]);
+          setCurrentStudentState(null);
         }
       }
     );
@@ -122,11 +150,13 @@ export const ParentAuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    localStorage.removeItem("currentStudentId");
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
-    setParentAccount(null);
-    setStudent(null);
+    setParentAccounts([]);
+    setStudents([]);
+    setCurrentStudentState(null);
   };
 
   return (
@@ -135,8 +165,11 @@ export const ParentAuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         session,
         loading,
+        parentAccounts,
+        students,
+        currentStudent,
         parentAccount,
-        student,
+        setCurrentStudent,
         signIn,
         signOut,
       }}

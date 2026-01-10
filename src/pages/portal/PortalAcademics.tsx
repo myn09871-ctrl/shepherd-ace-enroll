@@ -43,7 +43,7 @@ interface Grade {
 }
 
 const PortalAcademics = () => {
-  const { student } = useParentAuth();
+  const { currentStudent: student } = useParentAuth();
   const [grades, setGrades] = useState<Grade[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState<string>("");

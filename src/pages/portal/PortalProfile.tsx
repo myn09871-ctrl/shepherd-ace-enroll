@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useParentAuth } from "@/hooks/useParentAuth";
 
 const PortalProfile = () => {
-  const { parentAccount, student } = useParentAuth();
+  const { parentAccount, currentStudent: student } = useParentAuth();
 
   return (
     <div className="space-y-6">
