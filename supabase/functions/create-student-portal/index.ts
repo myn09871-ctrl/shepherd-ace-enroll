@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import nodemailer from "https://esm.sh/nodemailer@6.9.8";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,7 +49,18 @@ serve(async (req) => {
       throw new Error("This application has already been processed");
     }
 
-    // 2. Generate unique student ID (GSIS-YEAR-XXX)
+    // 2. Check for duplicate - prevent re-processing
+    const { data: existingStudent } = await supabase
+      .from("students")
+      .select("id, student_id")
+      .eq("enrollment_application_id", applicationId)
+      .maybeSingle();
+
+    if (existingStudent) {
+      throw new Error(`This application has already been processed. Student ID: ${existingStudent.student_id}`);
+    }
+
+    // 3. Generate unique student ID (GSIS-YEAR-XXX)
     const year = new Date().getFullYear();
     const { count } = await supabase
       .from("students")
@@ -59,7 +70,7 @@ serve(async (req) => {
     const studentNumber = String((count || 0) + 1).padStart(3, "0");
     const studentId = `GSIS-${year}-${studentNumber}`;
 
-    // 3. Create student record
+    // 4. Create student record
     const { data: student, error: studentError } = await supabase
       .from("students")
       .insert({
@@ -84,7 +95,7 @@ serve(async (req) => {
       throw new Error(`Failed to create student: ${studentError.message}`);
     }
 
-    // 4. Check if parent account exists by email
+    // 5. Check if parent account exists by email
     const portalEmail = application.portal_email || application.guardian1_email;
 
     const { data: existingParent } = await supabase
@@ -97,9 +108,9 @@ serve(async (req) => {
     let tempPassword = "";
     let isNewParent = !existingParent;
 
-    // 5. If no existing parent, create auth user
+    // 6. If no existing parent, create auth user
     if (!userId) {
-      // Generate temp password
+      // Generate temp password or use saved one
       tempPassword = application.portal_password_hash ||
         Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
 
@@ -117,7 +128,7 @@ serve(async (req) => {
       userId = authUser.user.id;
     }
 
-    // 6. Create parent account linked to student
+    // 7. Create parent account linked to student
     const { error: parentError } = await supabase
       .from("parent_accounts")
       .insert({
@@ -138,37 +149,38 @@ serve(async (req) => {
       throw new Error(`Failed to create parent account: ${parentError.message}`);
     }
 
-    // 7. Update application status to enrolled
+    // 8. Update application status to enrolled AND clear temp password
     const { error: updateError } = await supabase
       .from("enrollment_applications")
-      .update({ status: "enrolled" })
+      .update({ 
+        status: "enrolled",
+        portal_password_hash: null  // Clear temp password for security
+      })
       .eq("id", applicationId);
 
     if (updateError) {
       console.error("Application update error:", updateError);
     }
 
-    // 8. Send welcome email via Gmail SMTP
+    // 9. Send welcome email via Gmail SMTP using nodemailer
     let emailSent = false;
     let emailError = "";
 
     try {
-      const client = new SMTPClient({
-        connection: {
-          hostname: "smtp.gmail.com",
-          port: 587,
-          tls: true,
-          auth: {
-            username: "info.goodshepherdschoolgh@gmail.com",
-            password: gmailPassword,
-          },
+      const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: "info.goodshepherdschoolgh@gmail.com",
+          pass: gmailPassword,
         },
       });
 
       const studentName = `${application.student_first_name} ${application.student_surname}`;
       const portalUrl = "https://goodshepherdgh.lovable.app/portal/login";
 
-      const emailBody = isNewParent
+      const emailBodyText = isNewParent
         ? `Dear ${application.guardian1_full_name},
 
 Welcome to Good Shepherd International School!
@@ -217,28 +229,87 @@ Best regards,
 Good Shepherd International School
 Admissions Office`;
 
-      await client.send({
-        from: "Good Shepherd International School <info.goodshepherdschoolgh@gmail.com>",
+      const emailBodyHtml = isNewParent
+        ? `
+<!DOCTYPE html>
+<html>
+<head><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333;}h1{color:#2c5530;}.details{background:#f5f5f5;padding:15px;border-radius:8px;margin:15px 0;}.cta{display:inline-block;background:#2c5530;color:white!important;padding:12px 24px;text-decoration:none;border-radius:5px;margin:15px 0;}</style></head>
+<body>
+<h1>Welcome to Good Shepherd International School!</h1>
+<p>Dear ${application.guardian1_full_name},</p>
+<p>We are pleased to inform you that <strong>${studentName}'s</strong> enrollment has been approved.</p>
+<div class="details">
+<h3>Student Details</h3>
+<p><strong>Student ID:</strong> ${studentId}<br>
+<strong>Name:</strong> ${studentName}<br>
+<strong>Class:</strong> ${application.program_level}<br>
+<strong>Academic Year:</strong> ${year}/${year + 1}</p>
+</div>
+<div class="details">
+<h3>Parent Portal Login</h3>
+<p><strong>Email:</strong> ${portalEmail}<br>
+<strong>Temporary Password:</strong> ${tempPassword}</p>
+</div>
+<p><a href="${portalUrl}" class="cta">Login to Parent Portal</a></p>
+<p><em>For security, please change your password after your first login.</em></p>
+<p>If you have any questions, please contact us at info.goodshepherdschoolgh@gmail.com</p>
+<p>Best regards,<br><strong>Good Shepherd International School</strong><br>Admissions Office</p>
+</body>
+</html>`
+        : `
+<!DOCTYPE html>
+<html>
+<head><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333;}h1{color:#2c5530;}.details{background:#f5f5f5;padding:15px;border-radius:8px;margin:15px 0;}.cta{display:inline-block;background:#2c5530;color:white!important;padding:12px 24px;text-decoration:none;border-radius:5px;margin:15px 0;}</style></head>
+<body>
+<h1>Welcome to Good Shepherd International School!</h1>
+<p>Dear ${application.guardian1_full_name},</p>
+<p>We are pleased to inform you that <strong>${studentName}</strong> has been enrolled successfully.</p>
+<div class="details">
+<h3>Student Details</h3>
+<p><strong>Student ID:</strong> ${studentId}<br>
+<strong>Name:</strong> ${studentName}<br>
+<strong>Class:</strong> ${application.program_level}<br>
+<strong>Academic Year:</strong> ${year}/${year + 1}</p>
+</div>
+<p>Since you already have a Parent Portal account, ${studentName} has been linked to your existing account.</p>
+<p><a href="${portalUrl}" class="cta">Login to Parent Portal</a></p>
+<p>If you have any questions, please contact us at info.goodshepherdschoolgh@gmail.com</p>
+<p>Best regards,<br><strong>Good Shepherd International School</strong><br>Admissions Office</p>
+</body>
+</html>`;
+
+      await transporter.sendMail({
+        from: '"Good Shepherd International School" <info.goodshepherdschoolgh@gmail.com>',
         to: portalEmail,
         subject: `Welcome to Good Shepherd International School - ${studentName} Enrollment Confirmed`,
-        content: emailBody,
+        text: emailBodyText,
+        html: emailBodyHtml,
       });
 
-      await client.close();
       emailSent = true;
+      console.log("Email sent successfully to:", portalEmail);
 
       // Log the sent email
       await supabase.from("sent_emails").insert({
         recipient_email: portalEmail,
         recipient_type: "parent",
         subject: `Welcome - ${studentName} Enrollment Confirmed`,
-        body: emailBody,
+        body: emailBodyText,
         application_id: applicationId,
       });
 
     } catch (mailErr) {
       console.error("Email send error:", mailErr);
       emailError = mailErr instanceof Error ? mailErr.message : "Failed to send email";
+      
+      // Log the failed email attempt
+      await supabase.from("sent_emails").insert({
+        recipient_email: portalEmail,
+        recipient_type: "parent",
+        subject: `[FAILED] Welcome - ${application.student_first_name} ${application.student_surname}`,
+        body: `Email failed: ${emailError}`,
+        application_id: applicationId,
+      });
     }
 
     // Return success with portal info
