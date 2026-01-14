@@ -60,39 +60,48 @@ serve(async (req) => {
       throw new Error(`This application has already been processed. Student ID: ${existingStudent.student_id}`);
     }
 
-    // 3. Generate unique student ID (GSIS-YEAR-XXX)
+    // 3. Generate unique student ID atomically using database function
     const year = new Date().getFullYear();
-    const { count } = await supabase
-      .from("students")
-      .select("*", { count: "exact", head: true })
-      .ilike("student_id", `GSIS-${year}-%`);
-
-    const studentNumber = String((count || 0) + 1).padStart(3, "0");
-    const studentId = `GSIS-${year}-${studentNumber}`;
+    const { data: studentId, error: idError } = await supabase.rpc('generate_student_id');
+    
+    if (idError || !studentId) {
+      console.error("Student ID generation error:", idError);
+      throw new Error(`Failed to generate student ID: ${idError?.message || "Unknown error"}`);
+    }
 
     // 4. Create student record
-    const { data: student, error: studentError } = await supabase
-      .from("students")
-      .insert({
-        student_id: studentId,
-        first_name: application.student_first_name,
-        surname: application.student_surname,
-        middle_name: application.student_middle_name,
-        date_of_birth: application.student_dob,
-        gender: application.student_gender,
-        nationality: application.student_nationality,
-        current_class: application.program_level,
-        academic_year: `${year}/${year + 1}`,
-        status: "active",
-        enrollment_application_id: application.id,
-        photo_url: application.student_photo_url,
-      })
-      .select()
-      .single();
+    let student;
+    try {
+      const { data: studentData, error: studentError } = await supabase
+        .from("students")
+        .insert({
+          student_id: studentId,
+          first_name: application.student_first_name,
+          surname: application.student_surname,
+          middle_name: application.student_middle_name,
+          date_of_birth: application.student_dob,
+          gender: application.student_gender,
+          nationality: application.student_nationality,
+          current_class: application.program_level,
+          academic_year: `${year}/${year + 1}`,
+          status: "active",
+          enrollment_application_id: application.id,
+          photo_url: application.student_photo_url,
+        })
+        .select()
+        .single();
 
-    if (studentError) {
-      console.error("Student creation error:", studentError);
-      throw new Error(`Failed to create student: ${studentError.message}`);
+      if (studentError) {
+        // Handle duplicate constraint violation gracefully
+        if (studentError.code === "23505") {
+          throw new Error("A student with this ID already exists. This application may have been processed already.");
+        }
+        throw new Error(`Failed to create student: ${studentError.message}`);
+      }
+      student = studentData;
+    } catch (err) {
+      console.error("Student creation error:", err);
+      throw err;
     }
 
     // 5. Check if parent account exists by email

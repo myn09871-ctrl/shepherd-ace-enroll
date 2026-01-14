@@ -639,13 +639,13 @@ const ApplicationDetail = () => {
           <div className="bg-card rounded-xl border border-border p-6">
             <h2 className="font-semibold text-lg mb-4">Actions</h2>
             <div className="space-y-3">
-              {/* Main action - Approve & Create Portal */}
-              {application.status !== "enrolled" && (
+              {/* Main action - Approve & Create Portal (only for pending applications) */}
+              {application.status === "pending" && (
                 <Button
                   variant="default"
                   className="w-full justify-start gap-2 bg-primary hover:bg-primary/90"
                   onClick={approveAndCreatePortal}
-                  disabled={creatingPortal || application.status === "enrolled"}
+                  disabled={creatingPortal}
                 >
                   {creatingPortal ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -656,9 +656,22 @@ const ApplicationDetail = () => {
                 </Button>
               )}
               
+              {/* Show status for non-pending applications */}
               {application.status === "enrolled" && (
                 <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">
                   ✓ Student enrolled and portal created
+                </div>
+              )}
+              
+              {application.status === "under_review" && (
+                <div className="p-3 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm">
+                  ⏳ Application under review - awaiting additional info
+                </div>
+              )}
+              
+              {application.status === "rejected" && (
+                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+                  ✗ Application has been rejected
                 </div>
               )}
               
