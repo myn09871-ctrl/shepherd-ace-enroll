@@ -190,26 +190,28 @@ const ApplicationDetail = () => {
         throw new Error(result.error || "Failed to create portal");
       }
 
-      // Show detailed success message based on backend response
-      const emailStatus = result.emailSent 
-        ? `Welcome email sent to ${result.portalEmail}` 
-        : `Portal created but email failed: ${result.emailError || "Unknown error"}`;
-      
+      // Show success message - portal was created
       const accountType = result.isNewParent 
         ? "New parent account created" 
         : "Student linked to existing parent account";
 
       toast({
         title: "✅ Enrollment Complete!",
-        description: `${result.studentName} - ${result.studentId}. ${accountType}. ${emailStatus}`,
+        description: `${result.studentName} (${result.studentId}) enrolled successfully. ${accountType}.`,
       });
 
-      // Show additional warning if email failed
-      if (!result.emailSent) {
+      // Show email status - but NEVER expose credentials
+      if (result.emailSent) {
         toast({
-          title: "⚠️ Email Not Sent",
-          description: `Please manually share login credentials with ${result.portalEmail}. Password: ${result.tempPassword || "(existing account)"}`,
-          variant: "destructive",
+          title: "📧 Welcome Email Sent",
+          description: `Login credentials sent to ${result.portalEmail}`,
+        });
+      } else {
+        // Email failed - notify admin to check logs, do NOT ask to manually share
+        toast({
+          title: "⚠️ Email Delivery Issue",
+          description: `Portal created but email to ${result.portalEmail} could not be delivered. Check email logs in sent_emails table.`,
+          variant: "default",
         });
       }
 

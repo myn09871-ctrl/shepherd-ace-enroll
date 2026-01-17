@@ -80,18 +80,20 @@ const Messages = () => {
       return;
     }
 
-    setSending(true);
-    // Simulate sending - in production, you'd call an edge function
-    setTimeout(() => {
-      setSending(false);
+    if (!recipientType) {
       toast({
-        title: "Email Queued",
-        description: "Your message has been queued for sending",
+        title: "No Recipients",
+        description: "Please select recipients",
+        variant: "destructive",
       });
-      setSubject("");
-      setBody("");
-      setCustomEmail("");
-    }, 1500);
+      return;
+    }
+
+    // Show coming soon message - bulk email feature not yet implemented
+    toast({
+      title: "Coming Soon",
+      description: "Bulk email sending is under development. For now, welcome emails are sent automatically when approving applications.",
+    });
   };
 
   const formatTemplateName = (name: string) => {
