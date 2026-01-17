@@ -34,6 +34,8 @@ serve(async (req) => {
       throw new Error("Application ID is required");
     }
 
+    console.log(`Processing application: ${applicationId}`);
+
     // 1. Fetch the application
     const { data: application, error: appError } = await supabase
       .from("enrollment_applications")
@@ -69,6 +71,8 @@ serve(async (req) => {
       throw new Error(`Failed to generate student ID: ${idError?.message || "Unknown error"}`);
     }
 
+    console.log(`Generated student ID: ${studentId}`);
+
     // 4. Create student record
     let student;
     try {
@@ -99,6 +103,7 @@ serve(async (req) => {
         throw new Error(`Failed to create student: ${studentError.message}`);
       }
       student = studentData;
+      console.log(`Created student record: ${student.id}`);
     } catch (err) {
       console.error("Student creation error:", err);
       throw err;
@@ -135,6 +140,7 @@ serve(async (req) => {
       }
 
       userId = authUser.user.id;
+      console.log(`Created auth user: ${userId}`);
     }
 
     // 7. Create parent account linked to student
@@ -158,6 +164,8 @@ serve(async (req) => {
       throw new Error(`Failed to create parent account: ${parentError.message}`);
     }
 
+    console.log(`Created parent account for: ${portalEmail}`);
+
     // 8. Update application status to enrolled AND clear temp password
     const { error: updateError } = await supabase
       .from("enrollment_applications")
@@ -171,26 +179,33 @@ serve(async (req) => {
       console.error("Application update error:", updateError);
     }
 
-    // 9. Send welcome email via Gmail SMTP using nodemailer
+    // 9. Send welcome email via Gmail SMTP using nodemailer with RETRY logic
     let emailSent = false;
     let emailError = "";
+    const maxRetries = 3;
 
-    try {
-      const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false,
-        auth: {
-          user: "info.goodshepherdschoolgh@gmail.com",
-          pass: gmailPassword,
-        },
-      });
+    const studentName = `${application.student_first_name} ${application.student_surname}`;
+    const portalUrl = "https://shepherd-ace-enroll.lovable.app/portal/login";
 
-      const studentName = `${application.student_first_name} ${application.student_surname}`;
-      const portalUrl = "https://goodshepherdgh.lovable.app/portal/login";
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`Email attempt ${attempt}/${maxRetries} to ${portalEmail}`);
 
-      const emailBodyText = isNewParent
-        ? `Dear ${application.guardian1_full_name},
+        const transporter = nodemailer.createTransport({
+          host: "smtp.gmail.com",
+          port: 587,
+          secure: false,
+          auth: {
+            user: "info.goodshepherdschoolgh@gmail.com",
+            pass: gmailPassword,
+          },
+          connectionTimeout: 30000,
+          greetingTimeout: 30000,
+          socketTimeout: 30000,
+        });
+
+        const emailBodyText = isNewParent
+          ? `Dear ${application.guardian1_full_name},
 
 Welcome to Good Shepherd International School!
 
@@ -216,7 +231,7 @@ If you have any questions, please contact us at info.goodshepherdschoolgh@gmail.
 Best regards,
 Good Shepherd International School
 Admissions Office`
-        : `Dear ${application.guardian1_full_name},
+          : `Dear ${application.guardian1_full_name},
 
 Welcome to Good Shepherd International School!
 
@@ -238,8 +253,8 @@ Best regards,
 Good Shepherd International School
 Admissions Office`;
 
-      const emailBodyHtml = isNewParent
-        ? `
+        const emailBodyHtml = isNewParent
+          ? `
 <!DOCTYPE html>
 <html>
 <head><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333;}h1{color:#2c5530;}.details{background:#f5f5f5;padding:15px;border-radius:8px;margin:15px 0;}.cta{display:inline-block;background:#2c5530;color:white!important;padding:12px 24px;text-decoration:none;border-radius:5px;margin:15px 0;}</style></head>
@@ -265,7 +280,7 @@ Admissions Office`;
 <p>Best regards,<br><strong>Good Shepherd International School</strong><br>Admissions Office</p>
 </body>
 </html>`
-        : `
+          : `
 <!DOCTYPE html>
 <html>
 <head><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333;}h1{color:#2c5530;}.details{background:#f5f5f5;padding:15px;border-radius:8px;margin:15px 0;}.cta{display:inline-block;background:#2c5530;color:white!important;padding:12px 24px;text-decoration:none;border-radius:5px;margin:15px 0;}</style></head>
@@ -287,54 +302,66 @@ Admissions Office`;
 </body>
 </html>`;
 
-      await transporter.sendMail({
-        from: '"Good Shepherd International School" <info.goodshepherdschoolgh@gmail.com>',
-        to: portalEmail,
-        subject: `Welcome to Good Shepherd International School - ${studentName} Enrollment Confirmed`,
-        text: emailBodyText,
-        html: emailBodyHtml,
-      });
+        await transporter.sendMail({
+          from: '"Good Shepherd International School" <info.goodshepherdschoolgh@gmail.com>',
+          to: portalEmail,
+          subject: `Welcome to Good Shepherd International School - ${studentName} Enrollment Confirmed`,
+          text: emailBodyText,
+          html: emailBodyHtml,
+        });
 
-      emailSent = true;
-      console.log("Email sent successfully to:", portalEmail);
+        emailSent = true;
+        console.log(`Email sent successfully to: ${portalEmail}`);
 
-      // Log the sent email
+        // Log the successful sent email
+        await supabase.from("sent_emails").insert({
+          recipient_email: portalEmail,
+          recipient_type: "parent",
+          subject: `Welcome - ${studentName} Enrollment Confirmed`,
+          body: emailBodyText,
+          application_id: applicationId,
+        });
+
+        break; // Exit retry loop on success
+        
+      } catch (mailErr) {
+        console.error(`Email attempt ${attempt} failed:`, mailErr);
+        emailError = mailErr instanceof Error ? mailErr.message : "Failed to send email";
+        
+        if (attempt < maxRetries) {
+          // Exponential backoff before retry
+          const delay = 1000 * attempt;
+          console.log(`Waiting ${delay}ms before retry...`);
+          await new Promise(r => setTimeout(r, delay));
+        }
+      }
+    }
+
+    // Log failed email if all retries exhausted
+    if (!emailSent) {
+      console.error(`All ${maxRetries} email attempts failed. Last error: ${emailError}`);
       await supabase.from("sent_emails").insert({
         recipient_email: portalEmail,
         recipient_type: "parent",
-        subject: `Welcome - ${studentName} Enrollment Confirmed`,
-        body: emailBodyText,
-        application_id: applicationId,
-      });
-
-    } catch (mailErr) {
-      console.error("Email send error:", mailErr);
-      emailError = mailErr instanceof Error ? mailErr.message : "Failed to send email";
-      
-      // Log the failed email attempt
-      await supabase.from("sent_emails").insert({
-        recipient_email: portalEmail,
-        recipient_type: "parent",
-        subject: `[FAILED] Welcome - ${application.student_first_name} ${application.student_surname}`,
-        body: `Email failed: ${emailError}`,
+        subject: `[FAILED] Welcome - ${studentName}`,
+        body: `Email failed after ${maxRetries} attempts. Last error: ${emailError}`,
         application_id: applicationId,
       });
     }
 
-    // Return success with portal info
+    // Return success - NEVER expose tempPassword to frontend
     return new Response(
       JSON.stringify({
         success: true,
         studentId,
-        studentName: `${application.student_first_name} ${application.student_surname}`,
+        studentName,
         portalEmail,
-        tempPassword: isNewParent ? tempPassword : null,
         isNewParent,
         emailSent,
-        emailError: emailError || null,
-        message: isNewParent
-          ? "New parent portal created successfully"
-          : "Student linked to existing parent account",
+        emailError: emailSent ? null : emailError,
+        message: emailSent
+          ? `Portal created and welcome email sent to ${portalEmail}`
+          : `Portal created successfully. Email delivery failed after ${maxRetries} attempts - check email logs.`,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
