@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import nodemailer from "https://esm.sh/nodemailer@6.9.8";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +8,112 @@ const corsHeaders = {
 
 interface CreatePortalRequest {
   applicationId: string;
+}
+
+// Gmail API OAuth email sender - works in Deno Edge Functions
+async function sendGmailEmail(
+  to: string,
+  subject: string,
+  textBody: string,
+  htmlBody: string
+): Promise<{ success: boolean; error?: string }> {
+  const clientId = Deno.env.get("GMAIL_CLIENT_ID");
+  const clientSecret = Deno.env.get("GMAIL_CLIENT_SECRET");
+  const refreshToken = Deno.env.get("GMAIL_REFRESH_TOKEN");
+  const fromEmail = "info.goodshepherdschoolgh@gmail.com";
+
+  if (!clientId || !clientSecret || !refreshToken) {
+    console.error("Gmail OAuth credentials missing");
+    return { success: false, error: "Gmail OAuth credentials not configured" };
+  }
+
+  try {
+    // Step 1: Get access token from refresh token
+    console.log("Requesting Gmail access token...");
+    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: refreshToken,
+        grant_type: "refresh_token",
+      }),
+    });
+
+    const tokenData = await tokenResponse.json();
+    
+    if (!tokenData.access_token) {
+      console.error("Failed to get Gmail access token:", tokenData);
+      return { success: false, error: `Gmail OAuth error: ${tokenData.error_description || tokenData.error || "Unknown error"}` };
+    }
+
+    console.log("Gmail access token obtained successfully");
+
+    // Step 2: Construct MIME email with multipart/alternative for text and HTML
+    const boundary = "boundary_" + Date.now();
+    const mimeEmail = [
+      `From: Good Shepherd International School <${fromEmail}>`,
+      `To: ${to}`,
+      `Subject: ${subject}`,
+      `MIME-Version: 1.0`,
+      `Content-Type: multipart/alternative; boundary="${boundary}"`,
+      ``,
+      `--${boundary}`,
+      `Content-Type: text/plain; charset="UTF-8"`,
+      `Content-Transfer-Encoding: 7bit`,
+      ``,
+      textBody,
+      ``,
+      `--${boundary}`,
+      `Content-Type: text/html; charset="UTF-8"`,
+      `Content-Transfer-Encoding: 7bit`,
+      ``,
+      htmlBody,
+      ``,
+      `--${boundary}--`,
+    ].join("\r\n");
+
+    // Step 3: Base64url encode the email (Gmail API requirement)
+    const encodedEmail = btoa(unescape(encodeURIComponent(mimeEmail)))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+
+    // Step 4: Send via Gmail API
+    console.log(`Sending email to ${to} via Gmail API...`);
+    const sendResponse = await fetch(
+      "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${tokenData.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ raw: encodedEmail }),
+      }
+    );
+
+    if (!sendResponse.ok) {
+      const errorData = await sendResponse.json();
+      console.error("Gmail API send failed:", errorData);
+      return { 
+        success: false, 
+        error: errorData.error?.message || `Gmail API error: ${sendResponse.status}` 
+      };
+    }
+
+    const result = await sendResponse.json();
+    console.log("Email sent successfully via Gmail API. Message ID:", result.id);
+    return { success: true };
+
+  } catch (err) {
+    console.error("Gmail API error:", err);
+    return { 
+      success: false, 
+      error: err instanceof Error ? err.message : "Unknown Gmail API error" 
+    };
+  }
 }
 
 serve(async (req) => {
@@ -20,11 +125,6 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const gmailPassword = Deno.env.get("GMAIL_APP_PASSWORD");
-
-    if (!gmailPassword) {
-      throw new Error("Email configuration missing. Please configure GMAIL_APP_PASSWORD.");
-    }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -179,33 +279,19 @@ serve(async (req) => {
       console.error("Application update error:", updateError);
     }
 
-    // 9. Send welcome email via Gmail SMTP using nodemailer with RETRY logic
+    // 9. Send welcome email via Gmail API OAuth with RETRY logic
     let emailSent = false;
     let emailError = "";
     const maxRetries = 3;
 
     const studentName = `${application.student_first_name} ${application.student_surname}`;
-    const portalUrl = "https://shepherd-ace-enroll.lovable.app/portal/login";
+    const portalUrl = "https://gsisgh.vercel.app/portal/login";
 
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        console.log(`Email attempt ${attempt}/${maxRetries} to ${portalEmail}`);
-
-        const transporter = nodemailer.createTransport({
-          host: "smtp.gmail.com",
-          port: 587,
-          secure: false,
-          auth: {
-            user: "info.goodshepherdschoolgh@gmail.com",
-            pass: gmailPassword,
-          },
-          connectionTimeout: 30000,
-          greetingTimeout: 30000,
-          socketTimeout: 30000,
-        });
-
-        const emailBodyText = isNewParent
-          ? `Dear ${application.guardian1_full_name},
+    // Prepare email content
+    const emailSubject = `Welcome to Good Shepherd International School - ${studentName} Enrollment Confirmed`;
+    
+    const emailBodyText = isNewParent
+      ? `Dear ${application.guardian1_full_name},
 
 Welcome to Good Shepherd International School!
 
@@ -230,8 +316,9 @@ If you have any questions, please contact us at info.goodshepherdschoolgh@gmail.
 
 Best regards,
 Good Shepherd International School
-Admissions Office`
-          : `Dear ${application.guardian1_full_name},
+Admissions Office
+Mallam, New Gbawe`
+      : `Dear ${application.guardian1_full_name},
 
 Welcome to Good Shepherd International School!
 
@@ -251,10 +338,11 @@ If you have any questions, please contact us at info.goodshepherdschoolgh@gmail.
 
 Best regards,
 Good Shepherd International School
-Admissions Office`;
+Admissions Office
+Mallam, New Gbawe`;
 
-        const emailBodyHtml = isNewParent
-          ? `
+    const emailBodyHtml = isNewParent
+      ? `
 <!DOCTYPE html>
 <html>
 <head><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333;}h1{color:#2c5530;}.details{background:#f5f5f5;padding:15px;border-radius:8px;margin:15px 0;}.cta{display:inline-block;background:#2c5530;color:white!important;padding:12px 24px;text-decoration:none;border-radius:5px;margin:15px 0;}</style></head>
@@ -277,10 +365,10 @@ Admissions Office`;
 <p><a href="${portalUrl}" class="cta">Login to Parent Portal</a></p>
 <p><em>For security, please change your password after your first login.</em></p>
 <p>If you have any questions, please contact us at info.goodshepherdschoolgh@gmail.com</p>
-<p>Best regards,<br><strong>Good Shepherd International School</strong><br>Admissions Office</p>
+<p>Best regards,<br><strong>Good Shepherd International School</strong><br>Admissions Office<br>Mallam, New Gbawe</p>
 </body>
 </html>`
-          : `
+      : `
 <!DOCTYPE html>
 <html>
 <head><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333;}h1{color:#2c5530;}.details{background:#f5f5f5;padding:15px;border-radius:8px;margin:15px 0;}.cta{display:inline-block;background:#2c5530;color:white!important;padding:12px 24px;text-decoration:none;border-radius:5px;margin:15px 0;}</style></head>
@@ -298,18 +386,22 @@ Admissions Office`;
 <p>Since you already have a Parent Portal account, ${studentName} has been linked to your existing account.</p>
 <p><a href="${portalUrl}" class="cta">Login to Parent Portal</a></p>
 <p>If you have any questions, please contact us at info.goodshepherdschoolgh@gmail.com</p>
-<p>Best regards,<br><strong>Good Shepherd International School</strong><br>Admissions Office</p>
+<p>Best regards,<br><strong>Good Shepherd International School</strong><br>Admissions Office<br>Mallam, New Gbawe</p>
 </body>
 </html>`;
 
-        await transporter.sendMail({
-          from: '"Good Shepherd International School" <info.goodshepherdschoolgh@gmail.com>',
-          to: portalEmail,
-          subject: `Welcome to Good Shepherd International School - ${studentName} Enrollment Confirmed`,
-          text: emailBodyText,
-          html: emailBodyHtml,
-        });
+    // Attempt to send email with retries
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      console.log(`Email attempt ${attempt}/${maxRetries} to ${portalEmail}`);
+      
+      const result = await sendGmailEmail(
+        portalEmail,
+        emailSubject,
+        emailBodyText,
+        emailBodyHtml
+      );
 
+      if (result.success) {
         emailSent = true;
         console.log(`Email sent successfully to: ${portalEmail}`);
 
@@ -323,10 +415,9 @@ Admissions Office`;
         });
 
         break; // Exit retry loop on success
-        
-      } catch (mailErr) {
-        console.error(`Email attempt ${attempt} failed:`, mailErr);
-        emailError = mailErr instanceof Error ? mailErr.message : "Failed to send email";
+      } else {
+        emailError = result.error || "Unknown error";
+        console.error(`Email attempt ${attempt} failed: ${emailError}`);
         
         if (attempt < maxRetries) {
           // Exponential backoff before retry
