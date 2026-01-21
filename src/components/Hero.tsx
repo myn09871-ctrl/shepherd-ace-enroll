@@ -110,7 +110,7 @@ const Hero = () => {
               {[
                 { icon: Award, value: "100%", label: "BECE Pass Rate" },
                 { icon: Users, value: "500+", label: "Students" },
-                { icon: BookOpen, value: "15+", label: "Years of Excellence" },
+                { icon: BookOpen, value: `${new Date().getFullYear() - 1992}+`, label: "Years of Excellence" },
               ].map((stat, index) => (
                 <div 
                   key={stat.label}

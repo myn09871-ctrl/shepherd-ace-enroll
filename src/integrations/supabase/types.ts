@@ -46,6 +46,33 @@ export type Database = {
           },
         ]
       }
+      admin_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       announcement_acknowledgments: {
         Row: {
           acknowledged_at: string
@@ -437,6 +464,42 @@ export type Database = {
           },
         ]
       }
+      gallery_images: {
+        Row: {
+          caption: string | null
+          category: string
+          created_at: string
+          display_order: number | null
+          file_name: string
+          file_url: string
+          id: string
+          is_active: boolean | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          caption?: string | null
+          category: string
+          created_at?: string
+          display_order?: number | null
+          file_name: string
+          file_url: string
+          id?: string
+          is_active?: boolean | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          caption?: string | null
+          category?: string
+          created_at?: string
+          display_order?: number | null
+          file_name?: string
+          file_url?: string
+          id?: string
+          is_active?: boolean | null
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       grades: {
         Row: {
           academic_year: string
@@ -746,6 +809,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       school_settings: {
         Row: {

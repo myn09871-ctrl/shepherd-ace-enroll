@@ -18,10 +18,15 @@ import Applications from "./pages/admin/Applications";
 import ApplicationDetail from "./pages/admin/ApplicationDetail";
 import Students from "./pages/admin/Students";
 import Results from "./pages/admin/Results";
+import ResultsManagement from "./pages/admin/ResultsManagement";
 import AnnouncementsManagement from "./pages/admin/AnnouncementsManagement";
 import Content from "./pages/admin/Content";
-import Messages from "./pages/admin/Messages";
+import MessagesPage from "./pages/admin/MessagesPage";
 import Settings from "./pages/admin/Settings";
+import GalleryManagement from "./pages/admin/GalleryManagement";
+import FeesManagement from "./pages/admin/FeesManagement";
+import DocumentManagement from "./pages/admin/DocumentManagement";
+import AdminProfile from "./pages/admin/AdminProfile";
 
 // Parent Portal imports - cleaned up
 import PortalLogin from "./pages/portal/PortalLogin";
@@ -31,8 +36,9 @@ import PortalAcademics from "./pages/portal/PortalAcademics";
 import PortalAnnouncements from "./pages/portal/PortalAnnouncements";
 import PortalDocuments from "./pages/portal/PortalDocuments";
 import PortalTimetable from "./pages/portal/PortalTimetable";
-import PortalMessages from "./pages/portal/PortalMessages";
+import PortalMessagesPage from "./pages/portal/PortalMessagesPage";
 import PortalProfile from "./pages/portal/PortalProfile";
+import PortalFees from "./pages/portal/PortalFees";
 
 const queryClient = new QueryClient();
 
