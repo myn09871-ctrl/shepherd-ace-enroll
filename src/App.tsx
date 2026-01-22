@@ -21,7 +21,7 @@ import Results from "./pages/admin/Results";
 import ResultsManagement from "./pages/admin/ResultsManagement";
 import AnnouncementsManagement from "./pages/admin/AnnouncementsManagement";
 import Content from "./pages/admin/Content";
-import MessagesPage from "./pages/admin/MessagesPage";
+import Messages from "./pages/admin/MessagesPage";
 import Settings from "./pages/admin/Settings";
 import GalleryManagement from "./pages/admin/GalleryManagement";
 import FeesManagement from "./pages/admin/FeesManagement";
@@ -36,7 +36,7 @@ import PortalAcademics from "./pages/portal/PortalAcademics";
 import PortalAnnouncements from "./pages/portal/PortalAnnouncements";
 import PortalDocuments from "./pages/portal/PortalDocuments";
 import PortalTimetable from "./pages/portal/PortalTimetable";
-import PortalMessagesPage from "./pages/portal/PortalMessagesPage";
+import PortalMessages from "./pages/portal/PortalMessagesPage";
 import PortalProfile from "./pages/portal/PortalProfile";
 import PortalFees from "./pages/portal/PortalFees";
 
@@ -65,7 +65,7 @@ const App = () => (
                 <Route path="results" element={<Results />} />
                 <Route path="announcements" element={<AnnouncementsManagement />} />
                 <Route path="content" element={<Content />} />
-                <Route path="messages" element={<MessagesPage />} />
+                <Route path="messages" element={<Messages />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
 
@@ -77,7 +77,7 @@ const App = () => (
                 <Route path="announcements" element={<PortalAnnouncements />} />
                 <Route path="documents" element={<PortalDocuments />} />
                 <Route path="timetable" element={<PortalTimetable />} />
-                <Route path="messages" element={<PortalMessagesPage />} />
+                <Route path="messages" element={<PortalMessages />} />
                 <Route path="profile" element={<PortalProfile />} />
               </Route>
               
