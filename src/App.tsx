@@ -65,7 +65,7 @@ const App = () => (
                 <Route path="results" element={<Results />} />
                 <Route path="announcements" element={<AnnouncementsManagement />} />
                 <Route path="content" element={<Content />} />
-                <Route path="messages" element={<Messages />} />
+                <Route path="messages" element={<MessagesPage />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
 
@@ -77,7 +77,7 @@ const App = () => (
                 <Route path="announcements" element={<PortalAnnouncements />} />
                 <Route path="documents" element={<PortalDocuments />} />
                 <Route path="timetable" element={<PortalTimetable />} />
-                <Route path="messages" element={<PortalMessages />} />
+                <Route path="messages" element={<PortalMessagesPage />} />
                 <Route path="profile" element={<PortalProfile />} />
               </Route>
               
