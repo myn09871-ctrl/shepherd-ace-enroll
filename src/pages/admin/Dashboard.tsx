@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { FileText, UserPlus, Globe, Mail, BarChart3, Clock, Eye } from "lucide-react";
+import { FileText, Globe, Mail, Clock, Eye, Images, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StatsCard from "@/components/admin/StatsCard";
 import StatusBadge from "@/components/admin/StatusBadge";
@@ -80,9 +80,9 @@ const Dashboard = () => {
 
       // Count enrolled
       const { count: totalEnrolled } = await supabase
-        .from("enrollment_applications")
+        .from("students")
         .select("*", { count: "exact", head: true })
-        .eq("status", "enrolled");
+        .eq("status", "active");
 
       setStats({
         todayCount: todayCount || 0,
@@ -99,10 +99,10 @@ const Dashboard = () => {
 
   const quickActions = [
     { label: "View Applications", icon: FileText, href: "/admin/applications" },
-    { label: "Add Student", icon: UserPlus, href: "/admin/students/new" },
+    { label: "Manage Gallery", icon: Images, href: "/admin/gallery" },
+    { label: "Update Fees", icon: CreditCard, href: "/admin/fees" },
     { label: "Update Content", icon: Globe, href: "/admin/content" },
-    { label: "Send Email", icon: Mail, href: "/admin/messages" },
-    { label: "View Reports", icon: BarChart3, href: "/admin/reports" },
+    { label: "Send Message", icon: Mail, href: "/admin/messages" },
   ];
 
   if (loading) {
@@ -168,6 +168,7 @@ const Dashboard = () => {
                       app.status === "pending" ? "bg-blue-500" :
                       app.status === "under_review" ? "bg-yellow-500" :
                       app.status === "approved" ? "bg-green-500" :
+                      app.status === "enrolled" ? "bg-primary" :
                       "bg-red-500"
                     }`} />
                     <div className="min-w-0">

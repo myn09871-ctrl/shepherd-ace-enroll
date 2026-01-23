@@ -120,7 +120,7 @@ const WhyUs = () => {
                   <Award className="h-6 w-6 text-accent-foreground" />
                 </div>
                 <div>
-                  <p className="font-heading text-2xl font-bold text-foreground">15+</p>
+                  <p className="font-heading text-2xl font-bold text-foreground">{new Date().getFullYear() - 1992}+</p>
                   <p className="text-xs text-muted-foreground">Years of Excellence</p>
                 </div>
               </div>
