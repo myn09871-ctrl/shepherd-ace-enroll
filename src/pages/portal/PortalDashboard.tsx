@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   GraduationCap, 
   Calendar, 
@@ -34,6 +34,7 @@ interface RecentActivity {
 
 const PortalDashboard = () => {
   const { currentStudent: student, parentAccount } = useParentAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     termAverage: null,
     attendancePercentage: 0,
@@ -177,6 +178,18 @@ const PortalDashboard = () => {
       age--;
     }
     return age;
+  };
+
+  const handleActivityClick = (activity: RecentActivity) => {
+    if (activity.type === "announcement") {
+      navigate("/portal/announcements");
+    } else if (activity.type === "grade") {
+      navigate("/portal/academics");
+    } else if (activity.type === "fee") {
+      navigate("/portal/fees");
+    } else if (activity.type === "attendance") {
+      navigate("/portal/attendance");
+    }
   };
 
   if (loading) {
@@ -324,7 +337,7 @@ const PortalDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Recent Activity */}
+        {/* Recent Activity - Now Clickable */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Recent Activity</CardTitle>
@@ -339,7 +352,15 @@ const PortalDashboard = () => {
                 {recentActivity.map((activity) => (
                   <div 
                     key={activity.id} 
-                    className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                    className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => handleActivityClick(activity)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        handleActivityClick(activity);
+                      }
+                    }}
                   >
                     <div className={`p-1.5 rounded-full shrink-0 ${
                       activity.type === "grade" ? "bg-blue-100" :
@@ -356,9 +377,12 @@ const PortalDashboard = () => {
                       <p className="text-sm font-medium text-foreground truncate">{activity.title}</p>
                       <p className="text-xs text-muted-foreground">{activity.description}</p>
                     </div>
-                    <span className="text-xs text-muted-foreground shrink-0">
-                      {format(new Date(activity.timestamp), "MMM d")}
-                    </span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(activity.timestamp), "MMM d")}
+                      </span>
+                      <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                    </div>
                   </div>
                 ))}
               </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, Filter, Eye, Check, X, MessageSquare } from "lucide-react";
+import { Search, Filter, Eye, Check, X, MessageSquare, Archive, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,6 +18,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { format, differenceInYears } from "date-fns";
@@ -38,8 +48,10 @@ const Applications = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("active");
   const [programFilter, setProgramFilter] = useState("all");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -53,7 +65,13 @@ const Applications = () => {
         .select("id, reference_number, student_first_name, student_surname, student_dob, program_level, status, created_at")
         .order("created_at", { ascending: false });
 
-      if (statusFilter !== "all") {
+      // Status filter logic
+      if (statusFilter === "active") {
+        // Active = all except archived
+        query = query.neq("status", "archived");
+      } else if (statusFilter === "archived") {
+        query = query.eq("status", "archived");
+      } else if (statusFilter !== "all") {
         query = query.eq("status", statusFilter);
       }
 
@@ -83,7 +101,7 @@ const Applications = () => {
 
       toast({
         title: "Status Updated",
-        description: `Application has been marked as ${newStatus}`,
+        description: `Application has been ${newStatus === "archived" ? "archived" : `marked as ${newStatus}`}`,
       });
 
       fetchApplications();
@@ -92,6 +110,42 @@ const Applications = () => {
       toast({
         title: "Error",
         description: "Failed to update application status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteApplication = async () => {
+    if (!selectedApp) return;
+
+    try {
+      // First delete related admin notes
+      await supabase
+        .from("admin_notes")
+        .delete()
+        .eq("application_id", selectedApp.id);
+
+      // Then delete the application
+      const { error } = await supabase
+        .from("enrollment_applications")
+        .delete()
+        .eq("id", selectedApp.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Application Deleted",
+        description: "The application has been permanently deleted",
+      });
+
+      setDeleteDialogOpen(false);
+      setSelectedApp(null);
+      fetchApplications();
+    } catch (error: any) {
+      console.error("Error deleting application:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete application",
         variant: "destructive",
       });
     }
@@ -127,16 +181,19 @@ const Applications = () => {
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-40">
+          <SelectTrigger className="w-full sm:w-44">
             <Filter className="h-4 w-4 mr-2" />
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="active">Active (Not Archived)</SelectItem>
             <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="pending">New</SelectItem>
             <SelectItem value="under_review">Under Review</SelectItem>
             <SelectItem value="approved">Approved</SelectItem>
+            <SelectItem value="enrolled">Enrolled</SelectItem>
             <SelectItem value="rejected">Rejected</SelectItem>
+            <SelectItem value="archived">Archived</SelectItem>
           </SelectContent>
         </Select>
         <Select value={programFilter} onValueChange={setProgramFilter}>
@@ -179,7 +236,7 @@ const Applications = () => {
               </TableHeader>
               <TableBody>
                 {filteredApplications.map((app) => (
-                  <TableRow key={app.id}>
+                  <TableRow key={app.id} className={app.status === "archived" ? "opacity-60" : ""}>
                     <TableCell className="text-muted-foreground">
                       {format(new Date(app.created_at), "MMM d, yyyy")}
                     </TableCell>
@@ -192,8 +249,8 @@ const Applications = () => {
                       <StatusBadge status={app.status} />
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon" asChild>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon" asChild title="View Details">
                           <Link to={`/admin/applications/${app.id}`}>
                             <Eye className="h-4 w-4" />
                           </Link>
@@ -205,6 +262,7 @@ const Applications = () => {
                               size="icon"
                               className="text-green-600 hover:text-green-700 hover:bg-green-50"
                               onClick={() => updateStatus(app.id, "approved")}
+                              title="Approve"
                             >
                               <Check className="h-4 w-4" />
                             </Button>
@@ -213,12 +271,38 @@ const Applications = () => {
                               size="icon"
                               className="text-red-600 hover:text-red-700 hover:bg-red-50"
                               onClick={() => updateStatus(app.id, "rejected")}
+                              title="Reject"
                             >
                               <X className="h-4 w-4" />
                             </Button>
                           </>
                         )}
-                        <Button variant="ghost" size="icon">
+                        {app.status !== "archived" && app.status !== "enrolled" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                            onClick={() => updateStatus(app.id, "archived")}
+                            title="Archive"
+                          >
+                            <Archive className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {(app.status === "archived" || app.status === "rejected") && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => {
+                              setSelectedApp(app);
+                              setDeleteDialogOpen(true);
+                            }}
+                            title="Delete Permanently"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="icon" title="Message">
                           <MessageSquare className="h-4 w-4" />
                         </Button>
                       </div>
@@ -230,6 +314,29 @@ const Applications = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Application Permanently?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the application for{" "}
+              <strong>{selectedApp?.student_first_name} {selectedApp?.student_surname}</strong>.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteApplication}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

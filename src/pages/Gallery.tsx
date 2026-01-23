@@ -1,9 +1,11 @@
-import { useState } from "react";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
+// Fallback images for when database is empty
 import schoolBuilding from "@/assets/school-building.webp";
 import computerLab from "@/assets/computer-lab.webp";
 import ceremony from "@/assets/ceremony.webp";
@@ -21,7 +23,8 @@ const categories = [
   { id: "facilities", label: "Facilities" },
 ];
 
-const galleryImages = [
+// Fallback gallery images when database is empty
+const fallbackImages = [
   { src: computerLab, alt: "Computer Lab", category: "academic" },
   { src: nurseryClass, alt: "Nursery Class", category: "academic" },
   { src: ceremony, alt: "School Ceremony", category: "ceremonies" },
@@ -32,10 +35,51 @@ const galleryImages = [
   { src: schoolBuilding, alt: "School Building", category: "facilities" },
 ];
 
+interface GalleryImage {
+  id: string;
+  file_url: string;
+  file_name: string;
+  category: string;
+  caption: string | null;
+}
+
 const Gallery = () => {
   const [activeCategory, setActiveCategory] = useState("all");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [dbImages, setDbImages] = useState<GalleryImage[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchGalleryImages();
+  }, []);
+
+  const fetchGalleryImages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("gallery_images")
+        .select("id, file_url, file_name, category, caption")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true })
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setDbImages(data || []);
+    } catch (error) {
+      console.error("Error fetching gallery images:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Use database images if available, otherwise fall back to static images
+  const galleryImages = dbImages.length > 0
+    ? dbImages.map(img => ({
+        src: img.file_url,
+        alt: img.caption || img.file_name,
+        category: img.category,
+      }))
+    : fallbackImages;
 
   const filteredImages =
     activeCategory === "all"
@@ -99,30 +143,36 @@ const Gallery = () => {
       {/* Gallery Grid */}
       <section className="py-12 md:py-16">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-            {filteredImages.map((image, index) => (
-              <div
-                key={index}
-                className="group relative overflow-hidden rounded-xl cursor-pointer aspect-[4/3] shadow-card hover:shadow-elevated transition-all duration-300"
-                onClick={() => openLightbox(index)}
-              >
-                <img
-                  src={image.src}
-                  alt={image.alt}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <p className="text-primary-foreground font-medium text-sm md:text-base">
-                      {image.alt}
-                    </p>
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+              {filteredImages.map((image, index) => (
+                <div
+                  key={index}
+                  className="group relative overflow-hidden rounded-xl cursor-pointer aspect-[4/3] shadow-card hover:shadow-elevated transition-all duration-300"
+                  onClick={() => openLightbox(index)}
+                >
+                  <img
+                    src={image.src}
+                    alt={image.alt}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <p className="text-primary-foreground font-medium text-sm md:text-base">
+                        {image.alt}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
-          {filteredImages.length === 0 && (
+          {!loading && filteredImages.length === 0 && (
             <div className="text-center py-16">
               <p className="text-muted-foreground text-lg">
                 No images found in this category.

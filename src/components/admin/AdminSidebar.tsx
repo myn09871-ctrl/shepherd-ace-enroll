@@ -9,6 +9,10 @@ import {
   Mail,
   Settings,
   LogOut,
+  Images,
+  CreditCard,
+  FolderOpen,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,7 +23,10 @@ const navItems = [
   { href: "/admin/applications", label: "Applications", icon: FileText },
   { href: "/admin/students", label: "Students", icon: Users },
   { href: "/admin/results", label: "Results", icon: GraduationCap },
+  { href: "/admin/fees", label: "Fees", icon: CreditCard },
+  { href: "/admin/documents", label: "Documents", icon: FolderOpen },
   { href: "/admin/announcements", label: "Announcements", icon: Megaphone },
+  { href: "/admin/gallery", label: "Gallery", icon: Images },
   { href: "/admin/messages", label: "Messages", icon: Mail },
   { href: "/admin/content", label: "Website", icon: Globe },
   { href: "/admin/settings", label: "Settings", icon: Settings },
@@ -99,7 +106,15 @@ const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
         </nav>
 
         {/* Footer - fixed at bottom */}
-        <div className="p-3 border-t border-border flex-shrink-0">
+        <div className="p-3 border-t border-border flex-shrink-0 space-y-1">
+          <Link
+            to="/admin/profile"
+            onClick={onClose}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors w-full"
+          >
+            <User className="h-4 w-4" />
+            <span>My Profile</span>
+          </Link>
           <button
             onClick={handleSignOut}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors w-full"
