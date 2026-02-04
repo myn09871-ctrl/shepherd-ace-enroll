@@ -53,9 +53,9 @@ const Header = () => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled
-          ? "bg-card/95 backdrop-blur-md shadow-card"
+          ? "bg-white/80 dark:bg-card/80 backdrop-blur-xl shadow-card border-b border-white/20"
           : "bg-transparent"
       }`}
     >
@@ -134,9 +134,9 @@ const Header = () => {
           </button>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu with glassmorphism */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden absolute top-20 left-0 right-0 bg-card shadow-elevated border-t border-border animate-fade-in">
+          <div className="lg:hidden absolute top-20 left-0 right-0 bg-white/90 dark:bg-card/90 backdrop-blur-xl shadow-elevated border-t border-white/30 animate-fade-in">
             <nav className="container mx-auto px-4 py-6 flex flex-col gap-4">
               {navLinks.map((link) =>
                 link.isRoute ? (

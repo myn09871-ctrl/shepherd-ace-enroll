@@ -61,8 +61,8 @@ const Hero = () => {
             className="text-primary-foreground space-y-4 sm:space-y-6 lg:space-y-8"
             style={{ transform: `translateY(${scrollY * -0.1}px)` }}
           >
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 animate-fade-up hover:scale-105 transition-transform duration-300">
+            {/* Badge with glassmorphism */}
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-lg border border-white/30 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 animate-fade-up hover:scale-105 hover:bg-white/20 transition-all duration-300 shadow-lg">
               <Award className="h-3 w-3 sm:h-4 sm:w-4 text-accent animate-pulse" />
               <span className="text-xs sm:text-sm font-medium">
                 100% BECE Distinction Rate
@@ -105,8 +105,8 @@ const Hero = () => {
               </Button>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6 pt-4 sm:pt-6 lg:pt-8 border-t border-primary-foreground/20 animate-fade-up animation-delay-500">
+            {/* Stats with glassmorphism */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6 pt-4 sm:pt-6 lg:pt-8 animate-fade-up animation-delay-500">
               {[
                 { icon: Award, value: "100%", label: "BECE Pass Rate" },
                 { icon: Users, value: "500+", label: "Students" },
@@ -114,7 +114,7 @@ const Hero = () => {
               ].map((stat, index) => (
                 <div 
                   key={stat.label}
-                  className="group hover:scale-105 transition-transform duration-300"
+                  className="group p-2 sm:p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:scale-105 transition-all duration-300"
                   style={{ animationDelay: `${600 + index * 100}ms` }}
                 >
                   <div className="flex items-center gap-1 sm:gap-2 mb-1">

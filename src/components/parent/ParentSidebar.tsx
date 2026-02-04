@@ -9,7 +9,9 @@ import {
   Settings, 
   LogOut,
   X,
-  Home
+  Home,
+  CreditCard,
+  CalendarCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useParentAuth } from "@/hooks/useParentAuth";
@@ -24,10 +26,12 @@ interface Student {
   photo_url: string | null;
 }
 
-// Removed Attendance and Fees - only core features
+// Full navigation with Fees and Attendance
 const navItems = [
   { href: "/portal", label: "Dashboard", icon: LayoutDashboard },
   { href: "/portal/academics", label: "Academic Performance", icon: GraduationCap },
+  { href: "/portal/fees", label: "Fees & Payments", icon: CreditCard },
+  { href: "/portal/attendance", label: "Attendance", icon: CalendarCheck },
   { href: "/portal/announcements", label: "Announcements", icon: Megaphone },
   { href: "/portal/documents", label: "Documents", icon: Folder },
   { href: "/portal/timetable", label: "Timetable", icon: Clock },

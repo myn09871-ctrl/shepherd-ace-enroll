@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { FileText, Globe, Mail, Clock, Eye, Images, CreditCard } from "lucide-react";
+import { FileText, Globe, Mail, Clock, Eye, Images, CreditCard, Users, GraduationCap, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StatsCard from "@/components/admin/StatsCard";
 import StatusBadge from "@/components/admin/StatusBadge";
+import ExpandableSearch from "@/components/admin/ExpandableSearch";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 
@@ -32,6 +33,7 @@ const Dashboard = () => {
     totalEnrolled: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -113,63 +115,89 @@ const Dashboard = () => {
     );
   }
 
+  const filteredApplications = recentApplications.filter(app =>
+    `${app.student_first_name} ${app.student_surname}`.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="space-y-4 md:space-y-6">
-      <div>
-        <h1 className="text-lg md:text-xl font-heading font-bold text-foreground">Dashboard</h1>
-        <p className="text-xs md:text-sm text-muted-foreground">Welcome to the admin portal</p>
+      {/* Header with gradient background */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary via-primary/90 to-accent p-4 md:p-6 text-primary-foreground">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
+        <div className="relative z-10 flex items-center justify-between">
+          <div>
+            <h1 className="text-lg md:text-2xl font-heading font-bold">Welcome Back!</h1>
+            <p className="text-xs md:text-sm text-primary-foreground/80">Good Shepherd International School Admin Portal</p>
+          </div>
+          <ExpandableSearch 
+            value={searchQuery} 
+            onChange={setSearchQuery}
+            placeholder="Search applications..."
+          />
+        </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards with blue theme */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
-        <StatsCard
-          title="Today"
-          value={stats.todayCount}
-          icon={FileText}
-          variant="info"
-        />
-        <StatsCard
-          title="Pending"
-          value={stats.pendingCount}
-          icon={Clock}
-          variant="warning"
-        />
-        <StatsCard
-          title="Approved"
-          value={stats.approvedThisWeek}
-          icon={FileText}
-          variant="success"
-        />
-        <StatsCard
-          title="Enrolled"
-          value={stats.totalEnrolled}
-          icon={FileText}
-          variant="default"
-        />
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-3 md:p-4 text-white shadow-lg">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -translate-y-4 translate-x-4" />
+          <FileText className="h-5 w-5 md:h-6 md:w-6 mb-2 opacity-80" />
+          <p className="text-2xl md:text-3xl font-bold">{stats.todayCount}</p>
+          <p className="text-xs md:text-sm text-white/80">Today's Applications</p>
+        </div>
+        
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 p-3 md:p-4 text-white shadow-lg">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -translate-y-4 translate-x-4" />
+          <Clock className="h-5 w-5 md:h-6 md:w-6 mb-2 opacity-80" />
+          <p className="text-2xl md:text-3xl font-bold">{stats.pendingCount}</p>
+          <p className="text-xs md:text-sm text-white/80">Pending Review</p>
+        </div>
+        
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 p-3 md:p-4 text-white shadow-lg">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -translate-y-4 translate-x-4" />
+          <TrendingUp className="h-5 w-5 md:h-6 md:w-6 mb-2 opacity-80" />
+          <p className="text-2xl md:text-3xl font-bold">{stats.approvedThisWeek}</p>
+          <p className="text-xs md:text-sm text-white/80">Approved This Week</p>
+        </div>
+        
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary to-primary/80 p-3 md:p-4 text-white shadow-lg">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -translate-y-4 translate-x-4" />
+          <Users className="h-5 w-5 md:h-6 md:w-6 mb-2 opacity-80" />
+          <p className="text-2xl md:text-3xl font-bold">{stats.totalEnrolled}</p>
+          <p className="text-xs md:text-sm text-white/80">Total Enrolled</p>
+        </div>
       </div>
 
       {/* Two Column Layout */}
       <div className="grid lg:grid-cols-3 gap-3 md:gap-4">
         {/* Recent Activity */}
-        <div className="lg:col-span-2 bg-card rounded-lg border border-border shadow-soft">
-          <div className="p-3 md:p-4 border-b border-border">
-            <h2 className="text-xs md:text-sm font-semibold text-foreground">Recent Applications</h2>
+        <div className="lg:col-span-2 bg-gradient-to-br from-card via-card to-primary/5 rounded-xl border border-border/50 shadow-card overflow-hidden">
+          <div className="p-3 md:p-4 border-b border-border bg-gradient-to-r from-primary/5 to-transparent">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm md:text-base font-semibold text-foreground flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                Recent Applications
+              </h2>
+              <span className="text-xs text-muted-foreground bg-primary/10 px-2 py-1 rounded-full">
+                {filteredApplications.length} total
+              </span>
+            </div>
           </div>
-          <div className="divide-y divide-border">
-            {recentApplications.length === 0 ? (
-              <div className="p-4 text-center text-xs md:text-sm text-muted-foreground">
-                No applications yet
+          <div className="divide-y divide-border/50">
+            {filteredApplications.length === 0 ? (
+              <div className="p-6 text-center text-sm text-muted-foreground">
+                {searchQuery ? "No matching applications found" : "No applications yet"}
               </div>
             ) : (
-              recentApplications.slice(0, 5).map((app) => (
-                <div key={app.id} className="p-2 md:p-3 flex items-center justify-between hover:bg-muted/50 transition-colors">
+              filteredApplications.slice(0, 5).map((app) => (
+                <div key={app.id} className="p-2 md:p-3 flex items-center justify-between hover:bg-primary/5 transition-colors">
                   <div className="flex items-center gap-2 md:gap-3 min-w-0">
-                    <div className={`h-2 w-2 rounded-full flex-shrink-0 ${
-                      app.status === "pending" ? "bg-blue-500" :
-                      app.status === "under_review" ? "bg-yellow-500" :
-                      app.status === "approved" ? "bg-green-500" :
-                      app.status === "enrolled" ? "bg-primary" :
-                      "bg-red-500"
+                    <div className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ring-2 ring-offset-2 ring-offset-card ${
+                      app.status === "pending" ? "bg-blue-500 ring-blue-500/30" :
+                      app.status === "under_review" ? "bg-yellow-500 ring-yellow-500/30" :
+                      app.status === "approved" ? "bg-green-500 ring-green-500/30" :
+                      app.status === "enrolled" ? "bg-primary ring-primary/30" :
+                      "bg-red-500 ring-red-500/30"
                     }`} />
                     <div className="min-w-0">
                       <p className="text-xs md:text-sm font-medium text-foreground truncate">
@@ -182,7 +210,7 @@ const Dashboard = () => {
                   </div>
                   <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
                     <StatusBadge status={app.status} size="sm" />
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0" asChild>
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-primary/10" asChild>
                       <Link to={`/admin/applications/${app.id}`}>
                         <Eye className="h-3 w-3 md:h-4 md:w-4" />
                       </Link>
@@ -192,31 +220,36 @@ const Dashboard = () => {
               ))
             )}
           </div>
-          {recentApplications.length > 0 && (
-            <div className="p-2 md:p-3 border-t border-border">
-              <Button variant="outline" size="sm" className="w-full text-xs md:text-sm h-8" asChild>
-                <Link to="/admin/applications">View All</Link>
+          {filteredApplications.length > 0 && (
+            <div className="p-2 md:p-3 border-t border-border/50 bg-gradient-to-r from-transparent to-primary/5">
+              <Button variant="outline" size="sm" className="w-full text-xs md:text-sm h-8 border-primary/20 hover:bg-primary/10" asChild>
+                <Link to="/admin/applications">View All Applications</Link>
               </Button>
             </div>
           )}
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-card rounded-lg border border-border shadow-soft">
-          <div className="p-3 md:p-4 border-b border-border">
-            <h2 className="text-xs md:text-sm font-semibold text-foreground">Quick Actions</h2>
+        <div className="bg-gradient-to-br from-card via-card to-secondary/5 rounded-xl border border-border/50 shadow-card overflow-hidden">
+          <div className="p-3 md:p-4 border-b border-border bg-gradient-to-r from-secondary/5 to-transparent">
+            <h2 className="text-sm md:text-base font-semibold text-foreground flex items-center gap-2">
+              <GraduationCap className="h-4 w-4 text-secondary" />
+              Quick Actions
+            </h2>
           </div>
           <div className="p-2 md:p-3 space-y-1 md:space-y-2">
-            {quickActions.map((action) => (
+            {quickActions.map((action, index) => (
               <Button
                 key={action.label}
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                className="w-full justify-start gap-2 text-xs md:text-sm h-8 md:h-9"
+                className="w-full justify-start gap-3 text-xs md:text-sm h-9 md:h-10 hover:bg-primary/10 hover:text-primary transition-all"
                 asChild
               >
                 <Link to={action.href}>
-                  <action.icon className="h-3 w-3 md:h-4 md:w-4" />
+                  <div className="p-1.5 rounded-lg bg-primary/10">
+                    <action.icon className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
+                  </div>
                   {action.label}
                 </Link>
               </Button>

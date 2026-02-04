@@ -16,11 +16,15 @@ const Contact = () => {
   ];
 
   return (
-    <section id="contact" className="py-20 lg:py-32 bg-muted/30">
-      <div className="container mx-auto px-4">
+    <section id="contact" className="py-20 lg:py-32 relative overflow-hidden bg-gradient-to-br from-muted/50 via-background to-primary/5">
+      {/* Background decoration */}
+      <div className="absolute top-20 left-10 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
+      
+      <div className="container mx-auto px-4 relative z-10">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-12 lg:mb-16">
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-3 py-1.5 sm:px-4 sm:py-2 mb-4 sm:mb-6 animate-fade-up">
+          <div className="inline-flex items-center gap-2 bg-white/60 dark:bg-card/60 backdrop-blur-lg text-primary rounded-full px-3 py-1.5 sm:px-4 sm:py-2 mb-4 sm:mb-6 animate-fade-up border border-white/40 shadow-soft">
             <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="text-xs sm:text-sm font-semibold">Get In Touch</span>
           </div>
@@ -41,9 +45,9 @@ const Contact = () => {
           {/* Contact Info */}
           <div className="space-y-8">
             {/* Location Card */}
-            <div className="bg-card rounded-2xl p-6 shadow-card animate-fade-up animation-delay-300">
+            <div className="bg-white/70 dark:bg-card/70 backdrop-blur-xl rounded-2xl p-6 shadow-card border border-white/40 animate-fade-up animation-delay-300 hover:shadow-elevated transition-all duration-300">
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center shadow-inner">
                   <MapPin className="h-6 w-6 text-primary" />
                 </div>
                 <div>
@@ -68,9 +72,9 @@ const Contact = () => {
             </div>
 
             {/* Phone Numbers Card */}
-            <div className="bg-card rounded-2xl p-6 shadow-card animate-fade-up animation-delay-400">
+            <div className="bg-white/70 dark:bg-card/70 backdrop-blur-xl rounded-2xl p-6 shadow-card border border-white/40 animate-fade-up animation-delay-400 hover:shadow-elevated transition-all duration-300">
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-secondary/20 flex items-center justify-center">
+                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-secondary/20 to-secondary/10 flex items-center justify-center shadow-inner">
                   <Phone className="h-6 w-6 text-secondary" />
                 </div>
                 <div className="flex-1">
@@ -82,7 +86,7 @@ const Contact = () => {
                       <a
                         key={phone}
                         href={`tel:${phone}`}
-                        className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors group"
+                        className="flex items-center gap-3 p-3 rounded-xl bg-white/50 dark:bg-muted/50 backdrop-blur-sm hover:bg-primary/10 transition-colors group border border-white/30"
                       >
                         <Phone className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
                         <span className="font-semibold text-foreground text-lg">
@@ -96,9 +100,9 @@ const Contact = () => {
             </div>
 
             {/* Office Hours Card */}
-            <div className="bg-card rounded-2xl p-6 shadow-card animate-fade-up animation-delay-500">
+            <div className="bg-white/70 dark:bg-card/70 backdrop-blur-xl rounded-2xl p-6 shadow-card border border-white/40 animate-fade-up animation-delay-500 hover:shadow-elevated transition-all duration-300">
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center">
+                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-accent/10 flex items-center justify-center shadow-inner">
                   <Clock className="h-6 w-6 text-accent" />
                 </div>
                 <div>

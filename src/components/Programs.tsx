@@ -104,15 +104,15 @@ const Programs = () => {
           </p>
         </div>
 
-        {/* Academic Programs Grid */}
+        {/* Academic Programs Grid with glassmorphism */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 mb-10 sm:mb-16 lg:mb-20">
           {academicPrograms.map((program, index) => (
             <div
               key={program.title}
-              className="group bg-card rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-card hover:shadow-elevated transition-all duration-300 hover:-translate-y-2 animate-fade-up"
+              className="group bg-white/80 dark:bg-card/80 backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 border border-white/50 dark:border-border/50 shadow-card hover:shadow-elevated transition-all duration-300 hover:-translate-y-2 hover:bg-white/90 dark:hover:bg-card/90 animate-fade-up"
               style={{ animationDelay: `${(index + 3) * 100}ms` }}
             >
-              <div className={`inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl ${program.color} mb-2 sm:mb-4 group-hover:scale-110 transition-transform`}>
+              <div className={`inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl ${program.color} mb-2 sm:mb-4 group-hover:scale-110 transition-transform shadow-sm`}>
                 <program.icon className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
               </div>
               
@@ -124,16 +124,18 @@ const Programs = () => {
                 {program.description}
               </p>
               
-              <span className="inline-block text-[10px] sm:text-xs font-semibold text-primary bg-primary/10 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
+              <span className="inline-block text-[10px] sm:text-xs font-semibold text-primary bg-primary/10 backdrop-blur-sm px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-primary/10">
                 {program.age}
               </span>
             </div>
           ))}
         </div>
 
-        {/* Career Training Section */}
-        <div className="bg-muted/30 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-12">
-          <div className="text-center mb-6 sm:mb-8 lg:mb-12">
+        {/* Career Training Section with glassmorphism */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-12 border border-white/20">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMwMDAiIGZpbGwtb3BhY2l0eT0iMC4wMiI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
+          
+          <div className="relative z-10 text-center mb-6 sm:mb-8 lg:mb-12">
             <h3 className="font-heading text-lg sm:text-xl lg:text-3xl font-bold text-foreground mb-2 sm:mb-4">
               Career Training Courses
             </h3>
@@ -143,11 +145,11 @@ const Programs = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+          <div className="relative z-10 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {careerPrograms.map((program, index) => (
               <div
                 key={program.title}
-                className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card shadow-card hover:shadow-elevated transition-all duration-300"
+                className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-white/70 dark:bg-card/70 backdrop-blur-lg border border-white/40 shadow-card hover:shadow-elevated transition-all duration-300 hover:-translate-y-1"
               >
                 {/* Image */}
                 <div className="relative h-24 sm:h-32 lg:h-40 overflow-hidden">
@@ -156,9 +158,9 @@ const Programs = () => {
                     alt={program.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-transparent" />
                   <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 right-2 sm:right-4">
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-primary-foreground">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-white">
                       <program.icon className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
                       <h4 className="font-heading text-xs sm:text-sm lg:text-base font-bold">{program.title}</h4>
                     </div>
