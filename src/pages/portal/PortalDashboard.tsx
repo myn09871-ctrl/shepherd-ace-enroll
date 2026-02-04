@@ -202,145 +202,147 @@ const PortalDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Student Profile Card */}
-      {student && (
-        <Card className="bg-gradient-to-r from-primary/10 to-secondary/10">
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <div className="h-20 w-20 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                {student.photo_url ? (
-                  <img src={student.photo_url} alt="" className="h-20 w-20 rounded-full object-cover" />
-                ) : (
-                  <span className="text-2xl font-bold text-primary">
-                    {student.first_name[0]}{student.surname[0]}
-                  </span>
-                )}
-              </div>
-              <div className="text-center sm:text-left">
-                <h1 className="text-xl font-bold text-foreground">
-                  {student.first_name} {student.middle_name || ""} {student.surname}
-                </h1>
-                <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
-                  <Badge variant="secondary">{student.student_id}</Badge>
-                  <Badge variant="outline">{student.current_class}</Badge>
-                  <Badge variant="outline">{calculateAge(student.date_of_birth)} years old</Badge>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Academic Year: {student.academic_year}
-                </p>
+      {/* Welcome Header with Blue Gradient */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary via-primary/90 to-accent p-4 md:p-6 text-primary-foreground">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-6 -translate-x-6" />
+        
+        {student && (
+          <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4">
+            <div className="h-20 w-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0 ring-4 ring-white/30">
+              {student.photo_url ? (
+                <img src={student.photo_url} alt="" className="h-20 w-20 rounded-full object-cover" />
+              ) : (
+                <span className="text-2xl font-bold">
+                  {student.first_name[0]}{student.surname[0]}
+                </span>
+              )}
+            </div>
+            <div className="text-center sm:text-left">
+              <p className="text-sm text-white/80">Welcome back,</p>
+              <h1 className="text-xl md:text-2xl font-bold">
+                {student.first_name} {student.middle_name || ""} {student.surname}
+              </h1>
+              <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+                <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium">{student.student_id}</span>
+                <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium">{student.current_class}</span>
+                <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium">{calculateAge(student.date_of_birth)} years</span>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        )}
+      </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Term Average</p>
-                <p className="text-lg font-bold text-foreground">
-                  {stats.termAverage !== null ? `${stats.termAverage}%` : "—"}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${getAttendanceColor(stats.attendancePercentage)}`}>
-                <Calendar className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Attendance</p>
-                <p className="text-lg font-bold text-foreground">{stats.attendancePercentage}%</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-100 rounded-lg relative">
-                <Bell className="h-5 w-5 text-orange-600" />
-                {stats.unreadAnnouncements > 0 && (
-                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-destructive rounded-full text-[10px] text-white flex items-center justify-center">
-                    {stats.unreadAnnouncements}
-                  </span>
-                )}
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Unread</p>
-                <p className="text-lg font-bold text-foreground">{stats.unreadAnnouncements}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${stats.pendingFees > 0 ? 'bg-red-100' : 'bg-green-100'}`}>
-                <CreditCard className={`h-5 w-5 ${stats.pendingFees > 0 ? 'text-red-600' : 'text-green-600'}`} />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Pending Fees</p>
-                <p className="text-lg font-bold text-foreground">
-                  {stats.pendingFees > 0 ? `GH₵${stats.pendingFees.toLocaleString()}` : "Paid"}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Quick Stats - Blue themed */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-3 md:p-4 text-white shadow-lg">
+          <div className="absolute top-0 right-0 w-12 h-12 bg-white/10 rounded-full -translate-y-3 translate-x-3" />
+          <TrendingUp className="h-5 w-5 mb-2 opacity-80" />
+          <p className="text-2xl md:text-3xl font-bold">
+            {stats.termAverage !== null ? `${stats.termAverage}%` : "—"}
+          </p>
+          <p className="text-xs text-white/80">Term Average</p>
+        </div>
+        
+        <div className={`relative overflow-hidden rounded-xl p-3 md:p-4 text-white shadow-lg ${
+          stats.attendancePercentage >= 90 
+            ? 'bg-gradient-to-br from-emerald-500 to-green-600' 
+            : stats.attendancePercentage >= 75 
+            ? 'bg-gradient-to-br from-amber-500 to-orange-500' 
+            : 'bg-gradient-to-br from-red-500 to-rose-600'
+        }`}>
+          <div className="absolute top-0 right-0 w-12 h-12 bg-white/10 rounded-full -translate-y-3 translate-x-3" />
+          <Calendar className="h-5 w-5 mb-2 opacity-80" />
+          <p className="text-2xl md:text-3xl font-bold">{stats.attendancePercentage}%</p>
+          <p className="text-xs text-white/80">Attendance</p>
+        </div>
+        
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 p-3 md:p-4 text-white shadow-lg">
+          <div className="absolute top-0 right-0 w-12 h-12 bg-white/10 rounded-full -translate-y-3 translate-x-3" />
+          <div className="relative">
+            <Bell className="h-5 w-5 mb-2 opacity-80" />
+            {stats.unreadAnnouncements > 0 && (
+              <span className="absolute -top-1 -right-1 h-4 w-4 bg-white rounded-full text-[10px] text-orange-600 font-bold flex items-center justify-center">
+                {stats.unreadAnnouncements}
+              </span>
+            )}
+          </div>
+          <p className="text-2xl md:text-3xl font-bold">{stats.unreadAnnouncements}</p>
+          <p className="text-xs text-white/80">Unread</p>
+        </div>
+        
+        <div className={`relative overflow-hidden rounded-xl p-3 md:p-4 text-white shadow-lg ${
+          stats.pendingFees > 0 
+            ? 'bg-gradient-to-br from-red-500 to-rose-600' 
+            : 'bg-gradient-to-br from-emerald-500 to-green-600'
+        }`}>
+          <div className="absolute top-0 right-0 w-12 h-12 bg-white/10 rounded-full -translate-y-3 translate-x-3" />
+          <CreditCard className="h-5 w-5 mb-2 opacity-80" />
+          <p className="text-2xl md:text-3xl font-bold">
+            {stats.pendingFees > 0 ? `GH₵${stats.pendingFees.toLocaleString()}` : "Paid ✓"}
+          </p>
+          <p className="text-xs text-white/80">Fees Status</p>
+        </div>
       </div>
 
       {/* Quick Links & Recent Activity */}
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Quick Links */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Quick Access</CardTitle>
+        {/* Quick Links - Blue themed */}
+        <Card className="bg-gradient-to-br from-card via-card to-primary/5 border-primary/10">
+          <CardHeader className="pb-3 bg-gradient-to-r from-primary/5 to-transparent">
+            <CardTitle className="text-base flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-primary/10">
+                <GraduationCap className="h-4 w-4 text-primary" />
+              </div>
+              Quick Access
+            </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-3">
             <Link to="/portal/academics">
-              <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2">
-                <GraduationCap className="h-5 w-5 text-primary" />
+              <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2 hover:bg-primary/10 hover:border-primary/30 transition-all">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <GraduationCap className="h-5 w-5 text-primary" />
+                </div>
                 <span className="text-xs">Report Cards</span>
               </Button>
             </Link>
             <Link to="/portal/attendance">
-              <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2">
-                <Calendar className="h-5 w-5 text-primary" />
+              <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2 hover:bg-primary/10 hover:border-primary/30 transition-all">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Calendar className="h-5 w-5 text-primary" />
+                </div>
                 <span className="text-xs">Attendance</span>
               </Button>
             </Link>
             <Link to="/portal/timetable">
-              <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2">
-                <Clock className="h-5 w-5 text-primary" />
+              <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2 hover:bg-primary/10 hover:border-primary/30 transition-all">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Clock className="h-5 w-5 text-primary" />
+                </div>
                 <span className="text-xs">Timetable</span>
               </Button>
             </Link>
             <Link to="/portal/documents">
-              <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2">
-                <FileText className="h-5 w-5 text-primary" />
+              <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2 hover:bg-primary/10 hover:border-primary/30 transition-all">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <FileText className="h-5 w-5 text-primary" />
+                </div>
                 <span className="text-xs">Documents</span>
               </Button>
             </Link>
           </CardContent>
         </Card>
 
-        {/* Recent Activity - Now Clickable */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Recent Activity</CardTitle>
+        {/* Recent Activity - Blue themed */}
+        <Card className="bg-gradient-to-br from-card via-card to-secondary/5 border-secondary/10">
+          <CardHeader className="pb-3 bg-gradient-to-r from-secondary/5 to-transparent">
+            <CardTitle className="text-base flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-secondary/10">
+                <Bell className="h-4 w-4 text-secondary" />
+              </div>
+              Recent Activity
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {recentActivity.length === 0 ? (
@@ -348,11 +350,11 @@ const PortalDashboard = () => {
                 No recent activity
               </p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {recentActivity.map((activity) => (
                   <div 
                     key={activity.id} 
-                    className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                    className="flex items-start gap-3 p-3 rounded-xl bg-gradient-to-r from-muted/50 to-transparent hover:from-primary/10 hover:to-transparent transition-all cursor-pointer border border-transparent hover:border-primary/20"
                     onClick={() => handleActivityClick(activity)}
                     role="button"
                     tabIndex={0}
@@ -362,34 +364,34 @@ const PortalDashboard = () => {
                       }
                     }}
                   >
-                    <div className={`p-1.5 rounded-full shrink-0 ${
-                      activity.type === "grade" ? "bg-blue-100" :
-                      activity.type === "announcement" ? "bg-orange-100" :
-                      activity.type === "attendance" ? "bg-green-100" :
-                      "bg-purple-100"
+                    <div className={`p-2 rounded-lg shrink-0 ${
+                      activity.type === "grade" ? "bg-blue-500/10" :
+                      activity.type === "announcement" ? "bg-orange-500/10" :
+                      activity.type === "attendance" ? "bg-green-500/10" :
+                      "bg-purple-500/10"
                     }`}>
-                      {activity.type === "grade" && <GraduationCap className="h-3 w-3 text-blue-600" />}
-                      {activity.type === "announcement" && <Bell className="h-3 w-3 text-orange-600" />}
-                      {activity.type === "attendance" && <Calendar className="h-3 w-3 text-green-600" />}
-                      {activity.type === "fee" && <CreditCard className="h-3 w-3 text-purple-600" />}
+                      {activity.type === "grade" && <GraduationCap className="h-4 w-4 text-blue-600" />}
+                      {activity.type === "announcement" && <Bell className="h-4 w-4 text-orange-600" />}
+                      {activity.type === "attendance" && <Calendar className="h-4 w-4 text-green-600" />}
+                      {activity.type === "fee" && <CreditCard className="h-4 w-4 text-purple-600" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{activity.title}</p>
                       <p className="text-xs text-muted-foreground">{activity.description}</p>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
                         {format(new Date(activity.timestamp), "MMM d")}
                       </span>
-                      <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                      <ChevronRight className="h-4 w-4 text-primary" />
                     </div>
                   </div>
                 ))}
               </div>
             )}
             <Link to="/portal/announcements" className="block mt-4">
-              <Button variant="ghost" size="sm" className="w-full">
-                View All
+              <Button variant="outline" size="sm" className="w-full border-primary/20 hover:bg-primary/10 hover:text-primary">
+                View All Activity
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </Link>

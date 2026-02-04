@@ -159,6 +159,45 @@
   .shadow-glow {
     box-shadow: var(--shadow-glow);
   }
+
+  /* Glassmorphism effects */
+  .glass {
+    @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-lg;
+  }
+
+  .glass-light {
+    @apply bg-white/60 backdrop-blur-lg border border-white/40 shadow-soft;
+  }
+
+  .glass-dark {
+    @apply bg-black/10 backdrop-blur-md border border-black/10 shadow-lg;
+  }
+
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-xl border border-white/50 shadow-card;
+  }
+
+  .glass-primary {
+    background: linear-gradient(135deg, hsla(230, 70%, 35%, 0.15), hsla(210, 80%, 50%, 0.1));
+    @apply backdrop-blur-md border border-primary/20 shadow-lg;
+  }
+
+  /* Dashboard card styles with blue theme */
+  .dashboard-card {
+    @apply bg-gradient-to-br from-card via-card to-primary/5 border border-border/50 shadow-card;
+  }
+
+  .dashboard-card-blue {
+    @apply bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 shadow-soft;
+  }
+
+  .dashboard-stat-card {
+    @apply relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-accent text-primary-foreground;
+  }
+
+  .dashboard-header {
+    @apply bg-gradient-to-r from-primary/10 via-transparent to-secondary/10;
+  }
 }
 
 @layer utilities {
