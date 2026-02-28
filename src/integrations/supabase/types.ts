@@ -199,32 +199,78 @@ export type Database = {
           consent_truthfulness: boolean | null
           created_at: string
           current_medications: Json | null
+          fee_payment_plan: string | null
           financial_acknowledgment: boolean | null
           financial_assistance_interest: boolean | null
           guardian1_address: string
+          guardian1_children_classes: string | null
+          guardian1_children_in_home: number | null
+          guardian1_educational_qualification: string | null
           guardian1_email: string
           guardian1_employer: string | null
           guardian1_full_name: string
+          guardian1_house_no: string | null
+          guardian1_how_many_children: string | null
           guardian1_is_primary_contact: boolean | null
           guardian1_landmark: string | null
+          guardian1_location: string | null
+          guardian1_marital_status: string | null
           guardian1_occupation: string | null
+          guardian1_other_children_in_school: boolean | null
           guardian1_phone_primary: string
           guardian1_phone_secondary: string | null
+          guardian1_pupil_lives_with: boolean | null
           guardian1_relationship: string
+          guardian1_religion: string | null
+          guardian1_responsible_for_fees: boolean | null
           guardian1_workplace_address: string | null
           guardian1_workplace_phone: string | null
           guardian2_address: string | null
+          guardian2_children_classes: string | null
+          guardian2_children_in_home: number | null
+          guardian2_educational_qualification: string | null
           guardian2_email: string | null
           guardian2_full_name: string | null
+          guardian2_house_no: string | null
+          guardian2_how_many_children: string | null
           guardian2_is_emergency_contact: boolean | null
+          guardian2_location: string | null
+          guardian2_marital_status: string | null
+          guardian2_occupation: string | null
+          guardian2_other_children_in_school: boolean | null
           guardian2_phone_primary: string | null
           guardian2_phone_secondary: string | null
+          guardian2_pupil_lives_with: boolean | null
           guardian2_relationship: string | null
+          guardian2_religion: string | null
+          guardian2_responsible_for_fees: boolean | null
+          guardian2_tel_no: string | null
+          guardian3_address: string | null
+          guardian3_children_in_home: number | null
+          guardian3_educational_qualification: string | null
+          guardian3_house_no: string | null
+          guardian3_location: string | null
+          guardian3_marital_status: string | null
+          guardian3_name: string | null
+          guardian3_occupation: string | null
+          guardian3_pupil_lives_with: boolean | null
+          guardian3_religion: string | null
+          guardian3_responsible_for_fees: boolean | null
+          guardian3_tel_no: string | null
           has_allergies: boolean | null
           has_medical_conditions: boolean | null
           has_special_needs: boolean | null
           id: string
+          immunization_bcg: boolean | null
+          immunization_dtp: boolean | null
+          immunization_hepatitis_b: boolean | null
+          immunization_hib: boolean | null
+          immunization_measles: boolean | null
+          immunization_poliomyelitis: boolean | null
+          immunization_tetanus: boolean | null
           immunization_up_to_date: boolean | null
+          immunization_whooping_cough: boolean | null
+          immunization_yellow_fever: boolean | null
           intended_start_date: string | null
           is_first_time_enrollment: boolean | null
           last_grade_completed: string | null
@@ -234,6 +280,8 @@ export type Database = {
           pickup_location: string | null
           portal_email: string | null
           portal_password_hash: string | null
+          previous_school_date_attended: string | null
+          previous_school_last_class: string | null
           previous_school_location: string | null
           previous_school_name: string | null
           program_level: string
@@ -248,11 +296,15 @@ export type Database = {
           student_dob: string
           student_first_name: string
           student_gender: string
+          student_hometown: string | null
+          student_languages_spoken: string | null
           student_middle_name: string | null
           student_nationality: string
           student_photo_url: string | null
           student_place_of_birth: string | null
+          student_religion: string | null
           student_surname: string
+          subjects_studied: string[] | null
           transportation_method: string | null
           updated_at: string
           vaccination_card_url: string | null
@@ -272,32 +324,78 @@ export type Database = {
           consent_truthfulness?: boolean | null
           created_at?: string
           current_medications?: Json | null
+          fee_payment_plan?: string | null
           financial_acknowledgment?: boolean | null
           financial_assistance_interest?: boolean | null
           guardian1_address: string
+          guardian1_children_classes?: string | null
+          guardian1_children_in_home?: number | null
+          guardian1_educational_qualification?: string | null
           guardian1_email: string
           guardian1_employer?: string | null
           guardian1_full_name: string
+          guardian1_house_no?: string | null
+          guardian1_how_many_children?: string | null
           guardian1_is_primary_contact?: boolean | null
           guardian1_landmark?: string | null
+          guardian1_location?: string | null
+          guardian1_marital_status?: string | null
           guardian1_occupation?: string | null
+          guardian1_other_children_in_school?: boolean | null
           guardian1_phone_primary: string
           guardian1_phone_secondary?: string | null
+          guardian1_pupil_lives_with?: boolean | null
           guardian1_relationship: string
+          guardian1_religion?: string | null
+          guardian1_responsible_for_fees?: boolean | null
           guardian1_workplace_address?: string | null
           guardian1_workplace_phone?: string | null
           guardian2_address?: string | null
+          guardian2_children_classes?: string | null
+          guardian2_children_in_home?: number | null
+          guardian2_educational_qualification?: string | null
           guardian2_email?: string | null
           guardian2_full_name?: string | null
+          guardian2_house_no?: string | null
+          guardian2_how_many_children?: string | null
           guardian2_is_emergency_contact?: boolean | null
+          guardian2_location?: string | null
+          guardian2_marital_status?: string | null
+          guardian2_occupation?: string | null
+          guardian2_other_children_in_school?: boolean | null
           guardian2_phone_primary?: string | null
           guardian2_phone_secondary?: string | null
+          guardian2_pupil_lives_with?: boolean | null
           guardian2_relationship?: string | null
+          guardian2_religion?: string | null
+          guardian2_responsible_for_fees?: boolean | null
+          guardian2_tel_no?: string | null
+          guardian3_address?: string | null
+          guardian3_children_in_home?: number | null
+          guardian3_educational_qualification?: string | null
+          guardian3_house_no?: string | null
+          guardian3_location?: string | null
+          guardian3_marital_status?: string | null
+          guardian3_name?: string | null
+          guardian3_occupation?: string | null
+          guardian3_pupil_lives_with?: boolean | null
+          guardian3_religion?: string | null
+          guardian3_responsible_for_fees?: boolean | null
+          guardian3_tel_no?: string | null
           has_allergies?: boolean | null
           has_medical_conditions?: boolean | null
           has_special_needs?: boolean | null
           id?: string
+          immunization_bcg?: boolean | null
+          immunization_dtp?: boolean | null
+          immunization_hepatitis_b?: boolean | null
+          immunization_hib?: boolean | null
+          immunization_measles?: boolean | null
+          immunization_poliomyelitis?: boolean | null
+          immunization_tetanus?: boolean | null
           immunization_up_to_date?: boolean | null
+          immunization_whooping_cough?: boolean | null
+          immunization_yellow_fever?: boolean | null
           intended_start_date?: string | null
           is_first_time_enrollment?: boolean | null
           last_grade_completed?: string | null
@@ -307,6 +405,8 @@ export type Database = {
           pickup_location?: string | null
           portal_email?: string | null
           portal_password_hash?: string | null
+          previous_school_date_attended?: string | null
+          previous_school_last_class?: string | null
           previous_school_location?: string | null
           previous_school_name?: string | null
           program_level: string
@@ -321,11 +421,15 @@ export type Database = {
           student_dob: string
           student_first_name: string
           student_gender: string
+          student_hometown?: string | null
+          student_languages_spoken?: string | null
           student_middle_name?: string | null
           student_nationality: string
           student_photo_url?: string | null
           student_place_of_birth?: string | null
+          student_religion?: string | null
           student_surname: string
+          subjects_studied?: string[] | null
           transportation_method?: string | null
           updated_at?: string
           vaccination_card_url?: string | null
@@ -345,32 +449,78 @@ export type Database = {
           consent_truthfulness?: boolean | null
           created_at?: string
           current_medications?: Json | null
+          fee_payment_plan?: string | null
           financial_acknowledgment?: boolean | null
           financial_assistance_interest?: boolean | null
           guardian1_address?: string
+          guardian1_children_classes?: string | null
+          guardian1_children_in_home?: number | null
+          guardian1_educational_qualification?: string | null
           guardian1_email?: string
           guardian1_employer?: string | null
           guardian1_full_name?: string
+          guardian1_house_no?: string | null
+          guardian1_how_many_children?: string | null
           guardian1_is_primary_contact?: boolean | null
           guardian1_landmark?: string | null
+          guardian1_location?: string | null
+          guardian1_marital_status?: string | null
           guardian1_occupation?: string | null
+          guardian1_other_children_in_school?: boolean | null
           guardian1_phone_primary?: string
           guardian1_phone_secondary?: string | null
+          guardian1_pupil_lives_with?: boolean | null
           guardian1_relationship?: string
+          guardian1_religion?: string | null
+          guardian1_responsible_for_fees?: boolean | null
           guardian1_workplace_address?: string | null
           guardian1_workplace_phone?: string | null
           guardian2_address?: string | null
+          guardian2_children_classes?: string | null
+          guardian2_children_in_home?: number | null
+          guardian2_educational_qualification?: string | null
           guardian2_email?: string | null
           guardian2_full_name?: string | null
+          guardian2_house_no?: string | null
+          guardian2_how_many_children?: string | null
           guardian2_is_emergency_contact?: boolean | null
+          guardian2_location?: string | null
+          guardian2_marital_status?: string | null
+          guardian2_occupation?: string | null
+          guardian2_other_children_in_school?: boolean | null
           guardian2_phone_primary?: string | null
           guardian2_phone_secondary?: string | null
+          guardian2_pupil_lives_with?: boolean | null
           guardian2_relationship?: string | null
+          guardian2_religion?: string | null
+          guardian2_responsible_for_fees?: boolean | null
+          guardian2_tel_no?: string | null
+          guardian3_address?: string | null
+          guardian3_children_in_home?: number | null
+          guardian3_educational_qualification?: string | null
+          guardian3_house_no?: string | null
+          guardian3_location?: string | null
+          guardian3_marital_status?: string | null
+          guardian3_name?: string | null
+          guardian3_occupation?: string | null
+          guardian3_pupil_lives_with?: boolean | null
+          guardian3_religion?: string | null
+          guardian3_responsible_for_fees?: boolean | null
+          guardian3_tel_no?: string | null
           has_allergies?: boolean | null
           has_medical_conditions?: boolean | null
           has_special_needs?: boolean | null
           id?: string
+          immunization_bcg?: boolean | null
+          immunization_dtp?: boolean | null
+          immunization_hepatitis_b?: boolean | null
+          immunization_hib?: boolean | null
+          immunization_measles?: boolean | null
+          immunization_poliomyelitis?: boolean | null
+          immunization_tetanus?: boolean | null
           immunization_up_to_date?: boolean | null
+          immunization_whooping_cough?: boolean | null
+          immunization_yellow_fever?: boolean | null
           intended_start_date?: string | null
           is_first_time_enrollment?: boolean | null
           last_grade_completed?: string | null
@@ -380,6 +530,8 @@ export type Database = {
           pickup_location?: string | null
           portal_email?: string | null
           portal_password_hash?: string | null
+          previous_school_date_attended?: string | null
+          previous_school_last_class?: string | null
           previous_school_location?: string | null
           previous_school_name?: string | null
           program_level?: string
@@ -394,11 +546,15 @@ export type Database = {
           student_dob?: string
           student_first_name?: string
           student_gender?: string
+          student_hometown?: string | null
+          student_languages_spoken?: string | null
           student_middle_name?: string | null
           student_nationality?: string
           student_photo_url?: string | null
           student_place_of_birth?: string | null
+          student_religion?: string | null
           student_surname?: string
+          subjects_studied?: string[] | null
           transportation_method?: string | null
           updated_at?: string
           vaccination_card_url?: string | null
