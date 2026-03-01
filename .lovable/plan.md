@@ -1,212 +1,211 @@
 
-# Restructure Admission Form to Match Physical School Form
+# Automated Report Card System for GSIS
 
 ## Overview
-Align the digital admission form with the school's official paper form structure (sections A-H), adding missing fields and reorganizing existing ones. The Parent Portal account section and automated approval logic remain untouched.
+Build a full report card system that mirrors the GSIS Excel template's logic (IAS/ETES scoring, proficiency levels 1-5, grade letters A/P/AP/D/B) while adopting the colorful visual design from the reference image (school crest header, student photo, colored subject rows, grade interpretation key). Admin can enter scores per student, and all calculations (totals, proficiency, grades, class averages, positions) are automated.
 
-## What the Physical Form Has That's Missing Digitally
+## What the GSIS Report Card Contains
 
-### Section A - Child's Personal Data (missing fields)
-- Hometown
-- Language(s) Spoken
-- Religion
-- Passport-size photograph upload
+**Score Structure:**
+- IAS (50%) -- Internal Assessment Score (replaces current class_work + assignment + midterm)
+- ETES (50%) -- End of Term Exam Score (replaces current endterm)
+- Total Score (100%) = IAS + ETES
 
-### Section B - Health Status (partially covered, needs restructuring)
-- Specific immunization checklist: BCG, DTP, Whooping Cough, Tetanus, Poliomyelitis, Measles, Yellow Fever, Hepatitis B (3 doses), HIB (3 doses)
-- Currently uses generic checkboxes; needs to match the exact vaccinations listed
+**Grading Scale (GSIS-specific, NOT the old A1-F9):**
+| Marks | Level | Grade | Meaning |
+|-------|-------|-------|---------|
+| 80%+  | 1 | A | Advanced |
+| 75-79% | 2 | P | Proficient |
+| 70-74% | 3 | AP | Approaching Proficiency |
+| 65-69% | 4 | D | Developing |
+| Below 64% | 5 | B | Beginning |
 
-### Section C - Record of Previous School (missing fields)
-- Date Attended
-- Last Class Attended (separate from current "last grade completed")
-
-### Section D - Subjects Studied in Previous School (entirely missing)
-- Science: Natural Science, Integrated Science, Mathematics
-- Social Sciences: Social Studies, RME, Citizenship
-- Languages: English, French, Akwapim Twi
-- Vocational Skills: Creative Arts, Pre-Tech/BDT, ICT
-
-### Section E - Biological Family Data (needs restructuring)
-Current form has "Primary Guardian" and "Secondary Guardian". Physical form has three columns: **Father**, **Mother**, **Guardian** -- each with:
-- Name, Occupation, Educational Qualification, Marital Status, Religion
-- Address, Tel No (Local or Abroad), Location, House No
-- No. of children in home, Other children in this school (Yes/No, how many, which classes)
-- Who is responsible for fees (Mr/Mrs/Miss)
-- Pupil presently lives with, Younger/Older sibling info
-
-### Section F - Fee Payment Policy (entirely missing)
-Three FLEXI Payment Plans:
-- One Touch (full fee at once on re-opening)
-- Two months Installments (50% on re-opening, 50% after Mid-terms)
-- Daily Susu Payment Scheme
-
-### Section G - Regulations (display only, partially in consent)
-- Dismissal rules
-- Withdrawal notice requirements
-
-### Section H - Undertaking (partially in consent)
-- Agreement and signature line
+**Additional Report Fields:**
+- Attendance (days present out of total)
+- Conduct, Attitude, Interest
+- Form Teacher's Name and Remark
+- Headteacher's Name and Remark
+- Next Term Begins date
+- Promoted To class
+- Number on Roll (total students in class)
+- Student passport photo
+- Cumulated Score (total of all subjects) out of max (subjects x 100)
+- Class Average Score, Learner's Average Score
 
 ---
 
-## Implementation Plan
+## Database Changes
 
-### Step 1: Database Migration
-Add new columns to `enrollment_applications` table:
+### 1. New `report_cards` Table
+Stores per-student, per-term report metadata (the fields that aren't per-subject):
 
 ```text
-Student fields:
-  - student_hometown (text, nullable)
-  - student_languages_spoken (text, nullable)
-  - student_religion (text, nullable)
-
-Father fields (reuse guardian1_ prefix):
-  - guardian1_educational_qualification (text, nullable)
-  - guardian1_marital_status (text, nullable)
-  - guardian1_religion (text, nullable)
-  - guardian1_house_no (text, nullable)
-  - guardian1_location (text, nullable)
-  - guardian1_children_in_home (integer, nullable)
-  - guardian1_other_children_in_school (boolean, nullable)
-  - guardian1_how_many_children (text, nullable)
-  - guardian1_children_classes (text, nullable)
-  - guardian1_responsible_for_fees (boolean, nullable)
-  - guardian1_pupil_lives_with (boolean, nullable)
-
-Mother fields (reuse guardian2_ prefix, add new):
-  - guardian2_occupation (text, nullable)
-  - guardian2_educational_qualification (text, nullable)
-  - guardian2_marital_status (text, nullable)
-  - guardian2_religion (text, nullable)
-  - guardian2_house_no (text, nullable)
-  - guardian2_location (text, nullable)
-  - guardian2_tel_no (text, nullable)
-  - guardian2_children_in_home (integer, nullable)
-  - guardian2_other_children_in_school (boolean, nullable)
-  - guardian2_how_many_children (text, nullable)
-  - guardian2_children_classes (text, nullable)
-  - guardian2_responsible_for_fees (boolean, nullable)
-  - guardian2_pupil_lives_with (boolean, nullable)
-
-Guardian (third person) fields:
-  - guardian3_name (text, nullable)
-  - guardian3_occupation (text, nullable)
-  - guardian3_educational_qualification (text, nullable)
-  - guardian3_marital_status (text, nullable)
-  - guardian3_religion (text, nullable)
-  - guardian3_address (text, nullable)
-  - guardian3_tel_no (text, nullable)
-  - guardian3_location (text, nullable)
-  - guardian3_house_no (text, nullable)
-  - guardian3_children_in_home (integer, nullable)
-  - guardian3_responsible_for_fees (boolean, nullable)
-  - guardian3_pupil_lives_with (boolean, nullable)
-
-Previous school fields:
-  - previous_school_date_attended (text, nullable)
-  - previous_school_last_class (text, nullable)
-  - subjects_studied (text[], nullable)
-
-Fee payment:
-  - fee_payment_plan (text, nullable)
-
-Immunizations (specific):
-  - immunization_bcg (boolean, default false)
-  - immunization_dtp (boolean, default false)
-  - immunization_whooping_cough (boolean, default false)
-  - immunization_tetanus (boolean, default false)
-  - immunization_poliomyelitis (boolean, default false)
-  - immunization_measles (boolean, default false)
-  - immunization_yellow_fever (boolean, default false)
-  - immunization_hepatitis_b (boolean, default false)
-  - immunization_hib (boolean, default false)
+report_cards:
+  id (uuid, PK)
+  student_id (uuid, FK -> students)
+  academic_year (text)
+  term (text)
+  class_name (text) -- snapshot of class at time of report
+  number_on_roll (integer) -- total students in class
+  attendance_present (integer)
+  attendance_total (integer)
+  conduct (text)
+  attitude (text)
+  interest (text)
+  form_teacher_name (text)
+  form_teacher_remark (text)
+  headteacher_name (text)
+  headteacher_remark (text)
+  next_term_begins (date)
+  promoted_to (text)
+  cumulated_score (numeric) -- auto-calculated
+  max_possible_score (numeric) -- subjects_count x 100
+  learner_average (numeric) -- auto-calculated
+  class_average (numeric)
+  position_in_class (integer)
+  is_published (boolean, default false) -- only visible to parents when true
+  created_at, updated_at (timestamps)
+  UNIQUE(student_id, academic_year, term)
 ```
 
-### Step 2: Update Zod Schema (`src/lib/admission-schema.ts`)
-- Add new fields to `studentInfoSchema` (hometown, languages, religion)
-- Add `fatherSchema`, `motherSchema`, `guardianSchema` to replace guardian1/guardian2 schemas (while keeping guardian1_/guardian2_ DB column mapping for backward compatibility)
-- Add `subjectsStudiedSchema` with checkbox arrays matching the physical form
-- Add `feePaymentSchema` with the 3 FLEXI options
-- Add specific immunization fields to health schema
-- Add `undertakingSchema` for the agreement section
-- Keep `portalAccountBaseSchema` completely unchanged
+### 2. Modify `grades` Table
+Add/rename columns for IAS/ETES structure:
 
-### Step 3: Restructure FormPage1 (`src/components/admission/FormPage1.tsx`)
-Reorganize into sections matching the physical form:
+```text
+Add columns:
+  ias_score (numeric) -- Internal Assessment Score (out of 50)
+  etes_score (numeric) -- End of Term Exam Score (out of 50)
+  proficiency_level (integer) -- 1-5
+  grade_description (text) -- "Advanced", "Proficient", etc.
+  position_in_subject (integer) -- position for this specific subject
+```
 
-**Section A: Child's Personal Data**
-- Existing: Surname, Other Names, Date of Birth, Gender, Nationality, Place of Birth
-- New: Hometown, Language(s) Spoken, Religion
-- New: Passport photo upload area
+The existing `total_score` and `grade_letter` columns will be repurposed for the new grading scale.
 
-**Section B: Health Status of Child** (moved from Page 2)
-- Health problems/defects text area
-- Immunization checklist with specific vaccines: BCG, DTP, Whooping Cough, Tetanus, Poliomyelitis, Measles, Yellow Fever, Hepatitis B, HIB
-- Additional info for school management
+### 3. RLS Policies
+- `report_cards`: Admin full access; parents can SELECT their own children's published reports
+- Updated `grades` policies remain as-is (admin write, parent read)
 
-**Section C: Record of Previous School(s) Attended**
-- Name of School, Address, Date Attended, Last Class Attended
-- "Applying For Admission To Class" dropdown
+---
 
-**Section D: Subjects Studied in Previous School** (tick boxes)
-- Science: Natural Science, Integrated Science, Mathematics
-- Social Sciences: Social Studies, RME, Citizenship
-- Languages: English, French, Akwapim Twi
-- Vocational Skills: Creative Arts, Pre-Tech/BDT, ICT
+## File Changes
 
-**Parent Portal Account** (kept as-is, digital-only section)
+### New Files
 
-### Step 4: Restructure FormPage2 (`src/components/admission/FormPage2.tsx`)
-Reorganize into sections matching the physical form:
+**`src/pages/admin/ReportCards.tsx`** -- Main admin report card management page
+- Select class, academic year, term
+- See list of all students in that class
+- Click a student to open their report card editor
+- Bulk actions: "Generate All Reports" (creates empty report_card records for all students in class), "Publish All" (sets is_published = true)
 
-**Section E: Biological Family Data**
-Three-column layout for Father, Mother, and Guardian:
-- Name, Occupation, Educational Qualification, Marital Status, Religion
-- Address, Tel No, Location, House No
-- No. of children in the home, Other children in school (Yes/No, how many, which classes)
-- Who is responsible for fee payment
-- Child presently lives with
+**`src/components/admin/ReportCardEditor.tsx`** -- Single student report card editor
+- Top section: Student info (auto-filled from DB), attendance inputs, conduct/attitude/interest
+- Middle: Subject score table with IAS and ETES input fields; Total, Proficiency Level, Grade, and Description auto-calculate as admin types
+- Bottom: Form teacher name/remark, headteacher name/remark, next term begins, promoted to
+- Performance analysis section auto-shows: Cumulated Score, Max Possible, Learner's Average, Class Average
+- "Save" and "Preview Report Card" buttons
 
-**Section F: Fee Payment Policy**
-Display the three FLEXI payment plans with radio selection:
-- One Touch
-- Two Months Installments
-- Daily Susu Payment Scheme
+**`src/components/admin/ReportCardPreview.tsx`** -- Visual report card (styled like the reference image)
+- Colorful header with school name, logo/crest, contact info (matching the green/yellow header from reference)
+- "LEARNER'S TERMINAL REPORT" title bar
+- Student info grid: Name, Gender, Form/Class, Position, Average Mark, Remark, Number on Roll, Academic Year, Term, Promoted To, Next Term Begins
+- Subject scores table with colored rows (alternating), columns: S/N, Subject, IAS Score, ETES Score, Total Score, Grade, Level of Proficiency, Description
+- Attendance, Conduct, Attitude, Interest section
+- Form Teacher and Headteacher remarks
+- Grade Interpretation key at the bottom (the 5-level scale)
+- School-branded colors: blue header gradient, white body, colored grade cells
+- This same component is reused for PDF generation and parent portal viewing
 
-**Section G: Regulations** (display only)
-Show dismissal and withdrawal rules as read-only text
+**`src/pages/portal/PortalReportCard.tsx`** -- Parent portal view
+- Select term/year
+- Renders `ReportCardPreview` in read-only mode
+- "Download as PDF" button using jsPDF or html2canvas
 
-**Section H: Undertaking**
-Agreement text with date and digital signature checkbox
+### Modified Files
 
-**Existing sections kept:**
-- Special Educational Needs (enhanced from current)
-- Financial Acknowledgment (merged with Section F)
-- Transportation (kept)
-- Consent checkboxes (merged into Section H Undertaking)
+**`src/pages/admin/ResultsManagement.tsx`** -- Restructure score entry
+- Change columns from CW(20)/Assign(10)/Mid(30)/End(40) to IAS(50)/ETES(50)
+- Update `calculateGradeLetter` to use GSIS proficiency scale (A/P/AP/D/B)
+- Add `calculateProficiencyLevel` function
+- Auto-calculate position in subject across all students in same class
 
-### Step 5: Update PDF Generation (`src/pages/AdmissionForm.tsx`)
-- Restructure PDF sections to match A-H layout
-- Add the new fields to PDF output
-- Keep the reference number and header format
-- Do NOT touch the submission handler's portal account fields or the approve-admission edge function trigger
+**`src/pages/portal/PortalAcademics.tsx`** -- Update to match new structure
+- Change column headers to IAS/ETES instead of CW/Assignment/Mid/End
+- Update grade color coding for new scale (A=green, P=blue, AP=yellow, D=orange, B=red)
+- Add link to "View Full Report Card" which navigates to PortalReportCard
 
-### Step 6: Update Submission Handler
-- Add new fields to the `applicationData` object in the submit function
-- Map form field names to database column names
-- Keep all portal_email, portal_password_hash, security_question, security_answer handling exactly as-is
+**`src/App.tsx`** -- Add new routes
+- `/admin/report-cards` -> ReportCards
+- `/portal/report-card` -> PortalReportCard
 
-## What Will NOT Change
-- Parent Portal Account section (portal_email, password, security question)
-- The `approve-admission` edge function
-- The automated student/parent record creation on approval
-- The `AdmissionFormHeader` component
-- Navigation footer and page structure (still 2 pages)
-- Reference number generation
+**`src/components/admin/AdminSidebar.tsx`** -- Add "Report Cards" nav item
 
-## File Changes Summary
-1. **Database migration** -- Add ~40 new nullable columns
-2. **`src/lib/admission-schema.ts`** -- Restructured Zod schemas with new fields
-3. **`src/components/admission/FormPage1.tsx`** -- Sections A, B, C, D + Portal Account
-4. **`src/components/admission/FormPage2.tsx`** -- Sections E, F, G, H + Special Needs + Transport
-5. **`src/pages/AdmissionForm.tsx`** -- Updated default values, submission data mapping, PDF generation
+**`src/components/parent/ParentSidebar.tsx`** -- Add "Report Card" nav item
+
+---
+
+## Report Card Visual Design (Reference Image Style)
+
+The report card preview will be designed to match the uploaded reference image:
+
+```text
++----------------------------------------------------------+
+| [School Crest]  GOOD SHEPHERD INTERNATIONAL SCHOOL       |
+|                 Contact Info | Email | Motto     [Photo]  |
++----------------------------------------------------------+
+|          LEARNER'S TERMINAL REPORT                        |
++----------------------------------------------------------+
+| Name: ___________    Gender: ___    Number on Roll: ___   |
+| Form/Class: ___      Academic Year: ___    Term: ___      |
+| Position: ___        Promoted To: ___                     |
+| Average Mark: ___    Remark: ___                          |
+| Next Term: ___                                            |
++----------------------------------------------------------+
+| S/N | Subject      | IAS | ETES | Total | Grade | Level  |
+|-----|--------------|-----|------|-------|-------|--------|
+|  1  | English      |  45 |  30  |  75   |   P   |   2    |
+|  2  | Mathematics  |  40 |  35  |  75   |   P   |   2    |
+| ... (colored alternating rows)                            |
++----------------------------------------------------------+
+| OVERALL: 651.0  OUT OF 900.0                              |
++----------------------------------------------------------+
+| Attendance: 54/56  | Conduct: Respectful                  |
+| Attitude: Hardworking | Interest: Poetry reciting          |
+| Form Teacher: ___ | Remark: ___                           |
+| Headteacher: ___ | Remark: ___                            |
+| Date: ___                                                 |
++----------------------------------------------------------+
+| GRADE INTERPRETATION                                      |
+| 80%+ (1: Advanced) | 75-79 (2: Proficient) | ...         |
++----------------------------------------------------------+
+```
+
+Colors will use the school's blue brand as the primary header, with green/teal accents for grade highlights, matching the reference image's vibrant style.
+
+---
+
+## Auto-Calculation Logic
+
+1. **Total Score**: IAS + ETES (max 100)
+2. **Proficiency Level**: Based on total (80+=1, 75-79=2, 70-74=3, 65-69=4, <65=5)
+3. **Grade Letter**: Maps from level (1=A, 2=P, 3=AP, 4=D, 5=B)
+4. **Grade Description**: "Advanced", "Proficient", "Approaching Proficiency", "Developing", "Beginning"
+5. **Cumulated Score**: Sum of all subject totals
+6. **Max Possible**: Number of subjects x 100
+7. **Learner's Average**: Cumulated / Number of subjects
+8. **Class Average**: Average of all students' learner averages in same class/term/year
+9. **Position in Class**: Rank by learner's average (computed when saving)
+10. **Position in Subject**: Rank by subject total among classmates
+
+---
+
+## Implementation Sequence
+
+1. Database migration (report_cards table + new grades columns + RLS)
+2. Update ResultsManagement with IAS/ETES inputs and new grading scale
+3. Create ReportCardEditor (admin enters attendance, remarks, etc.)
+4. Create ReportCardPreview (colorful visual report card)
+5. Create ReportCards admin page (class list -> student report cards)
+6. Create PortalReportCard (parent view with PDF download)
+7. Update routes and sidebars
+8. Update PortalAcademics to reflect new column structure
