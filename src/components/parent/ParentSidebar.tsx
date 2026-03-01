@@ -11,7 +11,8 @@ import {
   X,
   Home,
   CreditCard,
-  CalendarCheck
+  CalendarCheck,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useParentAuth } from "@/hooks/useParentAuth";
@@ -30,6 +31,7 @@ interface Student {
 const navItems = [
   { href: "/portal", label: "Dashboard", icon: LayoutDashboard },
   { href: "/portal/academics", label: "Academic Performance", icon: GraduationCap },
+  { href: "/portal/report-card", label: "Report Card", icon: FileText },
   { href: "/portal/fees", label: "Fees & Payments", icon: CreditCard },
   { href: "/portal/attendance", label: "Attendance", icon: CalendarCheck },
   { href: "/portal/announcements", label: "Announcements", icon: Megaphone },

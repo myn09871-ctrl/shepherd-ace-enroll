@@ -664,12 +664,17 @@ export type Database = {
           class_work_score: number | null
           created_at: string
           endterm_score: number | null
+          etes_score: number | null
+          grade_description: string | null
           grade_letter: string | null
+          ias_score: number | null
           id: string
           midterm_score: number | null
           position_in_class: number | null
+          position_in_subject: number | null
           posted_at: string | null
           posted_by: string | null
+          proficiency_level: number | null
           student_id: string
           subject_id: string
           teacher_comment: string | null
@@ -684,12 +689,17 @@ export type Database = {
           class_work_score?: number | null
           created_at?: string
           endterm_score?: number | null
+          etes_score?: number | null
+          grade_description?: string | null
           grade_letter?: string | null
+          ias_score?: number | null
           id?: string
           midterm_score?: number | null
           position_in_class?: number | null
+          position_in_subject?: number | null
           posted_at?: string | null
           posted_by?: string | null
+          proficiency_level?: number | null
           student_id: string
           subject_id: string
           teacher_comment?: string | null
@@ -704,12 +714,17 @@ export type Database = {
           class_work_score?: number | null
           created_at?: string
           endterm_score?: number | null
+          etes_score?: number | null
+          grade_description?: string | null
           grade_letter?: string | null
+          ias_score?: number | null
           id?: string
           midterm_score?: number | null
           position_in_class?: number | null
+          position_in_subject?: number | null
           posted_at?: string | null
           posted_by?: string | null
+          proficiency_level?: number | null
           student_id?: string
           subject_id?: string
           teacher_comment?: string | null
@@ -992,6 +1007,98 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      report_cards: {
+        Row: {
+          academic_year: string
+          attendance_present: number | null
+          attendance_total: number | null
+          attitude: string | null
+          class_average: number | null
+          class_name: string
+          conduct: string | null
+          created_at: string
+          cumulated_score: number | null
+          form_teacher_name: string | null
+          form_teacher_remark: string | null
+          headteacher_name: string | null
+          headteacher_remark: string | null
+          id: string
+          interest: string | null
+          is_published: boolean
+          learner_average: number | null
+          max_possible_score: number | null
+          next_term_begins: string | null
+          number_on_roll: number | null
+          position_in_class: number | null
+          promoted_to: string | null
+          student_id: string
+          term: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year: string
+          attendance_present?: number | null
+          attendance_total?: number | null
+          attitude?: string | null
+          class_average?: number | null
+          class_name: string
+          conduct?: string | null
+          created_at?: string
+          cumulated_score?: number | null
+          form_teacher_name?: string | null
+          form_teacher_remark?: string | null
+          headteacher_name?: string | null
+          headteacher_remark?: string | null
+          id?: string
+          interest?: string | null
+          is_published?: boolean
+          learner_average?: number | null
+          max_possible_score?: number | null
+          next_term_begins?: string | null
+          number_on_roll?: number | null
+          position_in_class?: number | null
+          promoted_to?: string | null
+          student_id: string
+          term: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          attendance_present?: number | null
+          attendance_total?: number | null
+          attitude?: string | null
+          class_average?: number | null
+          class_name?: string
+          conduct?: string | null
+          created_at?: string
+          cumulated_score?: number | null
+          form_teacher_name?: string | null
+          form_teacher_remark?: string | null
+          headteacher_name?: string | null
+          headteacher_remark?: string | null
+          id?: string
+          interest?: string | null
+          is_published?: boolean
+          learner_average?: number | null
+          max_possible_score?: number | null
+          next_term_begins?: string | null
+          number_on_roll?: number | null
+          position_in_class?: number | null
+          promoted_to?: string | null
+          student_id?: string
+          term?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_cards_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       school_settings: {
         Row: {
