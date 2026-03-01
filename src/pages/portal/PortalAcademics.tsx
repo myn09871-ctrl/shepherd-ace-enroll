@@ -5,38 +5,32 @@ import {
   TrendingUp, 
   TrendingDown,
   Minus,
-  Award
+  Award,
+  FileText
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { useParentAuth } from "@/hooks/useParentAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { getGradeColor } from "@/lib/report-card-utils";
 
 interface Grade {
   id: string;
   subject_name: string;
-  class_work_score: number | null;
-  assignment_score: number | null;
-  midterm_score: number | null;
-  endterm_score: number | null;
+  ias_score: number | null;
+  etes_score: number | null;
   total_score: number | null;
   grade_letter: string | null;
+  proficiency_level: number | null;
+  grade_description: string | null;
   position_in_class: number | null;
   class_average: number | null;
   teacher_comment: string | null;
@@ -44,6 +38,7 @@ interface Grade {
 
 const PortalAcademics = () => {
   const { currentStudent: student } = useParentAuth();
+  const navigate = useNavigate();
   const [grades, setGrades] = useState<Grade[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState<string>("");
@@ -52,32 +47,22 @@ const PortalAcademics = () => {
   const [availableTerms, setAvailableTerms] = useState<string[]>([]);
 
   useEffect(() => {
-    if (student) {
-      fetchAvailableFilters();
-    }
+    if (student) fetchAvailableFilters();
   }, [student]);
 
   useEffect(() => {
-    if (student && selectedYear && selectedTerm) {
-      fetchGrades();
-    }
+    if (student && selectedYear && selectedTerm) fetchGrades();
   }, [student, selectedYear, selectedTerm]);
 
   const fetchAvailableFilters = async () => {
     if (!student) return;
-
     const { data } = await supabase
-      .from("grades")
-      .select("academic_year, term")
-      .eq("student_id", student.id);
-
+      .from("grades").select("academic_year, term").eq("student_id", student.id);
     if (data) {
       const years = [...new Set(data.map(g => g.academic_year))].sort().reverse();
       const terms = [...new Set(data.map(g => g.term))];
-      
       setAvailableYears(years);
       setAvailableTerms(terms);
-      
       if (years.length > 0) setSelectedYear(years[0]);
       if (terms.length > 0) setSelectedTerm(terms[0]);
     }
@@ -86,40 +71,27 @@ const PortalAcademics = () => {
 
   const fetchGrades = async () => {
     if (!student) return;
-
     setLoading(true);
     const { data, error } = await supabase
       .from("grades")
-      .select(`
-        id,
-        class_work_score,
-        assignment_score,
-        midterm_score,
-        endterm_score,
-        total_score,
-        grade_letter,
-        position_in_class,
-        class_average,
-        teacher_comment,
-        subjects(name)
-      `)
+      .select(`id, ias_score, etes_score, total_score, grade_letter, proficiency_level, grade_description, position_in_class, class_average, teacher_comment, subjects(name)`)
       .eq("student_id", student.id)
       .eq("academic_year", selectedYear)
       .eq("term", selectedTerm)
       .order("created_at", { ascending: true });
 
     if (error) {
-      console.error("Error fetching grades:", error);
+      console.error(error);
     } else {
       const formattedGrades: Grade[] = (data || []).map((g: any) => ({
         id: g.id,
         subject_name: g.subjects?.name || "Unknown Subject",
-        class_work_score: g.class_work_score,
-        assignment_score: g.assignment_score,
-        midterm_score: g.midterm_score,
-        endterm_score: g.endterm_score,
+        ias_score: g.ias_score,
+        etes_score: g.etes_score,
         total_score: g.total_score,
         grade_letter: g.grade_letter,
+        proficiency_level: g.proficiency_level,
+        grade_description: g.grade_description,
         position_in_class: g.position_in_class,
         class_average: g.class_average,
         teacher_comment: g.teacher_comment,
@@ -129,20 +101,11 @@ const PortalAcademics = () => {
     setLoading(false);
   };
 
-  const getGradeColor = (grade: string | null) => {
-    if (!grade) return "bg-gray-100 text-gray-800";
-    if (grade.startsWith("A")) return "bg-green-100 text-green-800";
-    if (grade.startsWith("B")) return "bg-blue-100 text-blue-800";
-    if (grade.startsWith("C")) return "bg-yellow-100 text-yellow-800";
-    if (grade.startsWith("D")) return "bg-orange-100 text-orange-800";
-    return "bg-red-100 text-red-800";
-  };
-
   const getPerformanceIndicator = (score: number | null, average: number | null) => {
     if (score === null || average === null) return null;
-    if (score > average + 5) return <TrendingUp className="h-4 w-4 text-green-600" />;
+    if (score > average + 5) return <TrendingUp className="h-4 w-4 text-emerald-600" />;
     if (score < average - 5) return <TrendingDown className="h-4 w-4 text-red-600" />;
-    return <Minus className="h-4 w-4 text-gray-400" />;
+    return <Minus className="h-4 w-4 text-muted-foreground" />;
   };
 
   const calculateOverallAverage = () => {
@@ -162,31 +125,19 @@ const PortalAcademics = () => {
             <GraduationCap className="h-5 w-5 text-primary" />
             Academic Performance
           </h1>
-          <p className="text-sm text-muted-foreground">
-            View grades, report cards, and academic progress
-          </p>
+          <p className="text-sm text-muted-foreground">View grades, report cards, and academic progress</p>
         </div>
-
         <div className="flex gap-2">
           <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Year" />
-            </SelectTrigger>
+            <SelectTrigger className="w-[140px]"><SelectValue placeholder="Year" /></SelectTrigger>
             <SelectContent>
-              {availableYears.map(year => (
-                <SelectItem key={year} value={year}>{year}</SelectItem>
-              ))}
+              {availableYears.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
             </SelectContent>
           </Select>
-
           <Select value={selectedTerm} onValueChange={setSelectedTerm}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Term" />
-            </SelectTrigger>
+            <SelectTrigger className="w-[120px]"><SelectValue placeholder="Term" /></SelectTrigger>
             <SelectContent>
-              {availableTerms.map(term => (
-                <SelectItem key={term} value={term}>{term}</SelectItem>
-              ))}
+              {availableTerms.map(t => <SelectItem key={t} value={t}>Term {t}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -200,12 +151,15 @@ const PortalAcademics = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Overall Term Average</p>
                 <p className="text-3xl font-bold text-foreground">{overallAverage}%</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {selectedTerm} - {selectedYear}
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">Term {selectedTerm} - {selectedYear}</p>
               </div>
-              <div className="p-4 bg-primary/20 rounded-full">
-                <Award className="h-8 w-8 text-primary" />
+              <div className="flex flex-col items-end gap-2">
+                <div className="p-4 bg-primary/20 rounded-full">
+                  <Award className="h-8 w-8 text-primary" />
+                </div>
+                <Button variant="outline" size="sm" onClick={() => navigate("/portal/report-card")}>
+                  <FileText className="h-4 w-4 mr-1" /> View Full Report Card
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -215,18 +169,12 @@ const PortalAcademics = () => {
       {/* Grades Table */}
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Subject Grades</CardTitle>
-            <Button variant="outline" size="sm" disabled>
-              <Download className="h-4 w-4 mr-2" />
-              Download Report
-            </Button>
-          </div>
+          <CardTitle className="text-base">Subject Grades</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center h-32">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
             </div>
           ) : grades.length === 0 ? (
             <div className="text-center py-12">
@@ -239,24 +187,20 @@ const PortalAcademics = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Subject</TableHead>
-                    <TableHead className="text-center">Class Work</TableHead>
-                    <TableHead className="text-center">Assignment</TableHead>
-                    <TableHead className="text-center">Mid-term</TableHead>
-                    <TableHead className="text-center">End-term</TableHead>
-                    <TableHead className="text-center">Total</TableHead>
+                    <TableHead className="text-center">IAS (50)</TableHead>
+                    <TableHead className="text-center">ETES (50)</TableHead>
+                    <TableHead className="text-center">Total (100)</TableHead>
                     <TableHead className="text-center">Grade</TableHead>
-                    <TableHead className="text-center">Position</TableHead>
+                    <TableHead className="text-center">Level</TableHead>
                     <TableHead className="text-center">vs Class</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {grades.map((grade) => (
+                  {grades.map(grade => (
                     <TableRow key={grade.id}>
                       <TableCell className="font-medium">{grade.subject_name}</TableCell>
-                      <TableCell className="text-center">{grade.class_work_score ?? "—"}</TableCell>
-                      <TableCell className="text-center">{grade.assignment_score ?? "—"}</TableCell>
-                      <TableCell className="text-center">{grade.midterm_score ?? "—"}</TableCell>
-                      <TableCell className="text-center">{grade.endterm_score ?? "—"}</TableCell>
+                      <TableCell className="text-center">{grade.ias_score ?? "—"}</TableCell>
+                      <TableCell className="text-center">{grade.etes_score ?? "—"}</TableCell>
                       <TableCell className="text-center font-semibold">{grade.total_score ?? "—"}</TableCell>
                       <TableCell className="text-center">
                         {grade.grade_letter && (
@@ -265,7 +209,7 @@ const PortalAcademics = () => {
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-center">{grade.position_in_class ?? "—"}</TableCell>
+                      <TableCell className="text-center">{grade.proficiency_level ?? "—"}</TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-1">
                           {getPerformanceIndicator(grade.total_score, grade.class_average)}
@@ -290,7 +234,7 @@ const PortalAcademics = () => {
             <CardTitle className="text-base">Teacher Comments</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {grades.filter(g => g.teacher_comment).map((grade) => (
+            {grades.filter(g => g.teacher_comment).map(grade => (
               <div key={grade.id} className="p-3 bg-muted/50 rounded-lg">
                 <p className="text-sm font-medium text-foreground">{grade.subject_name}</p>
                 <p className="text-sm text-muted-foreground mt-1">{grade.teacher_comment}</p>

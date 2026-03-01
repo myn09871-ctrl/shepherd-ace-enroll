@@ -18,6 +18,7 @@ import Applications from "./pages/admin/Applications";
 import ApplicationDetail from "./pages/admin/ApplicationDetail";
 import Students from "./pages/admin/Students";
 import ResultsManagement from "./pages/admin/ResultsManagement";
+import ReportCards from "./pages/admin/ReportCards";
 import AnnouncementsManagement from "./pages/admin/AnnouncementsManagement";
 import Content from "./pages/admin/Content";
 import Messages from "./pages/admin/MessagesPage";
@@ -39,6 +40,7 @@ import PortalMessages from "./pages/portal/PortalMessagesPage";
 import PortalProfile from "./pages/portal/PortalProfile";
 import PortalFees from "./pages/portal/PortalFees";
 import PortalAttendance from "./pages/portal/PortalAttendance";
+import PortalReportCard from "./pages/portal/PortalReportCard";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +65,7 @@ const App = () => (
                 <Route path="applications/:id" element={<ApplicationDetail />} />
                 <Route path="students" element={<Students />} />
                 <Route path="results" element={<ResultsManagement />} />
+                <Route path="report-cards" element={<ReportCards />} />
                 <Route path="announcements" element={<AnnouncementsManagement />} />
                 <Route path="content" element={<Content />} />
                 <Route path="messages" element={<Messages />} />
@@ -78,6 +81,7 @@ const App = () => (
               <Route path="/portal" element={<ParentLayout />}>
                 <Route index element={<PortalDashboard />} />
                 <Route path="academics" element={<PortalAcademics />} />
+                <Route path="report-card" element={<PortalReportCard />} />
                 <Route path="announcements" element={<PortalAnnouncements />} />
                 <Route path="documents" element={<PortalDocuments />} />
                 <Route path="timetable" element={<PortalTimetable />} />

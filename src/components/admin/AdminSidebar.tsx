@@ -13,6 +13,7 @@ import {
   CreditCard,
   FolderOpen,
   User,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,6 +24,7 @@ const navItems = [
   { href: "/admin/applications", label: "Applications", icon: FileText },
   { href: "/admin/students", label: "Students", icon: Users },
   { href: "/admin/results", label: "Results", icon: GraduationCap },
+  { href: "/admin/report-cards", label: "Report Cards", icon: ClipboardList },
   { href: "/admin/fees", label: "Fees", icon: CreditCard },
   { href: "/admin/documents", label: "Documents", icon: FolderOpen },
   { href: "/admin/announcements", label: "Announcements", icon: Megaphone },
