@@ -60,11 +60,9 @@ export const programSchema = z.object({
   intended_start_date: z.string().optional(),
 });
 
-// Portal account schema for admission form (without refine to allow merge)
+// Portal account schema for admission form (without password fields for security)
 export const portalAccountBaseSchema = z.object({
   portal_email: z.string().email("Valid email is required for portal access"),
-  portal_password: z.string().min(8, "Password must be at least 8 characters"),
-  portal_password_confirm: z.string().min(8, "Please confirm your password"),
   security_question: z.string().min(1, "Please select a security question"),
   security_answer: z.string().min(2, "Security answer is required"),
 });

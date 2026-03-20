@@ -79,8 +79,6 @@ const AdmissionForm = () => {
       intended_start_date: "",
       // Portal account fields
       portal_email: "",
-      portal_password: "",
-      portal_password_confirm: "",
       security_question: "",
       security_answer: "",
     },
