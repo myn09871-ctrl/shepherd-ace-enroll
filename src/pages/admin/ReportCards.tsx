@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { FileText, Users, Save, Eye, Printer, CheckCircle2, Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { FileText, Users, Save, Eye, Download, CheckCircle2, Plus, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,8 @@ import type { ReportCardData, SubjectGrade } from "@/components/admin/ReportCard
 import {
   calculateGradeLetter, calculateProficiencyLevel, getGradeDescription,
 } from "@/lib/report-card-utils";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 interface Student {
   id: string;
@@ -101,9 +103,7 @@ const ReportCards = () => {
   useEffect(() => { fetchInitialData(); }, []);
 
   useEffect(() => {
-    if (selectedStudent) {
-      fetchStudentReportCard(selectedStudent);
-    }
+    if (selectedStudent) fetchStudentReportCard(selectedStudent);
   }, [selectedStudent, academicYear, term]);
 
   const fetchInitialData = async () => {
@@ -128,67 +128,36 @@ const ReportCards = () => {
 
   const fetchStudentReportCard = async (student: Student) => {
     try {
-      // Fetch report card
       const { data: rc } = await supabase
-        .from("report_cards")
-        .select("*")
-        .eq("student_id", student.id)
-        .eq("academic_year", academicYear)
-        .eq("term", term)
+        .from("report_cards").select("*")
+        .eq("student_id", student.id).eq("academic_year", academicYear).eq("term", term)
         .maybeSingle();
 
       const classStudents = students.filter(s => s.current_class === selectedClass);
-
       if (rc) {
         setReportCard(rc as ReportCard);
       } else {
         setReportCard({
-          student_id: student.id,
-          academic_year: academicYear,
-          term,
-          class_name: selectedClass,
-          number_on_roll: classStudents.length,
-          attendance_present: null,
-          attendance_total: null,
-          conduct: null,
-          attitude: null,
-          interest: null,
-          form_teacher_name: null,
-          form_teacher_remark: null,
-          headteacher_name: null,
-          headteacher_remark: null,
-          next_term_begins: null,
-          promoted_to: null,
-          cumulated_score: null,
-          max_possible_score: null,
-          learner_average: null,
-          class_average: null,
-          position_in_class: null,
-          is_published: false,
+          student_id: student.id, academic_year: academicYear, term, class_name: selectedClass,
+          number_on_roll: classStudents.length, attendance_present: null, attendance_total: null,
+          conduct: null, attitude: null, interest: null, form_teacher_name: null,
+          form_teacher_remark: null, headteacher_name: null, headteacher_remark: null,
+          next_term_begins: null, promoted_to: null, cumulated_score: null,
+          max_possible_score: null, learner_average: null, class_average: null,
+          position_in_class: null, is_published: false,
         });
       }
 
-      // Fetch grades
-      const { data: grades } = await supabase
-        .from("grades")
-        .select("*")
-        .eq("student_id", student.id)
-        .eq("academic_year", academicYear)
-        .eq("term", term);
+      const { data: grades } = await supabase.from("grades").select("*")
+        .eq("student_id", student.id).eq("academic_year", academicYear).eq("term", term);
 
       const gradeMap: Record<string, GradeEntry> = {};
       (grades || []).forEach((g: any) => {
         gradeMap[g.subject_id] = {
-          id: g.id,
-          student_id: g.student_id,
-          subject_id: g.subject_id,
-          ias_score: g.ias_score,
-          etes_score: g.etes_score,
-          total_score: g.total_score,
-          grade_letter: g.grade_letter,
-          proficiency_level: g.proficiency_level,
-          grade_description: g.grade_description,
-          position_in_subject: g.position_in_subject,
+          id: g.id, student_id: g.student_id, subject_id: g.subject_id,
+          ias_score: g.ias_score, etes_score: g.etes_score, total_score: g.total_score,
+          grade_letter: g.grade_letter, proficiency_level: g.proficiency_level,
+          grade_description: g.grade_description, position_in_subject: g.position_in_subject,
         };
       });
       setGradeEntries(gradeMap);
@@ -200,20 +169,12 @@ const ReportCards = () => {
   const updateGradeEntry = (subjectId: string, field: "ias_score" | "etes_score", value: number | null) => {
     setGradeEntries(prev => {
       const existing = prev[subjectId] || {
-        student_id: selectedStudent!.id,
-        subject_id: subjectId,
-        ias_score: null,
-        etes_score: null,
-        total_score: null,
-        grade_letter: null,
-        proficiency_level: null,
-        grade_description: null,
-        position_in_subject: null,
+        student_id: selectedStudent!.id, subject_id: subjectId,
+        ias_score: null, etes_score: null, total_score: null, grade_letter: null,
+        proficiency_level: null, grade_description: null, position_in_subject: null,
       };
       const updated = { ...existing, [field]: value };
-      const ias = updated.ias_score || 0;
-      const etes = updated.etes_score || 0;
-      const total = ias + etes;
+      const total = (updated.ias_score || 0) + (updated.etes_score || 0);
       updated.total_score = total > 0 ? total : null;
       updated.grade_letter = calculateGradeLetter(updated.total_score);
       updated.proficiency_level = calculateProficiencyLevel(updated.total_score);
@@ -240,14 +201,11 @@ const ReportCards = () => {
     try {
       const { cumulated, maxPossible, average } = computeAggregates();
       const rcData = {
-        ...reportCard,
-        cumulated_score: cumulated,
-        max_possible_score: maxPossible,
+        ...reportCard, cumulated_score: cumulated, max_possible_score: maxPossible,
         learner_average: average,
         number_on_roll: students.filter(s => s.current_class === selectedClass).length,
       };
 
-      // Upsert report card
       if (reportCard.id) {
         const { error } = await supabase.from("report_cards").update(rcData).eq("id", reportCard.id);
         if (error) throw error;
@@ -257,35 +215,24 @@ const ReportCards = () => {
         setReportCard({ ...rcData, id: data.id });
       }
 
-      // Save grades
       const gradesToSave = Object.values(gradeEntries).filter(g => g.ias_score !== null || g.etes_score !== null);
       for (const grade of gradesToSave) {
         const gradeData = {
-          student_id: grade.student_id,
-          subject_id: grade.subject_id,
-          academic_year: academicYear,
-          term,
-          ias_score: grade.ias_score,
-          etes_score: grade.etes_score,
-          total_score: grade.total_score,
-          grade_letter: grade.grade_letter,
-          proficiency_level: grade.proficiency_level,
-          grade_description: grade.grade_description,
+          student_id: grade.student_id, subject_id: grade.subject_id,
+          academic_year: academicYear, term,
+          ias_score: grade.ias_score, etes_score: grade.etes_score,
+          total_score: grade.total_score, grade_letter: grade.grade_letter,
+          proficiency_level: grade.proficiency_level, grade_description: grade.grade_description,
           position_in_subject: grade.position_in_subject,
-          posted_by: user?.id,
-          posted_at: new Date().toISOString(),
+          posted_by: user?.id, posted_at: new Date().toISOString(),
         };
-
         if (grade.id) {
           await supabase.from("grades").update(gradeData).eq("id", grade.id);
         } else {
           const { data } = await supabase.from("grades").insert(gradeData).select().single();
-          if (data) {
-            setGradeEntries(prev => ({ ...prev, [grade.subject_id]: { ...grade, id: data.id } }));
-          }
+          if (data) setGradeEntries(prev => ({ ...prev, [grade.subject_id]: { ...grade, id: data.id } }));
         }
       }
-
       toast.success("Report card saved successfully");
     } catch (error: any) {
       console.error(error);
@@ -300,22 +247,12 @@ const ReportCards = () => {
     setSaving(true);
     try {
       for (const student of classStudents) {
-        const { data: existing } = await supabase
-          .from("report_cards")
-          .select("id")
-          .eq("student_id", student.id)
-          .eq("academic_year", academicYear)
-          .eq("term", term)
-          .maybeSingle();
-
+        const { data: existing } = await supabase.from("report_cards").select("id")
+          .eq("student_id", student.id).eq("academic_year", academicYear).eq("term", term).maybeSingle();
         if (!existing) {
           await supabase.from("report_cards").insert({
-            student_id: student.id,
-            academic_year: academicYear,
-            term,
-            class_name: selectedClass,
-            number_on_roll: classStudents.length,
-            is_published: false,
+            student_id: student.id, academic_year: academicYear, term,
+            class_name: selectedClass, number_on_roll: classStudents.length, is_published: false,
           });
         }
       }
@@ -331,12 +268,8 @@ const ReportCards = () => {
     setSaving(true);
     try {
       const classStudentIds = students.filter(s => s.current_class === selectedClass).map(s => s.id);
-      const { error } = await supabase
-        .from("report_cards")
-        .update({ is_published: true })
-        .in("student_id", classStudentIds)
-        .eq("academic_year", academicYear)
-        .eq("term", term);
+      const { error } = await supabase.from("report_cards").update({ is_published: true })
+        .in("student_id", classStudentIds).eq("academic_year", academicYear).eq("term", term);
       if (error) throw error;
       toast.success("All report cards published!");
     } catch (error: any) {
@@ -346,48 +279,128 @@ const ReportCards = () => {
     }
   };
 
+  const calculatePositions = async () => {
+    setSaving(true);
+    try {
+      const classStudentIds = students.filter(s => s.current_class === selectedClass).map(s => s.id);
+      if (classStudentIds.length === 0) return;
+
+      // Fetch all grades for this class/year/term
+      const { data: allGrades, error: gErr } = await supabase.from("grades").select("*")
+        .in("student_id", classStudentIds).eq("academic_year", academicYear).eq("term", term);
+      if (gErr) throw gErr;
+
+      // Fetch all report cards
+      const { data: allRcs, error: rcErr } = await supabase.from("report_cards").select("*")
+        .in("student_id", classStudentIds).eq("academic_year", academicYear).eq("term", term);
+      if (rcErr) throw rcErr;
+
+      // 1. Position in subject: rank by total_score per subject
+      const subjectGroups: Record<string, { id: string; student_id: string; total_score: number }[]> = {};
+      (allGrades || []).forEach((g: any) => {
+        if (g.total_score == null) return;
+        if (!subjectGroups[g.subject_id]) subjectGroups[g.subject_id] = [];
+        subjectGroups[g.subject_id].push({ id: g.id, student_id: g.student_id, total_score: g.total_score });
+      });
+
+      const gradeUpdates: { id: string; position_in_subject: number }[] = [];
+      Object.values(subjectGroups).forEach(group => {
+        group.sort((a, b) => b.total_score - a.total_score);
+        group.forEach((item, idx) => {
+          gradeUpdates.push({ id: item.id, position_in_subject: idx + 1 });
+        });
+      });
+
+      // 2. Learner average & position in class
+      const studentAverages: { student_id: string; average: number }[] = [];
+      classStudentIds.forEach(sid => {
+        const studentGrades = (allGrades || []).filter((g: any) => g.student_id === sid && g.total_score != null);
+        if (studentGrades.length === 0) return;
+        const sum = studentGrades.reduce((s: number, g: any) => s + g.total_score, 0);
+        studentAverages.push({ student_id: sid, average: sum / studentGrades.length });
+      });
+      studentAverages.sort((a, b) => b.average - a.average);
+
+      const classAvg = studentAverages.length > 0
+        ? studentAverages.reduce((s, a) => s + a.average, 0) / studentAverages.length : null;
+
+      // Batch update grades positions
+      for (const upd of gradeUpdates) {
+        await supabase.from("grades").update({ position_in_subject: upd.position_in_subject }).eq("id", upd.id);
+      }
+
+      // Batch update report cards
+      for (let i = 0; i < studentAverages.length; i++) {
+        const sa = studentAverages[i];
+        const rc = (allRcs || []).find((r: any) => r.student_id === sa.student_id);
+        if (rc) {
+          const studentGrades = (allGrades || []).filter((g: any) => g.student_id === sa.student_id && g.total_score != null);
+          const cumulated = studentGrades.reduce((s: number, g: any) => s + g.total_score, 0);
+          const maxPossible = studentGrades.length * 100;
+          await supabase.from("report_cards").update({
+            position_in_class: i + 1,
+            learner_average: sa.average,
+            class_average: classAvg,
+            cumulated_score: cumulated,
+            max_possible_score: maxPossible,
+          }).eq("id", (rc as any).id);
+        }
+      }
+
+      // Refresh current student if selected
+      if (selectedStudent) await fetchStudentReportCard(selectedStudent);
+      toast.success(`Positions calculated for ${studentAverages.length} students`);
+    } catch (error: any) {
+      console.error(error);
+      toast.error("Failed: " + error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const downloadPDF = async () => {
+    const el = document.getElementById("report-card-print");
+    if (!el) return;
+    try {
+      const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = (canvas.height * pdfW) / canvas.width;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfW, pdfH);
+      const name = selectedStudent ? `${selectedStudent.surname}_${selectedStudent.first_name}_Report` : "Report_Card";
+      pdf.save(`${name}.pdf`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to generate PDF");
+    }
+  };
+
   const buildPreviewData = (): ReportCardData | null => {
     if (!selectedStudent || !reportCard) return null;
     const { cumulated, maxPossible, average } = computeAggregates();
     const gradesList: SubjectGrade[] = subjects.map(sub => {
       const g = gradeEntries[sub.id];
       return {
-        subject_name: sub.name,
-        ias_score: g?.ias_score ?? null,
-        etes_score: g?.etes_score ?? null,
-        total_score: g?.total_score ?? null,
-        grade_letter: g?.grade_letter ?? null,
-        proficiency_level: g?.proficiency_level ?? null,
-        grade_description: g?.grade_description ?? null,
+        subject_name: sub.name, ias_score: g?.ias_score ?? null, etes_score: g?.etes_score ?? null,
+        total_score: g?.total_score ?? null, grade_letter: g?.grade_letter ?? null,
+        proficiency_level: g?.proficiency_level ?? null, grade_description: g?.grade_description ?? null,
         position_in_subject: g?.position_in_subject ?? null,
       };
     });
-
     return {
       student_name: `${selectedStudent.surname}, ${selectedStudent.first_name}${selectedStudent.middle_name ? " " + selectedStudent.middle_name : ""}`,
-      student_id: selectedStudent.student_id,
-      gender: selectedStudent.gender,
-      class_name: reportCard.class_name,
-      academic_year: reportCard.academic_year,
-      term: reportCard.term,
-      photo_url: selectedStudent.photo_url,
-      number_on_roll: reportCard.number_on_roll,
-      position_in_class: reportCard.position_in_class,
-      learner_average: average,
-      class_average: reportCard.class_average,
-      cumulated_score: cumulated,
-      max_possible_score: maxPossible,
-      promoted_to: reportCard.promoted_to,
-      next_term_begins: reportCard.next_term_begins,
-      attendance_present: reportCard.attendance_present,
-      attendance_total: reportCard.attendance_total,
-      conduct: reportCard.conduct,
-      attitude: reportCard.attitude,
-      interest: reportCard.interest,
-      form_teacher_name: reportCard.form_teacher_name,
-      form_teacher_remark: reportCard.form_teacher_remark,
-      headteacher_name: reportCard.headteacher_name,
-      headteacher_remark: reportCard.headteacher_remark,
+      student_id: selectedStudent.student_id, gender: selectedStudent.gender,
+      class_name: reportCard.class_name, academic_year: reportCard.academic_year,
+      term: reportCard.term, photo_url: selectedStudent.photo_url,
+      number_on_roll: reportCard.number_on_roll, position_in_class: reportCard.position_in_class,
+      learner_average: average, class_average: reportCard.class_average,
+      cumulated_score: cumulated, max_possible_score: maxPossible,
+      promoted_to: reportCard.promoted_to, next_term_begins: reportCard.next_term_begins,
+      attendance_present: reportCard.attendance_present, attendance_total: reportCard.attendance_total,
+      conduct: reportCard.conduct, attitude: reportCard.attitude, interest: reportCard.interest,
+      form_teacher_name: reportCard.form_teacher_name, form_teacher_remark: reportCard.form_teacher_remark,
+      headteacher_name: reportCard.headteacher_name, headteacher_remark: reportCard.headteacher_remark,
       grades: gradesList,
     };
   };
@@ -400,16 +413,16 @@ const ReportCards = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-xl md:text-2xl font-heading font-bold text-foreground flex items-center gap-2">
-            <FileText className="h-6 w-6" />
-            Report Cards
+            <FileText className="h-6 w-6" /> Report Cards
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Generate and manage student terminal report cards
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">Generate and manage student terminal report cards</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={generateAllReports} disabled={saving} size="sm">
             <Plus className="h-4 w-4 mr-1" /> Generate All
+          </Button>
+          <Button variant="outline" onClick={calculatePositions} disabled={saving} size="sm">
+            <Calculator className="h-4 w-4 mr-1" /> Calculate Positions
           </Button>
           <Button variant="outline" onClick={publishAll} disabled={saving} size="sm">
             <CheckCircle2 className="h-4 w-4 mr-1" /> Publish All
@@ -545,7 +558,6 @@ const ReportCards = () => {
                       </TableBody>
                     </Table>
                   </div>
-                  {/* Aggregates */}
                   {(() => {
                     const { cumulated, maxPossible, average } = computeAggregates();
                     return (
@@ -626,7 +638,12 @@ const ReportCards = () => {
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent className="max-w-[900px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Report Card Preview</DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle>Report Card Preview</DialogTitle>
+              <Button variant="outline" size="sm" onClick={downloadPDF}>
+                <Download className="h-4 w-4 mr-1" /> Download PDF
+              </Button>
+            </div>
           </DialogHeader>
           {buildPreviewData() && <ReportCardPreview data={buildPreviewData()!} />}
         </DialogContent>
