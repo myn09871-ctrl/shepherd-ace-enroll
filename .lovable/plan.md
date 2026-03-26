@@ -1,59 +1,163 @@
 
 
-# Multi-Feature Enhancement Plan
+# Teacher Dashboard for Good Shepherd International School
 
 ## Overview
-Implement 6 features: admin name display fix, bulk position calculation, PDF download for report cards, application delete cleanup, profile photo on report cards, and admin layout showing profile name/avatar.
+Build a complete teacher portal with its own authentication flow, layout, sidebar, and 8 feature pages. Teachers are a new role — they can only access their assigned classes and students, not admin features.
 
-## 1. Admin Layout — Show Profile Name & Avatar Instead of Email
+## Database Changes
 
-**File: `src/components/admin/AdminLayout.tsx`**
-- Fetch `admin_profiles` for the logged-in user on mount
-- Replace the email-derived `adminName` with `display_name` from the profile (fallback to email-derived name)
-- Show the avatar in the top bar next to the name
-- Link the name/avatar area to `/admin/profile` for easy access
+### 1. Add `teacher` to `app_role` enum
+Currently only has: `super_admin`, `admissions_officer`, `content_manager`. Add `teacher`.
 
-## 2. Bulk Position Calculation on Save
+### 2. New `teacher_profiles` table
+Stores teacher-specific data linked to `auth.users`:
 
-**File: `src/pages/admin/ReportCards.tsx`**
-- Add a "Calculate Positions" button next to "Generate All" and "Publish All"
-- When clicked:
-  1. Fetch all grades for the selected class/year/term
-  2. For each subject, rank students by `total_score` descending → assign `position_in_subject`
-  3. For each student, compute `learner_average` from their grades, then rank all students → assign `position_in_class`
-  4. Batch update `grades.position_in_subject` and `report_cards.position_in_class` + `learner_average`
-- Also auto-run position calculation when saving an individual report card (after all grades are saved)
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid PK | |
+| user_id | uuid NOT NULL UNIQUE | references auth.users |
+| full_name | text NOT NULL | |
+| phone | text | |
+| avatar_url | text | |
+| created_at / updated_at | timestamptz | |
 
-## 3. PDF Download for Report Card
+RLS: Teachers can SELECT/UPDATE own row. Admins full access.
 
-**File: `src/pages/portal/PortalReportCard.tsx`** and **`src/pages/admin/ReportCards.tsx`**
-- Install/use `html2canvas` (already available or add) + `jspdf`
-- Add a "Download PDF" button
-- Implementation: capture `#report-card-print` element with `html2canvas`, then create a jsPDF page from the canvas image
-- Add the same button in the admin preview dialog
+### 3. New `class_teachers` table
+Links teachers to classes (a teacher can have multiple classes):
 
-## 4. Application Delete — Already Implemented
-Looking at the code, archive and delete buttons are **already implemented** in `Applications.tsx` (lines 280-304). Archive shows for non-archived/non-enrolled apps, delete shows for archived/rejected apps with a confirmation dialog. No changes needed here.
+| Column | Type |
+|--------|------|
+| id | uuid PK |
+| teacher_id | uuid NOT NULL | references teacher_profiles.id |
+| class_name | text NOT NULL | matches `students.current_class` |
+| academic_year | text NOT NULL |
+| is_active | boolean DEFAULT true |
 
-## 5. Admin Profile Name Update — Already Implemented
-The `AdminProfile.tsx` page already has display name editing and avatar upload functionality. No changes needed to the profile page itself — only the layout top bar needs updating (covered in item 1).
+UNIQUE(teacher_id, class_name, academic_year). RLS: Teachers can SELECT own rows. Admins full access.
 
-## 6. Student Photo on Report Card — Already Implemented
-`ReportCardPreview.tsx` already renders `data.photo_url` in the header (line 72-78). The parent portal profile page already has photo upload. No changes needed.
+### 4. New `assignments` table
+
+| Column | Type |
+|--------|------|
+| id | uuid PK |
+| teacher_id | uuid | references teacher_profiles.id |
+| class_name | text NOT NULL |
+| title | text NOT NULL |
+| description | text |
+| due_date | date |
+| attachment_url | text |
+| academic_year | text |
+| term | text |
+| created_at | timestamptz |
+
+RLS: Teachers can manage own assignments. Parents can SELECT where class matches their child. Admins full access.
+
+### 5. Update `is_admin` function
+Currently checks for `super_admin`, `admissions_officer`, `content_manager`. Keep as-is — teachers are NOT admins.
+
+### 6. New `is_teacher` function (SECURITY DEFINER)
+```sql
+CREATE FUNCTION public.is_teacher(_user_id uuid) RETURNS boolean
+```
+Checks if user has the `teacher` role in `user_roles`.
+
+### 7. New `get_teacher_profile_id` function (SECURITY DEFINER)
+Returns the teacher_profiles.id for a given user_id. Used in RLS policies.
+
+### 8. RLS updates for existing tables
+- **`grades`**: Add policy for teachers to INSERT/UPDATE/SELECT grades for students in their assigned classes
+- **`attendance`**: Add policy for teachers to INSERT/UPDATE/SELECT attendance for their class students
+- **`portal_announcements`**: Add policy for teachers to INSERT announcements for their classes
+- **`parent_messages`**: Add policy for teachers to manage messages for their class parents
+- **`students`**: Add SELECT policy for teachers to view students in their assigned classes
+- **`subjects`**: Already has public SELECT — no change needed
+
+### 9. New storage bucket `teacher-avatars` (public)
 
 ---
 
-## File Changes Summary
+## New Files
 
-| File | Change |
-|------|--------|
-| `src/components/admin/AdminLayout.tsx` | Fetch admin profile, show name + avatar in top bar |
-| `src/pages/admin/ReportCards.tsx` | Add "Calculate Positions" bulk action, auto-rank on save |
-| `src/pages/portal/PortalReportCard.tsx` | Add "Download PDF" button using html2canvas + jspdf |
-| `src/pages/admin/ReportCards.tsx` | Add PDF download in preview dialog |
+### Auth & Layout
+1. **`src/hooks/useTeacherAuth.tsx`** — Context provider similar to `useParentAuth`. Fetches `teacher_profiles` and `class_teachers` for the logged-in user. Exposes: `user`, `teacherProfile`, `assignedClasses`, `loading`, `signIn`, `signOut`.
 
-## Technical Notes
-- `html2canvas` + `jspdf` will be used for PDF generation — captures the styled HTML report card as an image and embeds it in a PDF
-- Position calculation queries all students in the class to compute relative rankings
-- Admin profile fetch in layout uses `maybeSingle()` to handle cases where no profile exists yet
+2. **`src/components/teacher/TeacherLayout.tsx`** — Sidebar + topbar layout matching the reference image (blue sidebar with school crest, white content area). Top bar shows teacher name, avatar, notification bell, logout button. Mobile: sidebar collapses to hamburger.
+
+3. **`src/components/teacher/TeacherSidebar.tsx`** — Blue-themed sidebar with nav items: Dashboard, My Classes, Attendance, Results, Assignments, Announcements, Messages, Profile. School crest at top. Active route highlighting.
+
+### Pages (all under `/teacher/*`)
+4. **`src/pages/teacher/TeacherLogin.tsx`** — Login form for teachers (same Supabase auth, but redirects to `/teacher` on success and validates `teacher` role).
+
+5. **`src/pages/teacher/TeacherDashboard.tsx`** — Welcome card with greeting + class count. Stats cards: My Students count, Assigned Classes count, Pending Tasks count. Quick Actions: Mark Attendance, Enter Results, Create Assignment. Recent Activity feed (latest grades posted, messages received). Upcoming Events section.
+
+6. **`src/pages/teacher/TeacherClasses.tsx`** — Displays class cards for assigned classes only (from `class_teachers`). Each card shows class name, student count. Click opens student list for that class.
+
+7. **`src/pages/teacher/TeacherAttendance.tsx`** — Select class (from assigned only), date picker. Shows student table with Present/Absent/Late radio buttons. Bulk save to `attendance` table. Writes are visible to admin and parent dashboards.
+
+8. **`src/pages/teacher/TeacherResults.tsx`** — Select class, subject, term. IAS/ETES score entry per student (matching existing `grades` table structure with `ias_score`, `etes_score`). Auto-calculates total, grade letter, proficiency level. Bulk save.
+
+9. **`src/pages/teacher/TeacherAssignments.tsx`** — List of assignments created by this teacher. Create form: title, description, class (from assigned), due date, optional file upload. Stored in `assignments` table.
+
+10. **`src/pages/teacher/TeacherAnnouncements.tsx`** — Create class-level announcements (stored in `portal_announcements` with `target_audience = 'specific_class'` and `target_class` set). List of own announcements.
+
+11. **`src/pages/teacher/TeacherMessages.tsx`** — List parents by class. Send message to individual parent or entire class. Uses existing `parent_messages` table with `sender_type = 'teacher'`. Inbox view with read status.
+
+12. **`src/pages/teacher/TeacherProfile.tsx`** — Update full name, phone, avatar (upload to `teacher-avatars` bucket). Email shown read-only. Change password via `supabase.auth.updateUser`.
+
+### Route Updates
+13. **`src/App.tsx`** — Add teacher routes:
+```
+/teacher/login -> TeacherLogin
+/teacher (TeacherLayout)
+  /teacher -> TeacherDashboard
+  /teacher/classes -> TeacherClasses
+  /teacher/attendance -> TeacherAttendance
+  /teacher/results -> TeacherResults
+  /teacher/assignments -> TeacherAssignments
+  /teacher/announcements -> TeacherAnnouncements
+  /teacher/messages -> TeacherMessages
+  /teacher/profile -> TeacherProfile
+```
+
+---
+
+## Admin Side: Teacher Management
+14. **Add to admin sidebar**: "Teachers" nav item linking to `/admin/teachers`
+
+15. **`src/pages/admin/TeacherManagement.tsx`** — Admin page to:
+- Create teacher accounts (creates auth user + teacher role + teacher_profiles record)
+- Assign classes to teachers (insert into `class_teachers`)
+- View/edit/deactivate teacher accounts
+- This uses the existing `create-student-portal` edge function pattern to create auth accounts, or a new `create-teacher-account` edge function
+
+16. **New edge function `supabase/functions/create-teacher-account/index.ts`** — Creates auth user, inserts `user_roles` with `teacher` role, and inserts `teacher_profiles` record. Uses service role key.
+
+---
+
+## Parent Portal Updates
+- **Assignments page**: Add `/portal/assignments` route showing assignments for the parent's child's class
+- **`src/pages/portal/PortalAssignments.tsx`** — Lists assignments filtered by child's `current_class`
+
+---
+
+## UI Design
+- Sidebar: Deep blue background (`#1e3a5f` or similar from the reference), white text, school crest at top
+- Active nav item: Lighter blue or white background with blue text
+- Dashboard cards: White with subtle shadows, matching the reference image layout
+- Responsive: Sidebar collapses on mobile with hamburger trigger
+- Search uses icon-only expandable pattern (no large search bars)
+
+---
+
+## File Count Summary
+- 1 database migration (tables + enum + functions + RLS policies)
+- 1 edge function (`create-teacher-account`)
+- 1 auth hook (`useTeacherAuth`)
+- 3 layout/sidebar components
+- 10 page components (login + 8 features + admin management)
+- 1 route update (`App.tsx`)
+- 1 sidebar update (`AdminSidebar.tsx`)
+- 1 parent portal page (`PortalAssignments.tsx`)
 
