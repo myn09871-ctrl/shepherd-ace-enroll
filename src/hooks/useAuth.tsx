@@ -69,8 +69,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (data) {
-        setIsAdmin(true);
-        setUserRole(data.role);
+        const role = data.role?.toLowerCase();
+        if (role === "admin" || role === "school_admin" || role === "teacher") {
+          setIsAdmin(true);
+          setUserRole(data.role);
+        } else {
+          setIsAdmin(false);
+          setUserRole(data.role);
+        }
       }
     } catch {
       setIsAdmin(false);
