@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ParentAuthProvider } from "@/hooks/useParentAuth";
+import { TeacherAuthProvider } from "@/hooks/useTeacherAuth";
 import Index from "./pages/Index";
 import Gallery from "./pages/Gallery";
 import AdmissionForm from "./pages/AdmissionForm";
@@ -21,12 +22,13 @@ import ResultsManagement from "./pages/admin/ResultsManagement";
 import ReportCards from "./pages/admin/ReportCards";
 import AnnouncementsManagement from "./pages/admin/AnnouncementsManagement";
 import Content from "./pages/admin/Content";
-import Messages from "./pages/admin/MessagesPage";
+import MessagesPage from "./pages/admin/MessagesPage";
 import Settings from "./pages/admin/Settings";
 import GalleryManagement from "./pages/admin/GalleryManagement";
 import FeesManagement from "./pages/admin/FeesManagement";
 import DocumentManagement from "./pages/admin/DocumentManagement";
 import AdminProfile from "./pages/admin/AdminProfile";
+import TeacherManagement from "./pages/admin/TeacherManagement";
 
 // Parent Portal imports
 import PortalLogin from "./pages/portal/PortalLogin";
@@ -36,11 +38,24 @@ import PortalAcademics from "./pages/portal/PortalAcademics";
 import PortalAnnouncements from "./pages/portal/PortalAnnouncements";
 import PortalDocuments from "./pages/portal/PortalDocuments";
 import PortalTimetable from "./pages/portal/PortalTimetable";
-import PortalMessages from "./pages/portal/PortalMessagesPage";
+import PortalMessagesPage from "./pages/portal/PortalMessagesPage";
 import PortalProfile from "./pages/portal/PortalProfile";
 import PortalFees from "./pages/portal/PortalFees";
 import PortalAttendance from "./pages/portal/PortalAttendance";
 import PortalReportCard from "./pages/portal/PortalReportCard";
+import PortalAssignments from "./pages/portal/PortalAssignments";
+
+// Teacher Portal imports
+import TeacherLogin from "./pages/teacher/TeacherLogin";
+import TeacherLayout from "./components/teacher/TeacherLayout";
+import TeacherDashboard from "./pages/teacher/TeacherDashboard";
+import TeacherClasses from "./pages/teacher/TeacherClasses";
+import TeacherAttendance from "./pages/teacher/TeacherAttendance";
+import TeacherResults from "./pages/teacher/TeacherResults";
+import TeacherAssignments from "./pages/teacher/TeacherAssignments";
+import TeacherAnnouncements from "./pages/teacher/TeacherAnnouncements";
+import TeacherMessages from "./pages/teacher/TeacherMessages";
+import TeacherProfile from "./pages/teacher/TeacherProfile";
 
 const queryClient = new QueryClient();
 
@@ -49,52 +64,68 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <ParentAuthProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/gallery" element={<Gallery />} />
-              <Route path="/admission" element={<AdmissionForm />} />
-              
-              {/* Admin Routes */}
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="applications" element={<Applications />} />
-                <Route path="applications/:id" element={<ApplicationDetail />} />
-                <Route path="students" element={<Students />} />
-                <Route path="results" element={<ResultsManagement />} />
-                <Route path="report-cards" element={<ReportCards />} />
-                <Route path="announcements" element={<AnnouncementsManagement />} />
-                <Route path="content" element={<Content />} />
-                <Route path="messages" element={<Messages />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="gallery" element={<GalleryManagement />} />
-                <Route path="fees" element={<FeesManagement />} />
-                <Route path="documents" element={<DocumentManagement />} />
-                <Route path="profile" element={<AdminProfile />} />
-              </Route>
+          <TeacherAuthProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/gallery" element={<Gallery />} />
+                <Route path="/admission" element={<AdmissionForm />} />
+                
+                {/* Admin Routes */}
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<Dashboard />} />
+                  <Route path="applications" element={<Applications />} />
+                  <Route path="applications/:id" element={<ApplicationDetail />} />
+                  <Route path="students" element={<Students />} />
+                  <Route path="results" element={<ResultsManagement />} />
+                  <Route path="report-cards" element={<ReportCards />} />
+                  <Route path="announcements" element={<AnnouncementsManagement />} />
+                  <Route path="content" element={<Content />} />
+                  <Route path="messages" element={<MessagesPage />} />
+                  <Route path="settings" element={<Settings />} />
+                  <Route path="gallery" element={<GalleryManagement />} />
+                  <Route path="fees" element={<FeesManagement />} />
+                  <Route path="documents" element={<DocumentManagement />} />
+                  <Route path="profile" element={<AdminProfile />} />
+                  <Route path="teachers" element={<TeacherManagement />} />
+                </Route>
 
-              {/* Parent Portal Routes */}
-              <Route path="/portal/login" element={<PortalLogin />} />
-              <Route path="/portal" element={<ParentLayout />}>
-                <Route index element={<PortalDashboard />} />
-                <Route path="academics" element={<PortalAcademics />} />
-                <Route path="report-card" element={<PortalReportCard />} />
-                <Route path="announcements" element={<PortalAnnouncements />} />
-                <Route path="documents" element={<PortalDocuments />} />
-                <Route path="timetable" element={<PortalTimetable />} />
-                <Route path="messages" element={<PortalMessages />} />
-                <Route path="profile" element={<PortalProfile />} />
-                <Route path="fees" element={<PortalFees />} />
-                <Route path="attendance" element={<PortalAttendance />} />
-              </Route>
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+                {/* Parent Portal Routes */}
+                <Route path="/portal/login" element={<PortalLogin />} />
+                <Route path="/portal" element={<ParentLayout />}>
+                  <Route index element={<PortalDashboard />} />
+                  <Route path="academics" element={<PortalAcademics />} />
+                  <Route path="report-card" element={<PortalReportCard />} />
+                  <Route path="announcements" element={<PortalAnnouncements />} />
+                  <Route path="documents" element={<PortalDocuments />} />
+                  <Route path="timetable" element={<PortalTimetable />} />
+                  <Route path="messages" element={<PortalMessagesPage />} />
+                  <Route path="profile" element={<PortalProfile />} />
+                  <Route path="fees" element={<PortalFees />} />
+                  <Route path="attendance" element={<PortalAttendance />} />
+                  <Route path="assignments" element={<PortalAssignments />} />
+                </Route>
+
+                {/* Teacher Portal Routes */}
+                <Route path="/teacher/login" element={<TeacherLogin />} />
+                <Route path="/teacher" element={<TeacherLayout />}>
+                  <Route index element={<TeacherDashboard />} />
+                  <Route path="classes" element={<TeacherClasses />} />
+                  <Route path="attendance" element={<TeacherAttendance />} />
+                  <Route path="results" element={<TeacherResults />} />
+                  <Route path="assignments" element={<TeacherAssignments />} />
+                  <Route path="announcements" element={<TeacherAnnouncements />} />
+                  <Route path="messages" element={<TeacherMessages />} />
+                  <Route path="profile" element={<TeacherProfile />} />
+                </Route>
+                
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TeacherAuthProvider>
         </ParentAuthProvider>
       </AuthProvider>
     </TooltipProvider>
