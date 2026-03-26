@@ -109,6 +109,53 @@ export type Database = {
           },
         ]
       }
+      assignments: {
+        Row: {
+          academic_year: string | null
+          attachment_url: string | null
+          class_name: string
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          teacher_id: string | null
+          term: string | null
+          title: string
+        }
+        Insert: {
+          academic_year?: string | null
+          attachment_url?: string | null
+          class_name: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          teacher_id?: string | null
+          term?: string | null
+          title: string
+        }
+        Update: {
+          academic_year?: string | null
+          attachment_url?: string | null
+          class_name?: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          teacher_id?: string | null
+          term?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance: {
         Row: {
           created_at: string
@@ -152,6 +199,41 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_teachers: {
+        Row: {
+          academic_year: string
+          class_name: string
+          created_at: string
+          id: string
+          is_active: boolean
+          teacher_id: string
+        }
+        Insert: {
+          academic_year: string
+          class_name: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          teacher_id: string
+        }
+        Update: {
+          academic_year?: string
+          class_name?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_teachers_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1304,6 +1386,36 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       timetables: {
         Row: {
           class_name: string
@@ -1408,6 +1520,7 @@ export type Database = {
     }
     Functions: {
       generate_student_id: { Args: never; Returns: string }
+      get_teacher_profile_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1416,6 +1529,11 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_teacher: { Args: { _user_id: string }; Returns: boolean }
+      teacher_has_class: {
+        Args: { _class_name: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:
