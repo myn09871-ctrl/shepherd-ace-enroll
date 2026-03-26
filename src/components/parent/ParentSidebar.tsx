@@ -12,7 +12,8 @@ import {
   Home,
   CreditCard,
   CalendarCheck,
-  FileText
+  FileText,
+  ClipboardList
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useParentAuth } from "@/hooks/useParentAuth";
@@ -36,6 +37,7 @@ const navItems = [
   { href: "/portal/attendance", label: "Attendance", icon: CalendarCheck },
   { href: "/portal/announcements", label: "Announcements", icon: Megaphone },
   { href: "/portal/documents", label: "Documents", icon: Folder },
+  { href: "/portal/assignments", label: "Assignments", icon: ClipboardList },
   { href: "/portal/timetable", label: "Timetable", icon: Clock },
   { href: "/portal/messages", label: "Messages", icon: Mail },
   { href: "/portal/profile", label: "Profile Settings", icon: Settings },

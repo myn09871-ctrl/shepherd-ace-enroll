@@ -30,6 +30,7 @@ const navItems = [
   { href: "/admin/announcements", label: "Announcements", icon: Megaphone },
   { href: "/admin/gallery", label: "Gallery", icon: Images },
   { href: "/admin/messages", label: "Messages", icon: Mail },
+  { href: "/admin/teachers", label: "Teachers", icon: GraduationCap },
   { href: "/admin/content", label: "Website", icon: Globe },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
