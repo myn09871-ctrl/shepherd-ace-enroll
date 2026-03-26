@@ -1,40 +1,26 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, BookOpen, CalendarCheck, ClipboardList, Bell, CheckCircle2, CalendarDays } from "lucide-react";
+import { Users, BookOpen, CalendarCheck, ClipboardList, CheckCircle, MessageSquare, Calendar } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useTeacherAuth } from "@/hooks/useTeacherAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 
-interface ActivityItem {
+interface RecentActivityItem {
+  id: string;
+  type: "assignment" | "message" | "grade";
+  title: string;
+  description: string;
+  timestamp: string;
+}
+
+interface UpcomingEvent {
   id: string;
   title: string;
-  subtitle: string;
   date: string;
-  type: "assignment" | "announcement" | "message";
-}
-
-interface EventItem {
-  id: string;
-  title: string;
-  date: string;
-  type: "field_trip" | "test" | "event";
-}
-
-interface AssignmentRow {
-  id: string;
-  title: string;
-  class_name: string;
-  due_date: string | null;
-  created_at: string;
-}
-
-interface AnnouncementRow {
-  id: string;
-  title: string;
-  published_at: string | null;
-  category: string | null;
+  type: "event" | "deadline";
 }
 
 const TeacherDashboard = () => {
@@ -42,110 +28,107 @@ const TeacherDashboard = () => {
   const navigate = useNavigate();
   const [studentCount, setStudentCount] = useState(0);
   const [pendingTasks, setPendingTasks] = useState(0);
-  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
-  const [upcomingEvents, setUpcomingEvents] = useState<EventItem[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivityItem[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      const classNames = assignedClasses.map(c => c.class_name);
+    if (assignedClasses.length > 0 || teacherProfile) {
+      fetchDashboardData();
+    }
+  }, [assignedClasses, teacherProfile]);
 
-      if (classNames.length > 0) {
+  const fetchDashboardData = async () => {
+    if (!teacherProfile) return;
+
+    try {
+      // Fetch student count
+      if (assignedClasses.length > 0) {
+        const classNames = assignedClasses.map(c => c.class_name);
         const { count } = await supabase
           .from("students")
           .select("id", { count: "exact", head: true })
           .in("current_class", classNames)
           .eq("status", "active");
+
         setStudentCount(count || 0);
       }
 
-      if (!teacherProfile) return;
-
-      const now = new Date();
-      const weekAhead = new Date();
-      weekAhead.setDate(now.getDate() + 7);
-
-      // pending tasks: assignments due within next 7 days
-      const { data: pendingAssignments } = await supabase
-        .from<AssignmentRow>("assignments")
-        .select("id,due_date")
+      // Fetch assignments (pending tasks)
+      const { data: assignmentsData } = await supabase
+        .from("assignments")
+        .select("id")
         .eq("teacher_id", teacherProfile.id)
-        .gte("due_date", now.toISOString().slice(0, 10))
-        .lte("due_date", weekAhead.toISOString().slice(0, 10));
-      setPendingTasks((pendingAssignments || []).length);
+        .gt("due_date", new Date().toISOString().split("T")[0]);
 
-      // recent activity from assignments + announcements
-      const [assignmentsRes, announcementsRes] = await Promise.all([
-        supabase
-          .from<AssignmentRow>("assignments")
-          .select("id,title,class_name,due_date,created_at")
-          .eq("teacher_id", teacherProfile.id)
-          .order("created_at", { ascending: false })
-          .limit(5),
-        supabase
-          .from<AnnouncementRow>("portal_announcements")
-          .select("id,title,published_at,category")
-          .eq("created_by", teacherProfile.user_id)
-          .order("published_at", { ascending: false })
-          .limit(5),
-      ]);
+      setPendingTasks(assignmentsData?.length || 0);
 
-      const activities: ActivityItem[] = [];
-      (assignmentsRes.data || []).forEach((a) => {
-        activities.push({
-          id: a.id,
-          title: `Created assignment: ${a.title}`,
-          subtitle: `Class: ${a.class_name} • Due ${a.due_date ? new Date(a.due_date).toLocaleDateString() : "N/A"}`,
-          date: a.created_at,
-          type: "assignment",
-        });
-      });
+      // Fetch recent activity (assignments + messages)
+      const activities: RecentActivityItem[] = [];
 
-      (announcementsRes.data || []).forEach((a) => {
-        activities.push({
-          id: a.id,
-          title: `Posted announcement: ${a.title}`,
-          subtitle: a.category ? a.category : "Announcement",
-          date: a.published_at || "",
-          type: "announcement",
-        });
-      });
-
-      activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      setRecentActivity(activities.slice(0, 5));
-
-      // upcoming events from assignments near due date and hardcoded events
-      const nextEvents: EventItem[] = [];
-      (pendingAssignments || []).slice(0, 3).forEach((a: any) => {
-        nextEvents.push({
-          id: a.id,
-          title: "Assignment due soon",
-          date: a.due_date || "",
-          type: "event",
-        });
-      });
-
-      const { data: eventAnnouncements } = await supabase
-        .from("portal_announcements")
-        .select("id,title,published_at")
-        .eq("created_by", teacherProfile.user_id)
-        .eq("category", "event")
-        .order("published_at", { ascending: false })
+      const { data: recentAssignments } = await supabase
+        .from("assignments")
+        .select("id, title, created_at")
+        .eq("teacher_id", teacherProfile.id)
+        .order("created_at", { ascending: false })
         .limit(3);
 
-      (eventAnnouncements || []).forEach((e: any) => {
-        nextEvents.push({
-          id: e.id,
-          title: e.title,
-          date: e.published_at || "",
+      recentAssignments?.forEach((assignment) => {
+        activities.push({
+          id: assignment.id,
+          type: "assignment",
+          title: assignment.title,
+          description: "New assignment created",
+          timestamp: assignment.created_at,
+        });
+      });
+
+      // Recent messages to parents
+      const { data: recentMessages } = await supabase
+        .from("parent_messages")
+        .select("id, subject, created_at")
+        .eq("sender_id", teacherProfile.user_id)
+        .order("created_at", { ascending: false })
+        .limit(2);
+
+      recentMessages?.forEach((message) => {
+        activities.push({
+          id: message.id,
+          type: "message",
+          title: message.subject,
+          description: "Message to parent",
+          timestamp: message.created_at,
+        });
+      });
+
+      activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      setRecentActivity(activities.slice(0, 5));
+
+      // Fetch upcoming events (using portal_announcements for school events)
+      const { data: upcomingSchoolEvents } = await supabase
+        .from("portal_announcements")
+        .select("id, title, published_at")
+        .eq("is_published", true)
+        .order("published_at", { ascending: false })
+        .limit(2);
+
+      const events: UpcomingEvent[] = [];
+      upcomingSchoolEvents?.forEach((event) => {
+        events.push({
+          id: event.id,
+          title: event.title,
+          date: event.published_at || new Date().toISOString(),
           type: "event",
         });
       });
 
-      setUpcomingEvents(nextEvents.slice(0, 4));
-    };
-
-    fetchDashboardData();
-  }, [assignedClasses, teacherProfile]);
+      setUpcomingEvents(events);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -154,44 +137,66 @@ const TeacherDashboard = () => {
     return "Good Evening";
   };
 
+  const teacherFirstName = teacherProfile?.full_name?.split(" ")[0] || "Teacher";
+
   const stats = [
     { label: "My Students", value: studentCount, icon: Users, color: "from-blue-500 to-blue-600" },
     { label: "Assigned Classes", value: assignedClasses.length, icon: BookOpen, color: "from-emerald-500 to-emerald-600" },
-    { label: "Pending Tasks", value: pendingTasks, icon: Bell, color: "from-orange-500 to-orange-600" },
+    { label: "Pending Tasks", value: pendingTasks, icon: ClipboardList, color: "from-orange-500 to-orange-600" },
   ];
 
   const quickActions = [
     { label: "Mark Attendance", icon: CalendarCheck, path: "/teacher/attendance" },
-    { label: "Enter Results", icon: ClipboardList, path: "/teacher/results" },
-    { label: "View Classes", icon: Users, path: "/teacher/classes" },
+    { label: "Enter Results", icon: CheckCircle, path: "/teacher/results" },
+    { label: "Create Assignment", icon: ClipboardList, path: "/teacher/assignments" },
   ];
 
-  return (
-    <div className="space-y-6">
-      <div className="rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 p-5 text-white shadow-lg">
-        <h1 className="text-2xl md:text-3xl font-bold">{greeting()}, {teacherProfile?.full_name?.split(" ")[0] || "Teacher"}!</h1>
-        <p className="mt-1 text-sm md:text-base text-white/90">You have {assignedClasses.length} classes today.</p>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
+    );
+  }
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+  return (
+    <div className="space-y-4">
+      {/* Greeting Card */}
+      <Card className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">👋</span>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">{greeting()}, {teacherFirstName}!</h2>
+              <p className="text-sm text-muted-foreground">You have {assignedClasses.length} classes today.</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {stats.map((stat) => (
           <Card key={stat.label} className="overflow-hidden">
             <div className={`bg-gradient-to-r ${stat.color} p-4 text-white`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm opacity-90">{stat.label}</p>
-                  <p className="text-3xl font-bold">{stat.value}</p>
+                  <p className="text-xs md:text-sm opacity-90">{stat.label}</p>
+                  <p className="text-3xl md:text-4xl font-bold">{stat.value}</p>
                 </div>
-                <stat.icon className="h-10 w-10 opacity-80" />
+                <div className="opacity-20">
+                  <stat.icon className="h-12 w-12" />
+                </div>
               </div>
             </div>
           </Card>
         ))}
       </div>
 
+      {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Quick Actions</CardTitle>
+          <CardTitle className="text-base">Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -199,73 +204,68 @@ const TeacherDashboard = () => {
               <Button
                 key={action.label}
                 variant="outline"
-                className="h-auto py-4 flex flex-col gap-2"
+                className="h-auto py-5 flex flex-col gap-3 rounded-xl border-2 hover:border-primary hover:bg-primary/5 transition"
                 onClick={() => navigate(action.path)}
               >
-                <action.icon className="h-6 w-6 text-primary" />
-                <span className="text-sm">{action.label}</span>
+                <div className="p-3 rounded-lg bg-primary/10">
+                  <action.icon className="h-6 w-6 text-primary" />
+                </div>
+                <span className="text-sm font-medium">{action.label}</span>
               </Button>
             ))}
           </div>
         </CardContent>
       </Card>
 
-      {assignedClasses.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Assigned Classes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {assignedClasses.map((cls) => (
-                <div key={cls.id} className="bg-primary/5 border border-primary/10 rounded-lg p-3 text-center">
-                  <p className="font-semibold text-primary">{cls.class_name}</p>
-                  <p className="text-xs text-muted-foreground">{cls.academic_year}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
+      {/* Recent Activity & Upcoming Events */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Recent Activity */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Recent Activity</CardTitle>
+            <CardTitle className="text-base">Recent Activity</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             {recentActivity.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No recent activity yet</p>
+              <p className="text-sm text-muted-foreground">No recent activity</p>
             ) : (
-              <div className="space-y-2">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="p-3 bg-muted/20 rounded-lg border border-border">
-                    <p className="font-medium">{activity.title}</p>
-                    <p className="text-xs text-muted-foreground">{activity.subtitle}</p>
-                    <p className="text-[11px] text-muted-foreground mt-1">{activity.date ? new Date(activity.date).toLocaleString() : ""}</p>
+              recentActivity.map((activity) => (
+                <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition cursor-pointer">
+                  <div className={`flex-shrink-0 p-2 rounded-lg ${activity.type === "assignment" ? "bg-blue-100 dark:bg-blue-900" : activity.type === "message" ? "bg-yellow-100 dark:bg-yellow-900" : "bg-green-100 dark:bg-green-900"}`}>
+                    {activity.type === "assignment" && <ClipboardList className={`h-4 w-4 ${activity.type === "assignment" ? "text-blue-600 dark:text-blue-300" : "text-yellow-600"}`} />}
+                    {activity.type === "message" && <MessageSquare className="h-4 w-4 text-yellow-600 dark:text-yellow-300" />}
+                    {activity.type === "grade" && <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-300" />}
                   </div>
-                ))}
-              </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{activity.title}</p>
+                    <p className="text-xs text-muted-foreground">{activity.description}</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">{format(new Date(activity.timestamp), "MMM d")}</span>
+                </div>
+              ))
             )}
           </CardContent>
         </Card>
 
+        {/* Upcoming Events */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Upcoming Events</CardTitle>
+            <CardTitle className="text-base">Upcoming Events</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             {upcomingEvents.length === 0 ? (
               <p className="text-sm text-muted-foreground">No upcoming events</p>
             ) : (
-              <div className="space-y-2">
-                {upcomingEvents.map((event) => (
-                  <div key={event.id} className="p-3 bg-muted/20 rounded-lg border border-border">
-                    <p className="font-medium">{event.title}</p>
-                    <p className="text-xs text-muted-foreground">{event.date ? new Date(event.date).toLocaleDateString() : ""}</p>
+              upcomingEvents.map((event) => (
+                <div key={event.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition cursor-pointer">
+                  <div className="flex-shrink-0 p-2 rounded-lg bg-red-100 dark:bg-red-900">
+                    <Calendar className="h-4 w-4 text-red-600 dark:text-red-300" />
                   </div>
-                ))}
-              </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{event.title}</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">{format(new Date(event.date), "MMM d")}</span>
+                </div>
+              ))
             )}
           </CardContent>
         </Card>
