@@ -12,7 +12,8 @@ import {
   Home,
   CreditCard,
   CalendarCheck,
-  FileText
+  FileText,
+  ClipboardList
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useParentAuth } from "@/hooks/useParentAuth";
