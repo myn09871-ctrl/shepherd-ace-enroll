@@ -1,163 +1,102 @@
-
-
-# Teacher Dashboard for Good Shepherd International School
+# Redesign Teacher Dashboard and Parent Dashboard to Match Uploaded UI References
 
 ## Overview
-Build a complete teacher portal with its own authentication flow, layout, sidebar, and 8 feature pages. Teachers are a new role — they can only access their assigned classes and students, not admin features.
 
-## Database Changes
-
-### 1. Add `teacher` to `app_role` enum
-Currently only has: `super_admin`, `admissions_officer`, `content_manager`. Add `teacher`.
-
-### 2. New `teacher_profiles` table
-Stores teacher-specific data linked to `auth.users`:
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid PK | |
-| user_id | uuid NOT NULL UNIQUE | references auth.users |
-| full_name | text NOT NULL | |
-| phone | text | |
-| avatar_url | text | |
-| created_at / updated_at | timestamptz | |
-
-RLS: Teachers can SELECT/UPDATE own row. Admins full access.
-
-### 3. New `class_teachers` table
-Links teachers to classes (a teacher can have multiple classes):
-
-| Column | Type |
-|--------|------|
-| id | uuid PK |
-| teacher_id | uuid NOT NULL | references teacher_profiles.id |
-| class_name | text NOT NULL | matches `students.current_class` |
-| academic_year | text NOT NULL |
-| is_active | boolean DEFAULT true |
-
-UNIQUE(teacher_id, class_name, academic_year). RLS: Teachers can SELECT own rows. Admins full access.
-
-### 4. New `assignments` table
-
-| Column | Type |
-|--------|------|
-| id | uuid PK |
-| teacher_id | uuid | references teacher_profiles.id |
-| class_name | text NOT NULL |
-| title | text NOT NULL |
-| description | text |
-| due_date | date |
-| attachment_url | text |
-| academic_year | text |
-| term | text |
-| created_at | timestamptz |
-
-RLS: Teachers can manage own assignments. Parents can SELECT where class matches their child. Admins full access.
-
-### 5. Update `is_admin` function
-Currently checks for `super_admin`, `admissions_officer`, `content_manager`. Keep as-is — teachers are NOT admins.
-
-### 6. New `is_teacher` function (SECURITY DEFINER)
-```sql
-CREATE FUNCTION public.is_teacher(_user_id uuid) RETURNS boolean
-```
-Checks if user has the `teacher` role in `user_roles`.
-
-### 7. New `get_teacher_profile_id` function (SECURITY DEFINER)
-Returns the teacher_profiles.id for a given user_id. Used in RLS policies.
-
-### 8. RLS updates for existing tables
-- **`grades`**: Add policy for teachers to INSERT/UPDATE/SELECT grades for students in their assigned classes
-- **`attendance`**: Add policy for teachers to INSERT/UPDATE/SELECT attendance for their class students
-- **`portal_announcements`**: Add policy for teachers to INSERT announcements for their classes
-- **`parent_messages`**: Add policy for teachers to manage messages for their class parents
-- **`students`**: Add SELECT policy for teachers to view students in their assigned classes
-- **`subjects`**: Already has public SELECT — no change needed
-
-### 9. New storage bucket `teacher-avatars` (public)
+Redesign both dashboards to closely match the uploaded reference images while keeping all existing backend connections intact. The teacher dashboard gets a blue background page with warm welcome card, stat counters, quick action cards with icons, and recent activity/upcoming events sections. The parent dashboard gets a mobile-optimized layout with student selector, grouped dashboard cards (Fees Summary, Attendance, Academic Performance, Announcements), tabbed Messages/Documents section, and a bottom navigation bar on mobile.
 
 ---
 
-## New Files
+## Teacher Dashboard Redesign
 
-### Auth & Layout
-1. **`src/hooks/useTeacherAuth.tsx`** — Context provider similar to `useParentAuth`. Fetches `teacher_profiles` and `class_teachers` for the logged-in user. Exposes: `user`, `teacherProfile`, `assignedClasses`, `loading`, `signIn`, `signOut`.
+**Reference image**: Blue background page, welcome card with greeting + class count, 3 stat cards (My Students: 54, Assigned Classes: 2, Pending Tasks: 3), 3 quick action cards with large icons (Mark Attendance, Enter Results, Create Assignment), two side-by-side sections (Recent Activity + Upcoming Events).
 
-2. **`src/components/teacher/TeacherLayout.tsx`** — Sidebar + topbar layout matching the reference image (blue sidebar with school crest, white content area). Top bar shows teacher name, avatar, notification bell, logout button. Mobile: sidebar collapses to hamburger.
+### Changes to `src/pages/teacher/TeacherDashboard.tsx`
 
-3. **`src/components/teacher/TeacherSidebar.tsx`** — Blue-themed sidebar with nav items: Dashboard, My Classes, Attendance, Results, Assignments, Announcements, Messages, Profile. School crest at top. Active route highlighting.
+- **Page background**: Light blue (`bg-blue-50/50`) to match the reference
+- **Welcome card**: Full-width beige/cream card with emoji greeting, teacher name, and class count for the day. Example: "Good Morning, Mr. Mensah. You have 2 classes today."
+- **Stats row**: 3 horizontal stat cards (white with border) showing icon + label + large number:
+  - My Students (count from `students` table by assigned classes)
+  - Assigned Classes (from `class_teachers`)
+  - Pending Tasks (count of ungraded subjects or unmarked attendance -- query `assignments` with recent due dates)
+- **Quick Actions**: 3 cards with larger centered icons (teal/green checkmark for Attendance, A+ grade icon for Results, clipboard for Assignments). Each navigates to the respective route.
+- **Bottom section**: Two columns:
+  - **Recent Activity**: List items showing recent grade posts and messages, fetched from `grades` (latest posted) and `parent_messages` (latest received). Each item is clickable.
+  - **Upcoming Events**: List from `portal_announcements` with upcoming dates.
+- All data fetched from Supabase -- no placeholder/fake data.
 
-### Pages (all under `/teacher/*`)
-4. **`src/pages/teacher/TeacherLogin.tsx`** — Login form for teachers (same Supabase auth, but redirects to `/teacher` on success and validates `teacher` role).
+### Changes to `src/components/teacher/TeacherLayout.tsx`
 
-5. **`src/pages/teacher/TeacherDashboard.tsx`** — Welcome card with greeting + class count. Stats cards: My Students count, Assigned Classes count, Pending Tasks count. Quick Actions: Mark Attendance, Enter Results, Create Assignment. Recent Activity feed (latest grades posted, messages received). Upcoming Events section.
+- **Top bar**: Add "Welcome, Mr. [Name]!" text on the left side. Right side keeps notification bell (with badge count), avatar + name, and a "Logout" button styled as a blue pill.
+- Background of the content area: subtle blue tint
 
-6. **`src/pages/teacher/TeacherClasses.tsx`** — Displays class cards for assigned classes only (from `class_teachers`). Each card shows class name, student count. Click opens student list for that class.
+### Changes to `src/components/teacher/TeacherSidebar.tsx`
 
-7. **`src/pages/teacher/TeacherAttendance.tsx`** — Select class (from assigned only), date picker. Shows student table with Present/Absent/Late radio buttons. Bulk save to `attendance` table. Writes are visible to admin and parent dashboards.
-
-8. **`src/pages/teacher/TeacherResults.tsx`** — Select class, subject, term. IAS/ETES score entry per student (matching existing `grades` table structure with `ias_score`, `etes_score`). Auto-calculates total, grade letter, proficiency level. Bulk save.
-
-9. **`src/pages/teacher/TeacherAssignments.tsx`** — List of assignments created by this teacher. Create form: title, description, class (from assigned), due date, optional file upload. Stored in `assignments` table.
-
-10. **`src/pages/teacher/TeacherAnnouncements.tsx`** — Create class-level announcements (stored in `portal_announcements` with `target_audience = 'specific_class'` and `target_class` set). List of own announcements.
-
-11. **`src/pages/teacher/TeacherMessages.tsx`** — List parents by class. Send message to individual parent or entire class. Uses existing `parent_messages` table with `sender_type = 'teacher'`. Inbox view with read status.
-
-12. **`src/pages/teacher/TeacherProfile.tsx`** — Update full name, phone, avatar (upload to `teacher-avatars` bucket). Email shown read-only. Change password via `supabase.auth.updateUser`.
-
-### Route Updates
-13. **`src/App.tsx`** — Add teacher routes:
-```
-/teacher/login -> TeacherLogin
-/teacher (TeacherLayout)
-  /teacher -> TeacherDashboard
-  /teacher/classes -> TeacherClasses
-  /teacher/attendance -> TeacherAttendance
-  /teacher/results -> TeacherResults
-  /teacher/assignments -> TeacherAssignments
-  /teacher/announcements -> TeacherAnnouncements
-  /teacher/messages -> TeacherMessages
-  /teacher/profile -> TeacherProfile
-```
+- Already matches the reference (blue sidebar with school crest, white active state). Minor adjustments:
+  - Ensure "GOOD SHEPHERD INTERNATIONAL SCHOOL" text matches the reference (uppercase, two-line)
+  - Active state: white background with dark blue text (already implemented)
 
 ---
 
-## Admin Side: Teacher Management
-14. **Add to admin sidebar**: "Teachers" nav item linking to `/admin/teachers`
+## Parent Dashboard Redesign
 
-15. **`src/pages/admin/TeacherManagement.tsx`** — Admin page to:
-- Create teacher accounts (creates auth user + teacher role + teacher_profiles record)
-- Assign classes to teachers (insert into `class_teachers`)
-- View/edit/deactivate teacher accounts
-- This uses the existing `create-student-portal` edge function pattern to create auth accounts, or a new `create-teacher-account` edge function
+**Reference image**: Mobile-first design with school header bar (crest + "Good Shepherd School" + notification bell), student selector dropdown showing parent name + selected child with photo and class, "Welcome, [Parent]!" greeting, then a 2-column card grid:
 
-16. **New edge function `supabase/functions/create-teacher-account/index.ts`** — Creates auth user, inserts `user_roles` with `teacher` role, and inserts `teacher_profiles` record. Uses service role key.
+1. **Fees Summary** card (orange header): Outstanding amount, payment status badge, "View All Fees" button
+2. **Attendance** card (green header): Percentage with circular progress, days present/total, recent absence records, "View Attendance" button
+3. **Academic Performance** card (blue header): Latest exam result term, current average %, grade distribution dots, "View All Results" button
+4. **Latest Announcements** card (yellow/orange header): Recent announcement title + preview text
+5. **Messages + Recent Documents** tabbed section: Message list with sender avatar + preview, document list with "View PDF" buttons
+6. **Bottom navigation bar** (mobile only): Dashboard, My Children, Messages (with badge), Documents, Fees
+
+### Changes to `src/pages/portal/PortalDashboard.tsx`
+
+- Remove the current gradient welcome header and replace with a simpler "Welcome, [ParentName]!" text heading
+- Replace the 4 stat cards with the reference layout:
+  - **Fees Summary card**: Orange/red header badge, GHS amount outstanding, payment status badge (Partially Paid / Fully Paid / Unpaid), "View All Fees" button. Data from `fees` table.
+  - **Attendance card**: Green header badge, percentage with a small circular progress indicator, "X / Y / Z Current Days Present", list of recent absent dates from `attendance` table, "View Attendance" button.
+  - **Academic Performance card**: Blue header badge, latest exam result period, current average percentage (large text), grade letter distribution (A, P, AP, D, B counts from `grades`), "View All Results" button.
+  - **Latest Announcements card**: Yellow/amber header badge, latest announcement title + truncated content from `portal_announcements`.
+- **Messages + Documents section**: Tabbed or side-by-side. Messages list shows sender name, preview text, timestamp, with "View PDF" button for document-type messages. Documents tab shows recent `student_documents`.
+- All data from Supabase with real queries.
+
+### Changes to `src/components/parent/ParentLayout.tsx`
+
+- **Top header bar**: School crest + "Good Shepherd School" on left, notification bell on right
+- **Student selector**: Below the header, show parent name dropdown on left + selected child's photo + name + class on right. Uses existing `students` array and `setCurrentStudent`.
+- **Mobile bottom nav bar** (visible only on small screens): 5 icons -- Dashboard, My Children, Messages (with unread badge), Documents, Fees. Hide sidebar on mobile entirely, use bottom nav instead.
+- Keep sidebar for desktop/tablet.
+
+### Changes to `src/components/parent/ParentSidebar.tsx`
+
+- Minor styling refinements to match the cleaner reference look. The sidebar is mainly for desktop; mobile uses bottom nav.
 
 ---
 
-## Parent Portal Updates
-- **Assignments page**: Add `/portal/assignments` route showing assignments for the parent's child's class
-- **`src/pages/portal/PortalAssignments.tsx`** — Lists assignments filtered by child's `current_class`
+## Report Card Enhancement
+
+The report card preview (`ReportCardPreview.tsx`) already has the correct GSIS branding and structure. Minor additions:
+
+- Ensure student `photo_url` is prominently displayed (already implemented)
+- No structural changes needed -- the current design matches the GSIS template
 
 ---
 
-## UI Design
-- Sidebar: Deep blue background (`#1e3a5f` or similar from the reference), white text, school crest at top
-- Active nav item: Lighter blue or white background with blue text
-- Dashboard cards: White with subtle shadows, matching the reference image layout
-- Responsive: Sidebar collapses on mobile with hamburger trigger
-- Search uses icon-only expandable pattern (no large search bars)
+## File Changes Summary
 
----
 
-## File Count Summary
-- 1 database migration (tables + enum + functions + RLS policies)
-- 1 edge function (`create-teacher-account`)
-- 1 auth hook (`useTeacherAuth`)
-- 3 layout/sidebar components
-- 10 page components (login + 8 features + admin management)
-- 1 route update (`App.tsx`)
-- 1 sidebar update (`AdminSidebar.tsx`)
-- 1 parent portal page (`PortalAssignments.tsx`)
+| File                                                                                                    | Change Type                                                                               |
+| ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `src/pages/teacher/TeacherDashboard.tsx`                                                                | Major rewrite -- new card layout matching reference                                       |
+| `src/components/teacher/TeacherLayout.tsx`                                                              | Update top bar with welcome text + logout button                                          |
+| `src/pages/portal/PortalDashboard.tsx`                                                                  | Major rewrite -- grouped cards (fees, attendance, academic, announcements, messages/docs) |
+| `src/components/parent/ParentLayout.tsx`                                                                | Add mobile bottom nav bar, update header with school branding + student selector          |
+| Use smaller font sizes and cards for the ui to sleek and clen`src/components/parent/ParentSidebar.tsx` | Minor style adjustments                                                                   |
 
+
+## Technical Notes
+
+- All data continues to come from existing Supabase tables (`fees`, `attendance`, `grades`, `portal_announcements`, `parent_messages`, `student_documents`, `students`, `class_teachers`)
+- No database schema changes needed -- all required tables and columns already exist
+- No new dependencies required
+- Mobile bottom nav uses fixed positioning with `z-50`, content area gets `pb-16` on mobile to avoid overlap
+- Grade distribution in Academic Performance card counts grade letters from `grades` table grouped by `grade_letter`
