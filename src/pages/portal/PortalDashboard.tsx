@@ -1,403 +1,348 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { 
-  GraduationCap, 
-  Calendar, 
-  Bell, 
-  CreditCard, 
-  TrendingUp,
-  Clock,
-  FileText,
-  ChevronRight
+import { useNavigate } from "react-router-dom";
+import {
+  CreditCard, Calendar, GraduationCap, Bell, ChevronRight, FileText, MessageSquare,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useParentAuth } from "@/hooks/useParentAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 
-interface DashboardStats {
-  termAverage: number | null;
-  attendancePercentage: number;
-  unreadAnnouncements: number;
-  pendingFees: number;
-}
-
-interface RecentActivity {
-  id: string;
-  type: "grade" | "announcement" | "attendance" | "fee";
-  title: string;
-  description: string;
-  timestamp: string;
-}
-
 const PortalDashboard = () => {
   const { currentStudent: student, parentAccount } = useParentAuth();
   const navigate = useNavigate();
-  const [stats, setStats] = useState<DashboardStats>({
-    termAverage: null,
-    attendancePercentage: 0,
-    unreadAnnouncements: 0,
-    pendingFees: 0,
-  });
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Data states
+  const [feesTotal, setFeesTotal] = useState(0);
+  const [feesPaid, setFeesPaid] = useState(0);
+  const [attendancePresent, setAttendancePresent] = useState(0);
+  const [attendanceTotal, setAttendanceTotal] = useState(0);
+  const [recentAbsences, setRecentAbsences] = useState<any[]>([]);
+  const [termAverage, setTermAverage] = useState<number | null>(null);
+  const [gradeDist, setGradeDist] = useState<Record<string, number>>({});
+  const [latestTerm, setLatestTerm] = useState("");
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [unreadMsgCount, setUnreadMsgCount] = useState(0);
+
   useEffect(() => {
-    if (student) {
-      fetchDashboardData();
-    }
+    if (student) fetchAll();
   }, [student]);
 
-  const fetchDashboardData = async () => {
+  const fetchAll = async () => {
     if (!student) return;
-
+    setLoading(true);
     try {
-      // Fetch attendance stats
-      const currentYear = new Date().getFullYear();
-      const { data: attendanceData } = await supabase
-        .from("attendance")
-        .select("status")
-        .eq("student_id", student.id)
-        .gte("date", `${currentYear}-01-01`);
-
-      const totalDays = attendanceData?.length || 0;
-      const presentDays = attendanceData?.filter(a => a.status === "present" || a.status === "late").length || 0;
-      const attendancePercentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 100;
-
-      // Fetch pending fees
-      const { data: feesData } = await supabase
-        .from("fees")
-        .select("amount")
-        .eq("student_id", student.id)
-        .eq("is_paid", false);
-
-      const pendingFees = feesData?.reduce((sum, fee) => sum + Number(fee.amount), 0) || 0;
-
-      // Fetch unread announcements
-      const { data: announcementsData } = await supabase
-        .from("portal_announcements")
-        .select("id")
-        .eq("is_published", true);
-
-      const { data: acknowledgedData } = await supabase
-        .from("announcement_acknowledgments")
-        .select("announcement_id")
-        .eq("parent_account_id", parentAccount?.id || "");
-
-      const acknowledgedIds = new Set(acknowledgedData?.map(a => a.announcement_id) || []);
-      const unreadAnnouncements = announcementsData?.filter(a => !acknowledgedIds.has(a.id)).length || 0;
-
-      // Fetch latest grades for term average
-      const { data: gradesData } = await supabase
-        .from("grades")
-        .select("total_score")
-        .eq("student_id", student.id)
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      const validScores = gradesData?.filter(g => g.total_score !== null).map(g => Number(g.total_score)) || [];
-      const termAverage = validScores.length > 0 
-        ? Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length) 
-        : null;
-
-      setStats({
-        termAverage,
-        attendancePercentage,
-        unreadAnnouncements,
-        pendingFees,
-      });
-
-      // Build recent activity
-      const activities: RecentActivity[] = [];
-
-      // Recent grades
-      const { data: recentGrades } = await supabase
-        .from("grades")
-        .select("id, total_score, subject_id, posted_at, subjects(name)")
-        .eq("student_id", student.id)
-        .order("posted_at", { ascending: false })
-        .limit(3);
-
-      recentGrades?.forEach((grade: any) => {
-        if (grade.posted_at) {
-          activities.push({
-            id: grade.id,
-            type: "grade",
-            title: `${grade.subjects?.name || "Subject"} Score Posted`,
-            description: `Score: ${grade.total_score}%`,
-            timestamp: grade.posted_at,
-          });
-        }
-      });
-
-      // Recent announcements
-      const { data: recentAnnouncements } = await supabase
-        .from("portal_announcements")
-        .select("id, title, published_at")
-        .eq("is_published", true)
-        .order("published_at", { ascending: false })
-        .limit(3);
-
-      recentAnnouncements?.forEach(announcement => {
-        if (announcement.published_at) {
-          activities.push({
-            id: announcement.id,
-            type: "announcement",
-            title: announcement.title,
-            description: "New announcement",
-            timestamp: announcement.published_at,
-          });
-        }
-      });
-
-      // Sort by timestamp
-      activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-      setRecentActivity(activities.slice(0, 5));
-
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+      await Promise.all([
+        fetchFees(), fetchAttendance(), fetchGrades(),
+        fetchAnnouncements(), fetchMessages(), fetchDocuments(),
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
-  const getAttendanceColor = (percentage: number) => {
-    if (percentage >= 90) return "text-green-600 bg-green-100";
-    if (percentage >= 75) return "text-yellow-600 bg-yellow-100";
-    return "text-red-600 bg-red-100";
+  const fetchFees = async () => {
+    const { data } = await supabase
+      .from("fees").select("amount, is_paid").eq("student_id", student!.id);
+    const total = data?.reduce((s, f) => s + Number(f.amount), 0) || 0;
+    const paid = data?.filter(f => f.is_paid).reduce((s, f) => s + Number(f.amount), 0) || 0;
+    setFeesTotal(total);
+    setFeesPaid(paid);
   };
 
-  const calculateAge = (dob: string) => {
-    const today = new Date();
-    const birthDate = new Date(dob);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
+  const fetchAttendance = async () => {
+    const yr = new Date().getFullYear();
+    const { data } = await supabase
+      .from("attendance").select("status, date").eq("student_id", student!.id)
+      .gte("date", `${yr}-01-01`).order("date", { ascending: false });
+    const total = data?.length || 0;
+    const present = data?.filter(a => a.status === "present" || a.status === "late").length || 0;
+    setAttendanceTotal(total);
+    setAttendancePresent(present);
+    setRecentAbsences(data?.filter(a => a.status === "absent").slice(0, 3) || []);
   };
 
-  const handleActivityClick = (activity: RecentActivity) => {
-    if (activity.type === "announcement") {
-      navigate("/portal/announcements");
-    } else if (activity.type === "grade") {
-      navigate("/portal/academics");
-    } else if (activity.type === "fee") {
-      navigate("/portal/fees");
-    } else if (activity.type === "attendance") {
-      navigate("/portal/attendance");
+  const fetchGrades = async () => {
+    const { data } = await supabase
+      .from("grades").select("total_score, grade_letter, term, academic_year")
+      .eq("student_id", student!.id).order("created_at", { ascending: false });
+    if (data && data.length > 0) {
+      setLatestTerm(`${data[0].term} - ${data[0].academic_year}`);
+      const scores = data.filter(g => g.total_score != null).map(g => Number(g.total_score));
+      setTermAverage(scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null);
+      const dist: Record<string, number> = {};
+      data.forEach(g => { if (g.grade_letter) dist[g.grade_letter] = (dist[g.grade_letter] || 0) + 1; });
+      setGradeDist(dist);
     }
   };
+
+  const fetchAnnouncements = async () => {
+    const { data } = await supabase
+      .from("portal_announcements").select("id, title, content, published_at, category")
+      .eq("is_published", true).order("published_at", { ascending: false }).limit(3);
+    setAnnouncements(data || []);
+  };
+
+  const fetchMessages = async () => {
+    if (!parentAccount) return;
+    const { data } = await supabase
+      .from("parent_messages").select("id, subject, message, created_at, sender_type, is_read")
+      .eq("parent_account_id", parentAccount.id).order("created_at", { ascending: false }).limit(5);
+    setMessages(data || []);
+    setUnreadMsgCount(data?.filter(m => !m.is_read && m.sender_type !== "parent").length || 0);
+  };
+
+  const fetchDocuments = async () => {
+    const { data } = await supabase
+      .from("student_documents").select("id, document_name, document_type, file_url, created_at")
+      .eq("student_id", student!.id).order("created_at", { ascending: false }).limit(5);
+    setDocuments(data || []);
+  };
+
+  const attendancePct = attendanceTotal > 0 ? Math.round((attendancePresent / attendanceTotal) * 100) : 100;
+  const outstanding = feesTotal - feesPaid;
+  const feeStatus = outstanding <= 0 ? "Fully Paid" : feesPaid > 0 ? "Partially Paid" : "Unpaid";
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Header with Blue Gradient */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary via-primary/90 to-accent p-4 md:p-6 text-primary-foreground">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-6 -translate-x-6" />
-        
-        {student && (
-          <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4">
-            <div className="h-20 w-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0 ring-4 ring-white/30">
-              {student.photo_url ? (
-                <img src={student.photo_url} alt="" className="h-20 w-20 rounded-full object-cover" />
-              ) : (
-                <span className="text-2xl font-bold">
-                  {student.first_name[0]}{student.surname[0]}
-                </span>
-              )}
-            </div>
-            <div className="text-center sm:text-left">
-              <p className="text-sm text-white/80">Welcome back,</p>
-              <h1 className="text-xl md:text-2xl font-bold">
-                {student.first_name} {student.middle_name || ""} {student.surname}
-              </h1>
-              <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
-                <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium">{student.student_id}</span>
-                <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium">{student.current_class}</span>
-                <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium">{calculateAge(student.date_of_birth)} years</span>
-              </div>
+    <div className="space-y-4 pb-20 lg:pb-4">
+      {/* Greeting */}
+      <h2 className="text-lg font-bold text-foreground">
+        Welcome, {parentAccount?.parent_name?.split(" ")[0]}! 👋
+      </h2>
+
+      {/* Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Fees Summary */}
+        <Card className="overflow-hidden border shadow-sm">
+          <div className="bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2">
+            <div className="flex items-center gap-2 text-white">
+              <CreditCard className="h-4 w-4" />
+              <span className="text-xs font-semibold">Fees Summary</span>
             </div>
           </div>
-        )}
-      </div>
-
-      {/* Quick Stats - Blue themed */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-3 md:p-4 text-white shadow-lg">
-          <div className="absolute top-0 right-0 w-12 h-12 bg-white/10 rounded-full -translate-y-3 translate-x-3" />
-          <TrendingUp className="h-5 w-5 mb-2 opacity-80" />
-          <p className="text-2xl md:text-3xl font-bold">
-            {stats.termAverage !== null ? `${stats.termAverage}%` : "—"}
-          </p>
-          <p className="text-xs text-white/80">Term Average</p>
-        </div>
-        
-        <div className={`relative overflow-hidden rounded-xl p-3 md:p-4 text-white shadow-lg ${
-          stats.attendancePercentage >= 90 
-            ? 'bg-gradient-to-br from-emerald-500 to-green-600' 
-            : stats.attendancePercentage >= 75 
-            ? 'bg-gradient-to-br from-amber-500 to-orange-500' 
-            : 'bg-gradient-to-br from-red-500 to-rose-600'
-        }`}>
-          <div className="absolute top-0 right-0 w-12 h-12 bg-white/10 rounded-full -translate-y-3 translate-x-3" />
-          <Calendar className="h-5 w-5 mb-2 opacity-80" />
-          <p className="text-2xl md:text-3xl font-bold">{stats.attendancePercentage}%</p>
-          <p className="text-xs text-white/80">Attendance</p>
-        </div>
-        
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 p-3 md:p-4 text-white shadow-lg">
-          <div className="absolute top-0 right-0 w-12 h-12 bg-white/10 rounded-full -translate-y-3 translate-x-3" />
-          <div className="relative">
-            <Bell className="h-5 w-5 mb-2 opacity-80" />
-            {stats.unreadAnnouncements > 0 && (
-              <span className="absolute -top-1 -right-1 h-4 w-4 bg-white rounded-full text-[10px] text-orange-600 font-bold flex items-center justify-center">
-                {stats.unreadAnnouncements}
-              </span>
-            )}
-          </div>
-          <p className="text-2xl md:text-3xl font-bold">{stats.unreadAnnouncements}</p>
-          <p className="text-xs text-white/80">Unread</p>
-        </div>
-        
-        <div className={`relative overflow-hidden rounded-xl p-3 md:p-4 text-white shadow-lg ${
-          stats.pendingFees > 0 
-            ? 'bg-gradient-to-br from-red-500 to-rose-600' 
-            : 'bg-gradient-to-br from-emerald-500 to-green-600'
-        }`}>
-          <div className="absolute top-0 right-0 w-12 h-12 bg-white/10 rounded-full -translate-y-3 translate-x-3" />
-          <CreditCard className="h-5 w-5 mb-2 opacity-80" />
-          <p className="text-2xl md:text-3xl font-bold">
-            {stats.pendingFees > 0 ? `GH₵${stats.pendingFees.toLocaleString()}` : "Paid ✓"}
-          </p>
-          <p className="text-xs text-white/80">Fees Status</p>
-        </div>
-      </div>
-
-      {/* Quick Links & Recent Activity */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Quick Links - Blue themed */}
-        <Card className="bg-gradient-to-br from-card via-card to-primary/5 border-primary/10">
-          <CardHeader className="pb-3 bg-gradient-to-r from-primary/5 to-transparent">
-            <CardTitle className="text-base flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-primary/10">
-                <GraduationCap className="h-4 w-4 text-primary" />
-              </div>
-              Quick Access
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-3">
-            <Link to="/portal/academics">
-              <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2 hover:bg-primary/10 hover:border-primary/30 transition-all">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <GraduationCap className="h-5 w-5 text-primary" />
-                </div>
-                <span className="text-xs">Report Cards</span>
-              </Button>
-            </Link>
-            <Link to="/portal/attendance">
-              <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2 hover:bg-primary/10 hover:border-primary/30 transition-all">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Calendar className="h-5 w-5 text-primary" />
-                </div>
-                <span className="text-xs">Attendance</span>
-              </Button>
-            </Link>
-            <Link to="/portal/timetable">
-              <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2 hover:bg-primary/10 hover:border-primary/30 transition-all">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Clock className="h-5 w-5 text-primary" />
-                </div>
-                <span className="text-xs">Timetable</span>
-              </Button>
-            </Link>
-            <Link to="/portal/documents">
-              <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2 hover:bg-primary/10 hover:border-primary/30 transition-all">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <FileText className="h-5 w-5 text-primary" />
-                </div>
-                <span className="text-xs">Documents</span>
-              </Button>
-            </Link>
+          <CardContent className="p-4 space-y-3">
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Outstanding</p>
+              <p className="text-2xl font-bold text-foreground">
+                GH₵{outstanding.toLocaleString()}
+              </p>
+            </div>
+            <Badge variant={outstanding <= 0 ? "default" : "destructive"} className="text-[10px]">
+              {feeStatus}
+            </Badge>
+            <Button
+              variant="outline" size="sm"
+              className="w-full text-xs mt-1"
+              onClick={() => navigate("/portal/fees")}
+            >
+              View All Fees <ChevronRight className="h-3 w-3 ml-1" />
+            </Button>
           </CardContent>
         </Card>
 
-        {/* Recent Activity - Blue themed */}
-        <Card className="bg-gradient-to-br from-card via-card to-secondary/5 border-secondary/10">
-          <CardHeader className="pb-3 bg-gradient-to-r from-secondary/5 to-transparent">
-            <CardTitle className="text-base flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-secondary/10">
-                <Bell className="h-4 w-4 text-secondary" />
-              </div>
-              Recent Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentActivity.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                No recent activity
+        {/* Attendance */}
+        <Card className="overflow-hidden border shadow-sm">
+          <div className="bg-gradient-to-r from-emerald-500 to-green-500 px-4 py-2">
+            <div className="flex items-center gap-2 text-white">
+              <Calendar className="h-4 w-4" />
+              <span className="text-xs font-semibold">Attendance</span>
+            </div>
+          </div>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-end gap-2">
+              <p className="text-2xl font-bold text-foreground">{attendancePct}%</p>
+              <p className="text-[10px] text-muted-foreground mb-1">
+                {attendancePresent}/{attendanceTotal} days
               </p>
-            ) : (
-              <div className="space-y-2">
-                {recentActivity.map((activity) => (
-                  <div 
-                    key={activity.id} 
-                    className="flex items-start gap-3 p-3 rounded-xl bg-gradient-to-r from-muted/50 to-transparent hover:from-primary/10 hover:to-transparent transition-all cursor-pointer border border-transparent hover:border-primary/20"
-                    onClick={() => handleActivityClick(activity)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        handleActivityClick(activity);
-                      }
-                    }}
-                  >
-                    <div className={`p-2 rounded-lg shrink-0 ${
-                      activity.type === "grade" ? "bg-blue-500/10" :
-                      activity.type === "announcement" ? "bg-orange-500/10" :
-                      activity.type === "attendance" ? "bg-green-500/10" :
-                      "bg-purple-500/10"
-                    }`}>
-                      {activity.type === "grade" && <GraduationCap className="h-4 w-4 text-blue-600" />}
-                      {activity.type === "announcement" && <Bell className="h-4 w-4 text-orange-600" />}
-                      {activity.type === "attendance" && <Calendar className="h-4 w-4 text-green-600" />}
-                      {activity.type === "fee" && <CreditCard className="h-4 w-4 text-purple-600" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{activity.title}</p>
-                      <p className="text-xs text-muted-foreground">{activity.description}</p>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
-                        {format(new Date(activity.timestamp), "MMM d")}
-                      </span>
-                      <ChevronRight className="h-4 w-4 text-primary" />
-                    </div>
-                  </div>
+            </div>
+            <Progress value={attendancePct} className="h-2" />
+            {recentAbsences.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[10px] text-muted-foreground">Recent absences:</p>
+                {recentAbsences.map(a => (
+                  <p key={a.date} className="text-[10px] text-red-500">
+                    • {format(new Date(a.date), "MMM d, yyyy")}
+                  </p>
                 ))}
               </div>
             )}
-            <Link to="/portal/announcements" className="block mt-4">
-              <Button variant="outline" size="sm" className="w-full border-primary/20 hover:bg-primary/10 hover:text-primary">
-                View All Activity
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </Link>
+            <Button
+              variant="outline" size="sm"
+              className="w-full text-xs"
+              onClick={() => navigate("/portal/attendance")}
+            >
+              View Attendance <ChevronRight className="h-3 w-3 ml-1" />
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Academic Performance */}
+        <Card className="overflow-hidden border shadow-sm">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2">
+            <div className="flex items-center gap-2 text-white">
+              <GraduationCap className="h-4 w-4" />
+              <span className="text-xs font-semibold">Academic Performance</span>
+            </div>
+          </div>
+          <CardContent className="p-4 space-y-3">
+            {latestTerm && (
+              <p className="text-[10px] text-muted-foreground">{latestTerm}</p>
+            )}
+            <p className="text-2xl font-bold text-foreground">
+              {termAverage != null ? `${termAverage}%` : "—"}
+            </p>
+            {Object.keys(gradeDist).length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {Object.entries(gradeDist).map(([letter, count]) => (
+                  <span
+                    key={letter}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-medium"
+                  >
+                    {letter}: {count}
+                  </span>
+                ))}
+              </div>
+            )}
+            <Button
+              variant="outline" size="sm"
+              className="w-full text-xs"
+              onClick={() => navigate("/portal/academics")}
+            >
+              View All Results <ChevronRight className="h-3 w-3 ml-1" />
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Announcements */}
+        <Card className="overflow-hidden border shadow-sm">
+          <div className="bg-gradient-to-r from-amber-400 to-yellow-500 px-4 py-2">
+            <div className="flex items-center gap-2 text-white">
+              <Bell className="h-4 w-4" />
+              <span className="text-xs font-semibold">Latest Announcements</span>
+            </div>
+          </div>
+          <CardContent className="p-4 space-y-2">
+            {announcements.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-4">No announcements</p>
+            ) : (
+              announcements.map(a => (
+                <div
+                  key={a.id}
+                  className="p-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                  onClick={() => navigate("/portal/announcements")}
+                >
+                  <p className="text-xs font-medium truncate">{a.title}</p>
+                  <p className="text-[10px] text-muted-foreground line-clamp-1">{a.content}</p>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Messages & Documents Tabs */}
+      <Tabs defaultValue="messages">
+        <TabsList className="w-full grid grid-cols-2">
+          <TabsTrigger value="messages" className="text-xs gap-1.5">
+            <MessageSquare className="h-3.5 w-3.5" />
+            Messages
+            {unreadMsgCount > 0 && (
+              <Badge variant="destructive" className="text-[9px] h-4 px-1 ml-1">{unreadMsgCount}</Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="documents" className="text-xs gap-1.5">
+            <FileText className="h-3.5 w-3.5" />
+            Documents
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="messages" className="mt-2">
+          <Card className="border shadow-sm">
+            <CardContent className="p-3 space-y-2">
+              {messages.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-4">No messages</p>
+              ) : (
+                messages.map(m => (
+                  <div
+                    key={m.id}
+                    className={`flex items-start gap-3 p-2.5 rounded-lg cursor-pointer transition-colors ${
+                      !m.is_read && m.sender_type !== "parent" ? "bg-primary/5" : "hover:bg-muted/50"
+                    }`}
+                    onClick={() => navigate("/portal/messages")}
+                  >
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate">{m.subject}</p>
+                      <p className="text-[10px] text-muted-foreground line-clamp-1">{m.message}</p>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                      {format(new Date(m.created_at), "MMM d")}
+                    </span>
+                  </div>
+                ))
+              )}
+              <Button
+                variant="ghost" size="sm"
+                className="w-full text-xs text-primary"
+                onClick={() => navigate("/portal/messages")}
+              >
+                View All Messages
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="documents" className="mt-2">
+          <Card className="border shadow-sm">
+            <CardContent className="p-3 space-y-2">
+              {documents.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-4">No documents</p>
+              ) : (
+                documents.map(d => (
+                  <div key={d.id} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50">
+                    <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                      <FileText className="h-3.5 w-3.5 text-amber-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate">{d.document_name}</p>
+                      <p className="text-[10px] text-muted-foreground">{d.document_type}</p>
+                    </div>
+                    <a href={d.file_url} target="_blank" rel="noopener noreferrer">
+                      <Button variant="ghost" size="sm" className="text-[10px] h-7">
+                        View
+                      </Button>
+                    </a>
+                  </div>
+                ))
+              )}
+              <Button
+                variant="ghost" size="sm"
+                className="w-full text-xs text-primary"
+                onClick={() => navigate("/portal/documents")}
+              >
+                View All Documents
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
