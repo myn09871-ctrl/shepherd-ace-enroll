@@ -1,15 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, BookOpen, ClipboardList, CalendarCheck, GraduationCap, FileText, ChevronRight, Clock } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useTeacherAuth } from "@/hooks/useTeacherAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 
 interface ActivityItem {
   id: string;
-  type: "grade" | "message" | "announcement";
+  type: "grade" | "message";
   title: string;
   description: string;
   timestamp: string;
@@ -27,7 +25,6 @@ const TeacherDashboard = () => {
     if (assignedClasses.length > 0 && user) {
       const classNames = assignedClasses.map(c => c.class_name);
 
-      // Fetch student count
       supabase
         .from("students")
         .select("id", { count: "exact", head: true })
@@ -35,7 +32,6 @@ const TeacherDashboard = () => {
         .eq("status", "active")
         .then(({ count }) => setStudentCount(count || 0));
 
-      // Fetch pending assignments (due soon)
       supabase
         .from("assignments")
         .select("id", { count: "exact", head: true })
@@ -43,7 +39,6 @@ const TeacherDashboard = () => {
         .gte("due_date", new Date().toISOString().split("T")[0])
         .then(({ count }) => setPendingTasks(count || 0));
 
-      // Fetch recent activity
       const fetchActivity = async () => {
         const activities: ActivityItem[] = [];
         const { data: grades } = await supabase
@@ -51,13 +46,13 @@ const TeacherDashboard = () => {
           .select("id, total_score, posted_at, subject_id, subjects(name)")
           .eq("posted_by", user.id)
           .order("posted_at", { ascending: false })
-          .limit(4);
+          .limit(3);
 
         grades?.forEach((g: any) => {
           if (g.posted_at) {
             activities.push({
               id: g.id, type: "grade",
-              title: `${g.subjects?.name || "Subject"} results posted`,
+              title: `Graded results for ${g.subjects?.name || "Subject"}`,
               description: `Score: ${g.total_score}%`,
               timestamp: g.posted_at,
             });
@@ -69,7 +64,7 @@ const TeacherDashboard = () => {
           .select("id, subject, created_at, sender_type")
           .eq("sender_id", user.id)
           .order("created_at", { ascending: false })
-          .limit(3);
+          .limit(2);
 
         msgs?.forEach(m => {
           activities.push({
@@ -81,17 +76,16 @@ const TeacherDashboard = () => {
         });
 
         activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-        setRecentActivity(activities.slice(0, 5));
+        setRecentActivity(activities.slice(0, 4));
       };
 
-      // Fetch upcoming events
       const fetchEvents = async () => {
         const { data } = await supabase
           .from("portal_announcements")
           .select("id, title, published_at, category")
           .eq("is_published", true)
           .order("published_at", { ascending: false })
-          .limit(4);
+          .limit(3);
         setUpcomingEvents(data || []);
       };
 
@@ -107,186 +101,135 @@ const TeacherDashboard = () => {
     return "Good Evening";
   };
 
-  const firstName = teacherProfile?.full_name?.split(" ").slice(-1)[0] || "Teacher";
+  const lastName = teacherProfile?.full_name?.split(" ").slice(-1)[0] || "Teacher";
 
   return (
-    <div className="space-y-5 bg-blue-50/40 -m-4 md:-m-6 p-4 md:p-6 min-h-screen">
-      {/* Welcome Card */}
-      <div className="rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 p-5 md:p-6">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">👋</span>
+    <div className="space-y-4">
+      {/* Welcome Card - beige/cream */}
+      <div className="rounded-lg bg-[#fdf6ec] border border-amber-200/50 px-5 py-4">
+        <div className="flex items-center gap-2.5">
+          <span className="text-xl">😊</span>
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-foreground">
-              {greeting()}, {firstName}!
+            <h1 className="text-[15px] font-bold text-foreground">
+              {greeting()}, Mr. {lastName} 👋
             </h1>
-            <p className="text-sm text-muted-foreground">
-              You have {assignedClasses.length} class{assignedClasses.length !== 1 ? "es" : ""} today. Have a productive day!
+            <p className="text-[12px] text-muted-foreground mt-0.5">
+              You have {assignedClasses.length} class{assignedClasses.length !== 1 ? "es" : ""} today.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Stats Row */}
+      {/* Stats Row - 3 cards */}
       <div className="grid grid-cols-3 gap-3">
-        <Card className="border shadow-sm">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-blue-100">
-              <Users className="h-5 w-5 text-blue-600" />
+        {[
+          { icon: "👨‍🎓", label: "My Students", value: studentCount },
+          { icon: "🏫", label: "Assigned Classes", value: assignedClasses.length },
+          { icon: "📋", label: "Pending Tasks", value: pendingTasks },
+        ].map((stat) => (
+          <div key={stat.label} className="bg-white rounded-lg border border-border/60 px-4 py-3 flex items-center gap-3">
+            <span className="text-xl">{stat.icon}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-muted-foreground">{stat.label}</span>
+              <span className="text-2xl font-bold text-foreground">{stat.value}</span>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{studentCount}</p>
-              <p className="text-xs text-muted-foreground">My Students</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border shadow-sm">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-emerald-100">
-              <BookOpen className="h-5 w-5 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{assignedClasses.length}</p>
-              <p className="text-xs text-muted-foreground">Classes</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border shadow-sm">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-amber-100">
-              <ClipboardList className="h-5 w-5 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{pendingTasks}</p>
-              <p className="text-xs text-muted-foreground">Tasks</p>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        ))}
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-3 gap-3">
-        <Card
-          className="border shadow-sm cursor-pointer hover:shadow-md transition-shadow group"
-          onClick={() => navigate("/teacher/attendance")}
-        >
-          <CardContent className="p-5 flex flex-col items-center gap-3 text-center">
-            <div className="p-3 rounded-2xl bg-teal-100 group-hover:bg-teal-200 transition-colors">
-              <CalendarCheck className="h-7 w-7 text-teal-600" />
+      <div>
+        <h3 className="text-[13px] font-semibold text-foreground mb-2">Quick Actions</h3>
+        <div className="grid grid-cols-3 gap-3">
+          <button
+            onClick={() => navigate("/teacher/attendance")}
+            className="bg-white rounded-lg border border-border/60 p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+          >
+            <div className="h-12 w-12 rounded-xl bg-teal-50 flex items-center justify-center">
+              <CalendarCheck className="h-6 w-6 text-teal-600" />
             </div>
-            <span className="text-sm font-medium text-foreground">Mark Attendance</span>
-          </CardContent>
-        </Card>
-        <Card
-          className="border shadow-sm cursor-pointer hover:shadow-md transition-shadow group"
-          onClick={() => navigate("/teacher/results")}
-        >
-          <CardContent className="p-5 flex flex-col items-center gap-3 text-center">
-            <div className="p-3 rounded-2xl bg-blue-100 group-hover:bg-blue-200 transition-colors">
-              <GraduationCap className="h-7 w-7 text-blue-600" />
+            <span className="text-[12px] font-medium text-foreground">Mark Attendance</span>
+          </button>
+          <button
+            onClick={() => navigate("/teacher/results")}
+            className="bg-white rounded-lg border border-border/60 p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+          >
+            <div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center">
+              <GraduationCap className="h-6 w-6 text-blue-600" />
             </div>
-            <span className="text-sm font-medium text-foreground">Enter Results</span>
-          </CardContent>
-        </Card>
-        <Card
-          className="border shadow-sm cursor-pointer hover:shadow-md transition-shadow group"
-          onClick={() => navigate("/teacher/assignments")}
-        >
-          <CardContent className="p-5 flex flex-col items-center gap-3 text-center">
-            <div className="p-3 rounded-2xl bg-purple-100 group-hover:bg-purple-200 transition-colors">
-              <FileText className="h-7 w-7 text-purple-600" />
+            <span className="text-[12px] font-medium text-foreground">Enter Results</span>
+          </button>
+          <button
+            onClick={() => navigate("/teacher/assignments")}
+            className="bg-white rounded-lg border border-border/60 p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
+          >
+            <div className="h-12 w-12 rounded-xl bg-purple-50 flex items-center justify-center">
+              <FileText className="h-6 w-6 text-purple-600" />
             </div>
-            <span className="text-sm font-medium text-foreground">Create Assignment</span>
-          </CardContent>
-        </Card>
+            <span className="text-[12px] font-medium text-foreground">Create Assignment</span>
+          </button>
+        </div>
       </div>
 
-      {/* Recent Activity + Upcoming Events */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <Card className="border shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" />
+      {/* Recent Activity + Upcoming Events - side by side */}
+      <div className="grid md:grid-cols-2 gap-3">
+        <div className="bg-white rounded-lg border border-border/60">
+          <div className="px-4 py-2.5 border-b border-border/40">
+            <h3 className="text-[12px] font-semibold text-foreground flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5 text-primary" />
               Recent Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
+            </h3>
+          </div>
+          <div className="divide-y divide-border/30">
             {recentActivity.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-6">No recent activity</p>
+              <p className="text-[11px] text-muted-foreground text-center py-6">No recent activity</p>
             ) : (
               recentActivity.map(a => (
-                <div key={a.id} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                  <div className={`p-1.5 rounded-lg ${a.type === "grade" ? "bg-blue-100" : a.type === "message" ? "bg-green-100" : "bg-amber-100"}`}>
-                    {a.type === "grade" && <GraduationCap className="h-3.5 w-3.5 text-blue-600" />}
-                    {a.type === "message" && <FileText className="h-3.5 w-3.5 text-green-600" />}
-                    {a.type === "announcement" && <ClipboardList className="h-3.5 w-3.5 text-amber-600" />}
+                <div key={a.id} className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-muted/30 cursor-pointer transition-colors">
+                  <div className={`p-1 rounded ${a.type === "grade" ? "bg-blue-50" : "bg-green-50"}`}>
+                    {a.type === "grade" ? (
+                      <CalendarCheck className="h-3 w-3 text-blue-600" />
+                    ) : (
+                      <FileText className="h-3 w-3 text-green-600" />
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium truncate">{a.title}</p>
-                    <p className="text-[10px] text-muted-foreground">{a.description}</p>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                    {format(new Date(a.timestamp), "MMM d")}
-                  </span>
+                  <span className="text-[11px] text-foreground flex-1 truncate">{a.title}</span>
+                  <ChevronRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                 </div>
               ))
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="border shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <CalendarCheck className="h-4 w-4 text-primary" />
+        <div className="bg-white rounded-lg border border-border/60">
+          <div className="px-4 py-2.5 border-b border-border/40">
+            <h3 className="text-[12px] font-semibold text-foreground flex items-center gap-1.5">
+              <CalendarCheck className="h-3.5 w-3.5 text-primary" />
               Upcoming Events
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
+            </h3>
+          </div>
+          <div className="divide-y divide-border/30">
             {upcomingEvents.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-6">No upcoming events</p>
+              <p className="text-[11px] text-muted-foreground text-center py-6">No upcoming events</p>
             ) : (
               upcomingEvents.map(e => (
-                <div key={e.id} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors">
-                  <div className="p-1.5 rounded-lg bg-primary/10">
-                    <CalendarCheck className="h-3.5 w-3.5 text-primary" />
+                <div key={e.id} className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-muted/30 transition-colors">
+                  <div className="p-1 rounded bg-amber-50">
+                    <CalendarCheck className="h-3 w-3 text-amber-600" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium truncate">{e.title}</p>
-                    <p className="text-[10px] text-muted-foreground">{e.category}</p>
-                  </div>
+                  <span className="text-[11px] text-foreground flex-1 truncate">{e.title}</span>
                   {e.published_at && (
-                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                    <span className="text-[10px] text-muted-foreground flex-shrink-0">
                       {format(new Date(e.published_at), "MMM d")}
                     </span>
                   )}
+                  <ChevronRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                 </div>
               ))
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
-
-      {/* Assigned Classes */}
-      {assignedClasses.length > 0 && (
-        <Card className="border shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">My Classes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {assignedClasses.map(cls => (
-                <div
-                  key={cls.id}
-                  onClick={() => navigate("/teacher/classes")}
-                  className="bg-primary/5 border border-primary/10 rounded-xl p-3 text-center cursor-pointer hover:bg-primary/10 transition-colors"
-                >
-                  <p className="font-semibold text-sm text-primary">{cls.class_name}</p>
-                  <p className="text-[10px] text-muted-foreground">{cls.academic_year}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

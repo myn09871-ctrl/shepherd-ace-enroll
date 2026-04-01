@@ -35,26 +35,27 @@ const TeacherSidebar = ({ isOpen, onClose }: TeacherSidebarProps) => {
       )}
       <aside
         className={cn(
-          "fixed left-0 top-0 h-full w-64 z-50 transition-transform duration-300 lg:translate-x-0 flex flex-col",
-          "bg-[#1e3a5f] text-white",
+          "fixed left-0 top-0 h-full w-56 z-50 transition-transform duration-300 lg:translate-x-0 flex flex-col",
+          "bg-[#1a3563] text-white",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="p-4 border-b border-white/10 flex items-center justify-between flex-shrink-0">
-          <Link to="/teacher" className="flex items-center gap-3" onClick={onClose}>
-            <img src={schoolCrest} alt="GSIS" className="h-10 w-10 rounded-full object-cover" />
-            <div>
-              <h1 className="font-bold text-sm leading-tight">Good Shepherd</h1>
-              <p className="text-xs text-blue-200">Teacher Portal</p>
+        {/* Header with crest */}
+        <div className="px-4 py-5 flex items-center justify-between flex-shrink-0">
+          <Link to="/teacher" className="flex items-center gap-2.5" onClick={onClose}>
+            <img src={schoolCrest} alt="GSIS" className="h-9 w-9 rounded-full object-cover border border-white/20" />
+            <div className="leading-tight">
+              <p className="font-bold text-[11px] tracking-wide uppercase">GOOD SHEPHERD</p>
+              <p className="font-bold text-[10px] tracking-wide uppercase text-blue-200">INTERNATIONAL SCHOOL</p>
             </div>
           </Link>
-          <Button variant="ghost" size="icon" className="lg:hidden text-white hover:bg-white/10" onClick={onClose}>
-            <X className="h-5 w-5" />
+          <Button variant="ghost" size="icon" className="lg:hidden text-white hover:bg-white/10 h-7 w-7" onClick={onClose}>
+            <X className="h-4 w-4" />
           </Button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-3">
-          <div className="space-y-1">
+        <nav className="flex-1 overflow-y-auto px-3 py-1">
+          <div className="space-y-0.5">
             {navItems.map((item) => {
               const isActive = location.pathname === item.href ||
                 (item.href !== "/teacher" && location.pathname.startsWith(item.href));
@@ -64,13 +65,13 @@ const TeacherSidebar = ({ isOpen, onClose }: TeacherSidebarProps) => {
                   to={item.href}
                   onClick={onClose}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                    "flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-medium transition-colors",
                     isActive
-                      ? "bg-white text-[#1e3a5f]"
-                      : "text-blue-100 hover:bg-white/10"
+                      ? "bg-white text-[#1a3563] font-semibold"
+                      : "text-blue-100/90 hover:bg-white/10"
                   )}
                 >
-                  <item.icon className="h-4 w-4" />
+                  <item.icon className="h-4 w-4 flex-shrink-0" />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -78,10 +79,10 @@ const TeacherSidebar = ({ isOpen, onClose }: TeacherSidebarProps) => {
           </div>
         </nav>
 
-        <div className="p-3 border-t border-white/10 flex-shrink-0">
+        <div className="px-3 py-3 border-t border-white/10 flex-shrink-0">
           <button
             onClick={() => signOut()}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-300 hover:bg-red-500/20 transition-colors w-full"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] text-red-300 hover:bg-red-500/20 transition-colors w-full"
           >
             <LogOut className="h-4 w-4" />
             <span>Logout</span>
