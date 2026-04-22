@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Outlet, Navigate, useNavigate } from "react-router-dom";
-import { Menu, Bell, LogOut } from "lucide-react";
+import { Menu, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import TeacherSidebar from "./TeacherSidebar";
@@ -13,8 +13,8 @@ const TeacherLayout = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-[#3d7dd8]">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white" />
       </div>
     );
   }
@@ -23,10 +23,10 @@ const TeacherLayout = () => {
 
   if (!teacherProfile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <h1 className="text-lg font-bold text-foreground mb-1">Access Denied</h1>
-          <p className="text-sm text-muted-foreground">You don't have teacher permissions.</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#3d7dd8]">
+        <div className="text-center bg-white rounded-xl px-6 py-5">
+          <h1 className="text-base font-bold text-foreground mb-1">Access Denied</h1>
+          <p className="text-xs text-muted-foreground">You don't have teacher permissions.</p>
         </div>
       </div>
     );
@@ -42,45 +42,53 @@ const TeacherLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#dce6f0]">
-      <TeacherSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="lg:ml-56">
-        {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-white border-b border-border/60">
-          <div className="flex items-center justify-between px-4 h-12">
-            <div className="flex items-center gap-2">
+    <div className="min-h-screen bg-[#3d7dd8] p-0 md:p-5">
+      <div className="bg-white md:rounded-2xl overflow-hidden md:shadow-2xl min-h-screen md:min-h-[calc(100vh-2.5rem)] flex">
+        <TeacherSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+        <div className="flex-1 lg:ml-56 flex flex-col min-w-0">
+          {/* Top bar */}
+          <header className="flex items-center justify-between px-4 md:px-6 h-14 border-b border-border/40 bg-white">
+            <div className="flex items-center gap-2 min-w-0">
               <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8" onClick={() => setSidebarOpen(true)}>
                 <Menu className="h-4 w-4" />
               </Button>
-              <p className="text-[13px] font-medium text-foreground">
+              <h1 className="text-[15px] md:text-base font-bold text-foreground truncate">
                 Welcome, Mr. {lastName}!
-              </p>
+              </h1>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Button variant="ghost" size="icon" className="relative h-8 w-8">
-                <Bell className="h-4 w-4" />
-                <span className="absolute top-0.5 right-0.5 h-3.5 w-3.5 bg-red-500 text-white rounded-full text-[8px] font-bold flex items-center justify-center">3</span>
-              </Button>
-              <button onClick={() => navigate("/teacher/profile")} className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
+
+            <div className="flex items-center gap-2">
+              <button className="relative h-8 w-8 rounded-full hover:bg-muted/60 flex items-center justify-center">
+                <Bell className="h-[18px] w-[18px] text-foreground/80" strokeWidth={1.75} />
+                <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white rounded-full text-[9px] font-bold flex items-center justify-center">3</span>
+              </button>
+
+              <button
+                onClick={() => navigate("/teacher/profile")}
+                className="flex items-center gap-2 rounded-full border border-border/60 pl-1 pr-3 py-0.5 hover:bg-muted/40 transition-colors"
+              >
                 <Avatar className="h-7 w-7">
                   {teacherProfile.avatar_url && <AvatarImage src={teacherProfile.avatar_url} alt={name} />}
                   <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{initials}</AvatarFallback>
                 </Avatar>
                 <span className="text-[12px] font-medium text-foreground hidden sm:block">Mr. {lastName}</span>
               </button>
+
               <Button
                 size="sm"
                 onClick={handleLogout}
-                className="ml-1 text-[11px] h-7 px-3 gap-1 rounded-md bg-[#1a3563] hover:bg-[#152d52] text-white"
+                className="text-[12px] h-8 px-4 rounded-md bg-[#1a3563] hover:bg-[#152d52] text-white font-medium"
               >
                 Logout
               </Button>
             </div>
-          </div>
-        </header>
-        <main className="p-4 md:p-5">
-          <Outlet />
-        </main>
+          </header>
+
+          <main className="flex-1 p-4 md:p-6 bg-white overflow-auto">
+            <Outlet />
+          </main>
+        </div>
       </div>
     </div>
   );

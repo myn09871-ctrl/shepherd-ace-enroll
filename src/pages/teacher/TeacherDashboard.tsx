@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, BookOpen, ClipboardList, CalendarCheck, GraduationCap, FileText, ChevronRight, Clock } from "lucide-react";
+import {
+  Users, BookOpen, ClipboardList, CheckSquare, FileEdit, PencilRuler,
+  ChevronRight, CheckCircle2, MessageCircle, CalendarDays, SunMedium,
+} from "lucide-react";
 import { useTeacherAuth } from "@/hooks/useTeacherAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -9,7 +12,6 @@ interface ActivityItem {
   id: string;
   type: "grade" | "message";
   title: string;
-  description: string;
   timestamp: string;
 }
 
@@ -25,72 +27,40 @@ const TeacherDashboard = () => {
     if (assignedClasses.length > 0 && user) {
       const classNames = assignedClasses.map(c => c.class_name);
 
-      supabase
-        .from("students")
-        .select("id", { count: "exact", head: true })
-        .in("current_class", classNames)
-        .eq("status", "active")
+      supabase.from("students").select("id", { count: "exact", head: true })
+        .in("current_class", classNames).eq("status", "active")
         .then(({ count }) => setStudentCount(count || 0));
 
-      supabase
-        .from("assignments")
-        .select("id", { count: "exact", head: true })
-        .in("class_name", classNames)
-        .gte("due_date", new Date().toISOString().split("T")[0])
+      supabase.from("assignments").select("id", { count: "exact", head: true })
+        .in("class_name", classNames).gte("due_date", new Date().toISOString().split("T")[0])
         .then(({ count }) => setPendingTasks(count || 0));
 
-      const fetchActivity = async () => {
+      (async () => {
         const activities: ActivityItem[] = [];
-        const { data: grades } = await supabase
-          .from("grades")
-          .select("id, total_score, posted_at, subject_id, subjects(name)")
-          .eq("posted_by", user.id)
-          .order("posted_at", { ascending: false })
-          .limit(3);
-
+        const { data: grades } = await supabase.from("grades")
+          .select("id, posted_at, subjects(name)")
+          .eq("posted_by", user.id).order("posted_at", { ascending: false }).limit(2);
         grades?.forEach((g: any) => {
-          if (g.posted_at) {
-            activities.push({
-              id: g.id, type: "grade",
-              title: `Graded results for ${g.subjects?.name || "Subject"}`,
-              description: `Score: ${g.total_score}%`,
-              timestamp: g.posted_at,
-            });
-          }
-        });
-
-        const { data: msgs } = await supabase
-          .from("parent_messages")
-          .select("id, subject, created_at, sender_type")
-          .eq("sender_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(2);
-
-        msgs?.forEach(m => {
-          activities.push({
-            id: m.id, type: "message",
-            title: m.subject,
-            description: m.sender_type === "teacher" ? "Message sent" : "Reply received",
-            timestamp: m.created_at,
+          if (g.posted_at) activities.push({
+            id: g.id, type: "grade",
+            title: `Graded results for ${g.subjects?.name || "class"}`,
+            timestamp: g.posted_at,
           });
         });
-
+        const { data: msgs } = await supabase.from("parent_messages")
+          .select("id, subject, created_at").eq("sender_id", user.id)
+          .order("created_at", { ascending: false }).limit(2);
+        msgs?.forEach(m => activities.push({
+          id: m.id, type: "message", title: m.subject, timestamp: m.created_at,
+        }));
         activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-        setRecentActivity(activities.slice(0, 4));
-      };
+        setRecentActivity(activities.slice(0, 3));
+      })();
 
-      const fetchEvents = async () => {
-        const { data } = await supabase
-          .from("portal_announcements")
-          .select("id, title, published_at, category")
-          .eq("is_published", true)
-          .order("published_at", { ascending: false })
-          .limit(3);
-        setUpcomingEvents(data || []);
-      };
-
-      fetchActivity();
-      fetchEvents();
+      supabase.from("portal_announcements")
+        .select("id, title, published_at").eq("is_published", true)
+        .order("published_at", { ascending: false }).limit(3)
+        .then(({ data }) => setUpcomingEvents(data || []));
     }
   }, [assignedClasses, user]);
 
@@ -102,129 +72,119 @@ const TeacherDashboard = () => {
   };
 
   const lastName = teacherProfile?.full_name?.split(" ").slice(-1)[0] || "Teacher";
+  const classCount = assignedClasses.length;
 
   return (
-    <div className="space-y-4">
-      {/* Welcome Card - beige/cream */}
-      <div className="rounded-lg bg-[#fdf6ec] border border-amber-200/50 px-5 py-4">
-        <div className="flex items-center gap-2.5">
-          <span className="text-xl">😊</span>
-          <div>
-            <h1 className="text-[15px] font-bold text-foreground">
-              {greeting()}, Mr. {lastName} 👋
-            </h1>
-            <p className="text-[12px] text-muted-foreground mt-0.5">
-              You have {assignedClasses.length} class{assignedClasses.length !== 1 ? "es" : ""} today.
-            </p>
-          </div>
+    <div className="space-y-5 max-w-6xl">
+      {/* Welcome banner - beige */}
+      <div className="rounded-xl bg-[#fdf6ec] border border-[#f0e6cf] px-5 py-3.5 flex items-center gap-3">
+        <div className="h-9 w-9 rounded-full bg-[#f5d76e] flex items-center justify-center flex-shrink-0">
+          <SunMedium className="h-5 w-5 text-[#8a6400]" strokeWidth={2.2} />
+        </div>
+        <div>
+          <p className="text-[14px] font-bold text-foreground">
+            {greeting()}, Mr. {lastName}
+          </p>
+          <p className="text-[12px] text-muted-foreground mt-0.5">
+            You have {classCount} class{classCount !== 1 ? "es" : ""} today.
+          </p>
         </div>
       </div>
 
-      {/* Stats Row - 3 cards */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* Stats row - 3 cards with colored icon + label + big number */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
-          { icon: "👨‍🎓", label: "My Students", value: studentCount },
-          { icon: "🏫", label: "Assigned Classes", value: assignedClasses.length },
-          { icon: "📋", label: "Pending Tasks", value: pendingTasks },
+          { icon: Users, label: "My Students", value: studentCount, iconBg: "bg-[#fde8ec]", iconColor: "text-[#c44a6a]" },
+          { icon: BookOpen, label: "Assigned Classes", value: classCount, iconBg: "bg-[#e0f1d7]", iconColor: "text-[#4a8b2e]" },
+          { icon: ClipboardList, label: "Pending Tasks", value: pendingTasks, iconBg: "bg-[#fef1d6]", iconColor: "text-[#c98a1e]" },
         ].map((stat) => (
-          <div key={stat.label} className="bg-white rounded-lg border border-border/60 px-4 py-3 flex items-center gap-3">
-            <span className="text-xl">{stat.icon}</span>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] text-muted-foreground">{stat.label}</span>
-              <span className="text-2xl font-bold text-foreground">{stat.value}</span>
+          <div key={stat.label} className="bg-white rounded-xl border border-border/50 px-4 py-3.5 flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className={`h-9 w-9 rounded-lg ${stat.iconBg} flex items-center justify-center flex-shrink-0`}>
+                <stat.icon className={`h-5 w-5 ${stat.iconColor}`} strokeWidth={2} />
+              </div>
+              <span className="text-[12.5px] font-medium text-foreground">{stat.label}</span>
             </div>
+            <span className="text-[22px] font-bold text-[#1a3563] tabular-nums">{stat.value}</span>
           </div>
         ))}
       </div>
 
       {/* Quick Actions */}
       <div>
-        <h3 className="text-[13px] font-semibold text-foreground mb-2">Quick Actions</h3>
-        <div className="grid grid-cols-3 gap-3">
-          <button
-            onClick={() => navigate("/teacher/attendance")}
-            className="bg-white rounded-lg border border-border/60 p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
-          >
-            <div className="h-12 w-12 rounded-xl bg-teal-50 flex items-center justify-center">
-              <CalendarCheck className="h-6 w-6 text-teal-600" />
-            </div>
-            <span className="text-[12px] font-medium text-foreground">Mark Attendance</span>
-          </button>
-          <button
-            onClick={() => navigate("/teacher/results")}
-            className="bg-white rounded-lg border border-border/60 p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
-          >
-            <div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center">
-              <GraduationCap className="h-6 w-6 text-blue-600" />
-            </div>
-            <span className="text-[12px] font-medium text-foreground">Enter Results</span>
-          </button>
-          <button
-            onClick={() => navigate("/teacher/assignments")}
-            className="bg-white rounded-lg border border-border/60 p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow"
-          >
-            <div className="h-12 w-12 rounded-xl bg-purple-50 flex items-center justify-center">
-              <FileText className="h-6 w-6 text-purple-600" />
-            </div>
-            <span className="text-[12px] font-medium text-foreground">Create Assignment</span>
-          </button>
+        <h3 className="text-[13px] font-semibold text-foreground mb-2.5">Quick Actions</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { onClick: () => navigate("/teacher/attendance"), label: "Mark Attendance", Icon: CheckSquare, bg: "bg-[#d9f1ec]", color: "text-[#1b9e7e]" },
+            { onClick: () => navigate("/teacher/results"), label: "Enter Results", Icon: FileEdit, bg: "bg-[#fde8ec]", color: "text-[#c44a6a]" },
+            { onClick: () => navigate("/teacher/assignments"), label: "Create Assignment", Icon: PencilRuler, bg: "bg-[#e5ecfb]", color: "text-[#3a5fcd]" },
+          ].map((action) => (
+            <button
+              key={action.label}
+              onClick={action.onClick}
+              className="bg-white rounded-xl border border-border/50 px-4 py-6 flex flex-col items-center gap-3 hover:shadow-md hover:-translate-y-0.5 transition-all shadow-sm"
+            >
+              <div className={`h-14 w-14 rounded-xl ${action.bg} flex items-center justify-center`}>
+                <action.Icon className={`h-7 w-7 ${action.color}`} strokeWidth={2} />
+              </div>
+              <span className="text-[13px] font-semibold text-foreground">{action.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Recent Activity + Upcoming Events - side by side */}
-      <div className="grid md:grid-cols-2 gap-3">
-        <div className="bg-white rounded-lg border border-border/60">
+      {/* Recent Activity + Upcoming Events */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="rounded-xl border border-border/50 bg-white overflow-hidden">
           <div className="px-4 py-2.5 border-b border-border/40">
-            <h3 className="text-[12px] font-semibold text-foreground flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5 text-primary" />
-              Recent Activity
-            </h3>
+            <h3 className="text-[12.5px] font-semibold text-foreground">Recent Activity</h3>
           </div>
           <div className="divide-y divide-border/30">
             {recentActivity.length === 0 ? (
-              <p className="text-[11px] text-muted-foreground text-center py-6">No recent activity</p>
+              <p className="text-[11.5px] text-muted-foreground text-center py-6">No recent activity</p>
             ) : (
               recentActivity.map(a => (
-                <div key={a.id} className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-muted/30 cursor-pointer transition-colors">
-                  <div className={`p-1 rounded ${a.type === "grade" ? "bg-blue-50" : "bg-green-50"}`}>
-                    {a.type === "grade" ? (
-                      <CalendarCheck className="h-3 w-3 text-blue-600" />
-                    ) : (
-                      <FileText className="h-3 w-3 text-green-600" />
-                    )}
-                  </div>
-                  <span className="text-[11px] text-foreground flex-1 truncate">{a.title}</span>
-                  <ChevronRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                </div>
+                <button
+                  key={a.id}
+                  onClick={() => navigate(a.type === "grade" ? "/teacher/results" : "/teacher/messages")}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 hover:bg-muted/30 transition-colors text-left"
+                >
+                  {a.type === "grade" ? (
+                    <CheckCircle2 className="h-4 w-4 text-[#3a5fcd] flex-shrink-0" strokeWidth={2} />
+                  ) : (
+                    <MessageCircle className="h-4 w-4 text-[#c98a1e] flex-shrink-0" strokeWidth={2} />
+                  )}
+                  <span className="text-[12px] text-foreground flex-1 truncate">{a.title}</span>
+                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                </button>
               ))
             )}
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-border/60">
+        <div className="rounded-xl border border-border/50 bg-white overflow-hidden">
           <div className="px-4 py-2.5 border-b border-border/40">
-            <h3 className="text-[12px] font-semibold text-foreground flex items-center gap-1.5">
-              <CalendarCheck className="h-3.5 w-3.5 text-primary" />
-              Upcoming Events
-            </h3>
+            <h3 className="text-[12.5px] font-semibold text-foreground">Upcoming Events</h3>
           </div>
           <div className="divide-y divide-border/30">
             {upcomingEvents.length === 0 ? (
-              <p className="text-[11px] text-muted-foreground text-center py-6">No upcoming events</p>
+              <p className="text-[11.5px] text-muted-foreground text-center py-6">No upcoming events</p>
             ) : (
               upcomingEvents.map(e => (
-                <div key={e.id} className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-muted/30 transition-colors">
-                  <div className="p-1 rounded bg-amber-50">
-                    <CalendarCheck className="h-3 w-3 text-amber-600" />
-                  </div>
-                  <span className="text-[11px] text-foreground flex-1 truncate">{e.title}</span>
-                  {e.published_at && (
-                    <span className="text-[10px] text-muted-foreground flex-shrink-0">
-                      {format(new Date(e.published_at), "MMM d")}
-                    </span>
-                  )}
-                  <ChevronRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                </div>
+                <button
+                  key={e.id}
+                  onClick={() => navigate("/teacher/announcements")}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 hover:bg-muted/30 transition-colors text-left"
+                >
+                  <CalendarDays className="h-4 w-4 text-[#c44a6a] flex-shrink-0" strokeWidth={2} />
+                  <span className="text-[12px] text-foreground flex-1 truncate">
+                    {e.title}
+                    {e.published_at && (
+                      <span className="text-muted-foreground font-normal">: {format(new Date(e.published_at), "MMM d")}</span>
+                    )}
+                  </span>
+                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                </button>
               ))
             )}
           </div>
