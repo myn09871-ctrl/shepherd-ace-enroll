@@ -1,10 +1,16 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  CreditCard, CalendarCheck, GraduationCap, Bell, FileText, MessageSquare,
-  MinusCircle,
+  CreditCard,
+  CalendarCheck2,
+  GraduationCap,
+  FileText,
+  MessageSquare,
+  Megaphone,
+  CircleAlert,
+  Clock3,
+  ChevronRight,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useParentAuth } from "@/hooks/useParentAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +20,6 @@ const PortalDashboard = () => {
   const { currentStudent: student, parentAccount } = useParentAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-
   const [feesTotal, setFeesTotal] = useState(0);
   const [feesPaid, setFeesPaid] = useState(0);
   const [attendancePresent, setAttendancePresent] = useState(0);
@@ -37,8 +42,12 @@ const PortalDashboard = () => {
     setLoading(true);
     try {
       await Promise.all([
-        fetchFees(), fetchAttendance(), fetchGrades(),
-        fetchAnnouncements(), fetchMessages(), fetchDocuments(),
+        fetchFees(),
+        fetchAttendance(),
+        fetchGrades(),
+        fetchAnnouncements(),
+        fetchMessages(),
+        fetchDocuments(),
       ]);
     } finally {
       setLoading(false);
@@ -47,330 +56,396 @@ const PortalDashboard = () => {
 
   const fetchFees = async () => {
     const { data } = await supabase.from("fees").select("amount, is_paid").eq("student_id", student!.id);
-    const total = data?.reduce((s, f) => s + Number(f.amount), 0) || 0;
-    const paid = data?.filter(f => f.is_paid).reduce((s, f) => s + Number(f.amount), 0) || 0;
+    const total = data?.reduce((sum, fee) => sum + Number(fee.amount), 0) || 0;
+    const paid = data?.filter((fee) => fee.is_paid).reduce((sum, fee) => sum + Number(fee.amount), 0) || 0;
     setFeesTotal(total);
     setFeesPaid(paid);
   };
 
   const fetchAttendance = async () => {
-    const yr = new Date().getFullYear();
-    const { data } = await supabase.from("attendance").select("status, date").eq("student_id", student!.id)
-      .gte("date", `${yr}-01-01`).order("date", { ascending: false });
+    const year = new Date().getFullYear();
+    const { data } = await supabase
+      .from("attendance")
+      .select("status, date")
+      .eq("student_id", student!.id)
+      .gte("date", `${year}-01-01`)
+      .order("date", { ascending: false });
+
     const total = data?.length || 0;
-    const present = data?.filter(a => a.status === "present" || a.status === "late").length || 0;
+    const present = data?.filter((entry) => entry.status === "present" || entry.status === "late").length || 0;
     setAttendanceTotal(total);
     setAttendancePresent(present);
-    setRecentAbsences(data?.filter(a => a.status === "absent").slice(0, 2) || []);
+    setRecentAbsences(data?.filter((entry) => entry.status === "absent").slice(0, 2) || []);
   };
 
   const fetchGrades = async () => {
-    const { data } = await supabase.from("grades").select("total_score, grade_letter, term, academic_year")
-      .eq("student_id", student!.id).order("created_at", { ascending: false });
+    const { data } = await supabase
+      .from("grades")
+      .select("total_score, grade_letter, term, academic_year")
+      .eq("student_id", student!.id)
+      .order("created_at", { ascending: false });
+
     if (data && data.length > 0) {
-      setLatestTerm(`${data[0].term} - ${data[0].academic_year}`);
-      const scores = data.filter(g => g.total_score != null).map(g => Number(g.total_score));
-      setTermAverage(scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null);
-      const dist: Record<string, number> = {};
-      data.forEach(g => { if (g.grade_letter) dist[g.grade_letter] = (dist[g.grade_letter] || 0) + 1; });
-      setGradeDist(dist);
+      setLatestTerm(`${data[0].term} ${data[0].academic_year}`);
+      const scores = data.filter((grade) => grade.total_score != null).map((grade) => Number(grade.total_score));
+      setTermAverage(scores.length > 0 ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length) : null);
+      const distribution: Record<string, number> = {};
+      data.forEach((grade) => {
+        if (grade.grade_letter) distribution[grade.grade_letter] = (distribution[grade.grade_letter] || 0) + 1;
+      });
+      setGradeDist(distribution);
     }
   };
 
   const fetchAnnouncements = async () => {
-    const { data } = await supabase.from("portal_announcements").select("id, title, content, published_at, category")
-      .eq("is_published", true).order("published_at", { ascending: false }).limit(2);
+    const { data } = await supabase
+      .from("portal_announcements")
+      .select("id, title, content, published_at, category")
+      .eq("is_published", true)
+      .order("published_at", { ascending: false })
+      .limit(2);
     setAnnouncements(data || []);
   };
 
   const fetchMessages = async () => {
     if (!parentAccount) return;
-    const { data } = await supabase.from("parent_messages").select("id, subject, message, created_at, sender_type, is_read")
-      .eq("parent_account_id", parentAccount.id).order("created_at", { ascending: false }).limit(4);
+    const { data } = await supabase
+      .from("parent_messages")
+      .select("id, subject, message, created_at, sender_type, is_read")
+      .eq("parent_account_id", parentAccount.id)
+      .order("created_at", { ascending: false })
+      .limit(4);
     setMessages(data || []);
-    setUnreadMsgCount(data?.filter(m => !m.is_read && m.sender_type !== "parent").length || 0);
+    setUnreadMsgCount(data?.filter((message) => !message.is_read && message.sender_type !== "parent").length || 0);
   };
 
   const fetchDocuments = async () => {
-    const { data } = await supabase.from("student_documents").select("id, document_name, document_type, file_url, created_at")
-      .eq("student_id", student!.id).order("created_at", { ascending: false }).limit(3);
+    const { data } = await supabase
+      .from("student_documents")
+      .select("id, document_name, document_type, file_url, created_at")
+      .eq("student_id", student!.id)
+      .order("created_at", { ascending: false })
+      .limit(3);
     setDocuments(data || []);
   };
 
   const attendancePct = attendanceTotal > 0 ? Math.round((attendancePresent / attendanceTotal) * 100) : 100;
   const absentPct = 100 - attendancePct;
-  const outstanding = feesTotal - feesPaid;
+  const outstanding = Math.max(feesTotal - feesPaid, 0);
   const feeStatus = outstanding <= 0 && feesTotal > 0 ? "Fully Paid" : feesPaid > 0 ? "Partially Paid" : outstanding > 0 ? "Unpaid" : "No Fees";
+  const firstName = parentAccount?.parent_name?.split(" ")[0] || "Parent";
+
+  const gradeSummary = [
+    { label: "A+", count: (gradeDist["A+"] || 0) + (gradeDist["A"] || 0) },
+    { label: "Bs", count: gradeDist["B"] || 0 },
+    { label: "Cs", count: gradeDist["C"] || 0 },
+    { label: "Ds", count: gradeDist["D"] || 0 },
+  ];
+  const trendPoints = [
+    [0, 18],
+    [14, 17],
+    [28, 16],
+    [42, 13],
+    [56, 11],
+    [70, 8],
+    [84, 5],
+    [98, 3],
+  ];
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-48">
-        <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-primary" />
+      <div className="flex h-48 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
       </div>
     );
   }
 
-  const firstName = parentAccount?.parent_name?.split(" ")[0] || "Parent";
-
   return (
-    <div className="space-y-4 max-w-6xl">
-      <h2 className="text-[16px] font-bold text-foreground">Welcome, {firstName}!</h2>
+    <div className="mx-auto max-w-7xl space-y-4">
+      <div>
+        <h2 className="text-[16px] font-bold text-[hsl(var(--dashboard-ink))] md:text-[17px]">Welcome, {firstName}!</h2>
+      </div>
 
-      {/* Main grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Academic Performance */}
-        <div className="bg-white rounded-xl border border-border/50 overflow-hidden shadow-sm">
-          <div className="bg-gradient-to-r from-[#3a6fd8] to-[#4d86eb] px-4 py-2.5 flex items-center gap-2">
-            <GraduationCap className="h-4 w-4 text-white" strokeWidth={2} />
-            <span className="text-[13px] font-bold text-white">Academic Performance</span>
+      <div className="grid gap-4 md:grid-cols-[1.35fr_1fr_0.95fr] md:auto-rows-min">
+        <section className="parent-card order-3 overflow-hidden rounded-2xl md:order-1">
+          <div className="parent-card-header-blue flex items-center gap-2 px-4 py-3 text-primary-foreground">
+            <GraduationCap className="h-4.5 w-4.5" strokeWidth={2.1} />
+            <h3 className="text-[12.5px] font-bold">Academic Performance</h3>
           </div>
-          <div className="p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-[11.5px] text-muted-foreground">
-                Latest Exam Result {latestTerm && <span className="text-foreground/80">- {latestTerm}</span>}
+          <div className="parent-soft-blue space-y-3 p-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] font-semibold text-[hsl(var(--dashboard-ink))]">
+                Latest Exam Result
+                {latestTerm ? <span className="font-medium text-[hsl(var(--dashboard-soft-ink))]"> - {latestTerm}</span> : null}
               </p>
-              {termAverage != null && (
-                <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-semibold">
-                  Ov {termAverage}%
-                </Badge>
-              )}
+              <span className="parent-pill rounded-lg px-2 py-1 text-[9.5px] font-semibold text-primary">Cy 2029</span>
             </div>
-            <div className="flex items-end gap-2">
-              <span className="text-[28px] font-bold text-foreground leading-none">
-                {termAverage != null ? `${termAverage}%` : "—"}
-              </span>
-              <span className="text-[12px] text-muted-foreground pb-1">Current Average</span>
-            </div>
-            {/* Grade distribution dots + trend line */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {["A", "B", "C", "D"].map((letter) => {
-                  const count = gradeDist[letter] || 0;
-                  return (
-                    <div key={letter} className="flex flex-col items-center gap-1">
-                      <span className="text-[10.5px] font-semibold text-foreground/70">{letter}s</span>
-                      <span className="text-[10px] text-muted-foreground">{count}</span>
-                    </div>
-                  );
-                })}
+
+            <div className="rounded-xl bg-card px-4 py-4 shadow-sm">
+              <div className="flex items-end gap-2">
+                <span className="text-[28px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">
+                  {termAverage != null ? `${termAverage}%` : "—"}
+                </span>
+                <span className="pb-1 text-[12px] text-[hsl(var(--dashboard-ink))]">Current Average</span>
               </div>
-              {/* Mini trend dots */}
-              <svg width="120" height="32" viewBox="0 0 120 32" className="text-[#3a6fd8]">
-                <polyline
-                  points="5,22 25,18 45,14 65,12 85,8 105,5 115,4"
-                  fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"
-                />
-                {[[5,22],[25,18],[45,14],[65,12],[85,8],[105,5],[115,4]].map(([x,y], i) => (
-                  <circle key={i} cx={x} cy={y} r="2.5" fill="currentColor" />
-                ))}
-              </svg>
+
+              <div className="mt-4 flex items-end justify-between gap-3">
+                <div className="flex items-center gap-3 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
+                  {gradeSummary.map((item) => (
+                    <div key={item.label} className="text-center">
+                      <p className="font-semibold">{item.label}</p>
+                      <p>{item.count}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <svg width="124" height="34" viewBox="0 0 124 34" className="flex-shrink-0">
+                  <polyline
+                    points={trendPoints.map(([x, y]) => `${x + 8},${y + 6}`).join(" ")}
+                    fill="none"
+                    stroke="hsl(var(--parent-blue-end))"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  {trendPoints.map(([x, y], index) => (
+                    <circle
+                      key={index}
+                      cx={x + 8}
+                      cy={y + 6}
+                      r="4"
+                      fill={index < 4 ? "hsl(var(--parent-orange-start))" : "hsl(var(--parent-blue-start))"}
+                    />
+                  ))}
+                </svg>
+              </div>
             </div>
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-[10.5px] text-muted-foreground">Logg.d Inking</span>
-              <Button size="sm" className="text-[11px] h-7 px-3 bg-[#3a6fd8] hover:bg-[#2d5bbf] text-white" onClick={() => navigate("/portal/academics")}>
+
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Logg.d Inking</span>
+              <Button size="sm" className="h-8 rounded-xl px-4 text-[11px] font-semibold" onClick={() => navigate("/portal/academics")}>
                 View All Results
               </Button>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Attendance This Term */}
-        <div className="bg-white rounded-xl border border-border/50 overflow-hidden shadow-sm">
-          <div className="bg-gradient-to-r from-[#2ea765] to-[#3dc075] px-4 py-2.5 flex items-center gap-2">
-            <CalendarCheck className="h-4 w-4 text-white" strokeWidth={2} />
-            <span className="text-[13px] font-bold text-white">Attendance This Term</span>
+        <section className="parent-card order-2 overflow-hidden rounded-2xl md:order-2 md:col-span-2">
+          <div className="parent-card-header-green flex items-center gap-2 px-4 py-3 text-primary-foreground">
+            <CalendarCheck2 className="h-4.5 w-4.5" strokeWidth={2.1} />
+            <h3 className="text-[12.5px] font-bold">Attendance This Term</h3>
           </div>
-          <div className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex-1 space-y-2">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-[28px] font-bold text-[#2ea765] leading-none">{absentPct}%</span>
-                  <div className="leading-tight">
-                    <p className="text-[12px] text-foreground font-medium">Current Days Present</p>
-                    <p className="text-[11px] text-muted-foreground">{attendancePresent} /{attendanceTotal}</p>
+          <div className="parent-soft-green p-4">
+            <div className="flex items-start gap-4">
+              <div className="flex-1">
+                <div className="flex items-end gap-3">
+                  <span className="text-[32px] font-bold leading-none text-[hsl(var(--parent-green-end))]">{absentPct}%</span>
+                  <div className="pb-1 leading-tight">
+                    <p className="text-[11px] font-semibold text-[hsl(var(--dashboard-ink))]">Current Days Present</p>
+                    <p className="text-[10px] text-[hsl(var(--dashboard-soft-ink))]">
+                      {attendancePresent}/{attendanceTotal || 0}
+                    </p>
                   </div>
                 </div>
-                <div className="space-y-1 pt-1">
+
+                <div className="mt-4 space-y-2 border-t border-border/70 pt-3">
                   {recentAbsences.length === 0 ? (
-                    <p className="text-[11px] text-muted-foreground">No recent absences</p>
+                    <p className="text-[11px] text-[hsl(var(--dashboard-soft-ink))]">No recent absences</p>
                   ) : (
-                    recentAbsences.map(a => (
-                      <div key={a.date} className="flex items-center justify-between text-[11px]">
-                        <div className="flex items-center gap-1.5">
-                          <MinusCircle className="h-3 w-3 text-[#2ea765]" />
-                          <span className="text-foreground">{format(new Date(a.date), "MMM d")}</span>
-                        </div>
-                        <span className="text-muted-foreground">Absent</span>
+                    recentAbsences.map((absence) => (
+                      <div key={absence.date} className="flex items-center gap-3 text-[11px]">
+                        <CircleAlert className="h-4 w-4 text-[hsl(var(--parent-green-end))]" strokeWidth={2.1} />
+                        <span className="min-w-[92px] font-medium text-[hsl(var(--dashboard-ink))]">
+                          {format(new Date(absence.date), "MMM d")}
+                        </span>
+                        <span className="text-[hsl(var(--dashboard-soft-ink))]">Absent</span>
                       </div>
                     ))
                   )}
                 </div>
               </div>
-              {/* Big circular progress */}
-              <div className="relative h-[78px] w-[78px] flex-shrink-0">
-                <svg className="h-full w-full -rotate-90" viewBox="0 0 40 40">
-                  <circle cx="20" cy="20" r="17" fill="none" stroke="#e5f4ec" strokeWidth="4" />
-                  <circle cx="20" cy="20" r="17" fill="none" stroke="#2ea765" strokeWidth="4"
-                    strokeDasharray={`${(attendancePct / 100) * 106.8} 106.8`} strokeLinecap="round" />
+
+              <div className="relative flex h-[104px] w-[104px] flex-shrink-0 items-center justify-center">
+                <svg className="h-full w-full -rotate-90" viewBox="0 0 44 44">
+                  <circle cx="22" cy="22" r="18" fill="none" stroke="hsl(var(--parent-green-soft))" strokeWidth="4" />
+                  <circle
+                    cx="22"
+                    cy="22"
+                    r="18"
+                    fill="none"
+                    stroke="hsl(var(--parent-green-start))"
+                    strokeWidth="4"
+                    strokeDasharray={`${(attendancePct / 100) * 113} 113`}
+                    strokeLinecap="round"
+                  />
                 </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-[15px] font-bold text-[#2ea765] leading-none">{attendancePct}%</span>
-                  <span className="text-[8px] text-muted-foreground mt-0.5">Attendant</span>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <span className="text-[15px] font-bold leading-none text-[hsl(var(--parent-green-end))]">{attendancePct}%</span>
+                  <span className="mt-1 text-[9px] font-medium text-[hsl(var(--dashboard-soft-ink))]">Attendant</span>
                 </div>
               </div>
             </div>
-            <div className="flex justify-end pt-2">
-              <Button size="sm" className="text-[11px] h-7 px-3 bg-[#3a6fd8] hover:bg-[#2d5bbf] text-white" onClick={() => navigate("/portal/attendance")}>
+
+            <div className="mt-3 flex justify-end">
+              <Button size="sm" className="h-8 rounded-xl px-4 text-[11px] font-semibold" onClick={() => navigate("/portal/attendance")}>
                 View Attendance
               </Button>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Messages */}
-        <div className="bg-white rounded-xl border border-border/50 overflow-hidden shadow-sm">
-          <div className="bg-gradient-to-r from-[#3a6fd8] to-[#4d86eb] px-4 py-2.5 flex items-center justify-between">
+        <section className="parent-card order-5 overflow-hidden rounded-2xl md:order-3 md:row-span-2">
+          <div className="parent-card-header-blue flex items-center justify-between gap-2 px-4 py-3 text-primary-foreground">
             <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-white" strokeWidth={2} />
-              <span className="text-[13px] font-bold text-white">Messages</span>
+              <MessageSquare className="h-4.5 w-4.5" strokeWidth={2.1} />
+              <h3 className="text-[12.5px] font-bold">Messages</h3>
             </div>
-            {unreadMsgCount > 0 && (
-              <span className="text-[10px] text-white bg-white/20 rounded px-1.5 py-0.5 font-medium">
-                {unreadMsgCount} Not read
-              </span>
-            )}
+            <span className="rounded-lg bg-card/85 px-2 py-1 text-[9.5px] font-semibold text-primary">
+              {unreadMsgCount} Not read
+            </span>
           </div>
-          <div className="divide-y divide-border/30">
+          <div className="space-y-2 p-3">
             {messages.length === 0 ? (
-              <p className="text-[11px] text-muted-foreground text-center py-6">No messages</p>
+              <div className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-[11px] text-muted-foreground">
+                No messages
+              </div>
             ) : (
-              messages.slice(0, 4).map(m => (
+              messages.map((message, index) => (
                 <button
-                  key={m.id}
+                  key={message.id}
+                  type="button"
                   onClick={() => navigate("/portal/messages")}
-                  className={`w-full flex items-start gap-2.5 px-3.5 py-2.5 text-left transition-colors ${
-                    !m.is_read && m.sender_type !== "parent" ? "bg-blue-50/40" : "hover:bg-muted/30"
-                  }`}
+                  className="flex w-full items-start gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-muted/40"
                 >
-                  <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <MessageSquare className="h-3 w-3 text-foreground/60" />
+                  <div
+                    className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
+                      index === 0 ? "bg-[hsl(var(--parent-blue-soft))] text-[hsl(var(--parent-blue-end))]" : "bg-[hsl(var(--parent-orange-soft))] text-[hsl(var(--parent-orange-end))]"
+                    }`}
+                  >
+                    <MessageSquare className="h-4.5 w-4.5" strokeWidth={2.1} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11.5px] font-semibold text-foreground truncate">{m.subject}</p>
-                    <p className="text-[10.5px] text-muted-foreground line-clamp-1">{m.message}</p>
+                  <div className="min-w-0 flex-1 border-b border-border/60 pb-2 last:border-b-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate text-[12.5px] font-bold text-[hsl(var(--dashboard-ink))]">{message.subject}</p>
+                      <span className="text-[10px] text-[hsl(var(--dashboard-soft-ink))]">
+                        {format(new Date(message.created_at), "MMM d")}
+                      </span>
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-[11px] leading-5 text-[hsl(var(--dashboard-ink))]">{message.message}</p>
                   </div>
-                  <span className="text-[9.5px] text-muted-foreground flex-shrink-0 mt-1">
-                    {format(new Date(m.created_at), "MMM d")}
-                  </span>
                 </button>
               ))
             )}
           </div>
-        </div>
+        </section>
 
-        {/* Right column: Announcements + Fees stacked */}
-        <div className="space-y-4">
-          {/* Latest Announcements */}
-          <div className="bg-white rounded-xl border border-border/50 overflow-hidden shadow-sm">
-            <div className="bg-gradient-to-r from-[#f5a623] to-[#f2b748] px-4 py-2.5 flex items-center gap-2">
-              <Bell className="h-4 w-4 text-white" strokeWidth={2} />
-              <span className="text-[13px] font-bold text-white">Latest Announcements</span>
-            </div>
-            <div className="p-4 space-y-2">
-              {announcements.length === 0 ? (
-                <p className="text-[11px] text-muted-foreground text-center py-3">No announcements</p>
-              ) : (
-                announcements.map(a => (
-                  <button
-                    key={a.id}
-                    onClick={() => navigate("/portal/announcements")}
-                    className="w-full text-left hover:bg-muted/30 rounded p-1 transition-colors"
-                  >
-                    <p className="text-[12px] font-semibold text-foreground truncate">{a.title}</p>
-                    <p className="text-[10.5px] text-muted-foreground line-clamp-2 mt-0.5">{a.content}</p>
-                  </button>
-                ))
-              )}
-            </div>
+        <section className="parent-card order-4 overflow-hidden rounded-2xl md:order-4">
+          <div className="parent-card-header-orange flex items-center gap-2 px-4 py-3 text-primary-foreground">
+            <Megaphone className="h-4.5 w-4.5" strokeWidth={2.1} />
+            <h3 className="text-[12.5px] font-bold">Latest Announcements</h3>
           </div>
-
-          {/* Fees Summary */}
-          <div className="bg-white rounded-xl border border-border/50 overflow-hidden shadow-sm">
-            <div className="bg-gradient-to-r from-[#d94d3a] to-[#e5664a] px-4 py-2.5 flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-white" strokeWidth={2} />
-              <span className="text-[13px] font-bold text-white">Fees Summary</span>
-            </div>
-            <div className="p-4 space-y-3">
-              <div className="flex items-baseline gap-2">
-                <span className="text-[22px] font-bold text-[#d94d3a] leading-none">
-                  GHS {outstanding.toLocaleString()}
-                </span>
-                <span className="text-[12px] text-muted-foreground">Outstanding</span>
-              </div>
-              <div className="inline-flex items-center px-3 py-1 rounded-md bg-gradient-to-r from-[#f08a2c] to-[#f5a04a] text-white text-[11px] font-semibold">
-                {feeStatus}
-              </div>
-              <div className="flex justify-end">
-                <Button size="sm" className="text-[11px] h-7 px-3 bg-[#3a6fd8] hover:bg-[#2d5bbf] text-white" onClick={() => navigate("/portal/fees")}>
-                  View All Fees
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Documents - full width at bottom */}
-      <div className="bg-white rounded-xl border border-border/50 overflow-hidden shadow-sm">
-        <div className="px-4 py-2.5 border-b border-border/40 flex items-center justify-between bg-muted/20">
-          <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-[#d94d3a]" strokeWidth={2} />
-            <span className="text-[13px] font-bold text-foreground">Recent Documents</span>
-          </div>
-          <button
-            onClick={() => navigate("/portal/documents")}
-            className="text-[10.5px] text-foreground border border-border/60 rounded px-2 py-0.5 hover:bg-white transition-colors"
-          >
-            Mark All Documents
-          </button>
-        </div>
-        <div className="divide-y divide-border/30">
-          {documents.length === 0 ? (
-            <p className="text-[11px] text-muted-foreground text-center py-5">No documents available</p>
-          ) : (
-            documents.map(d => {
-              const ext = (d.document_type || "pdf").toLowerCase();
-              const colorMap: Record<string, string> = {
-                pdf: "text-[#d94d3a]",
-                doc: "text-[#3a6fd8]",
-                docx: "text-[#3a6fd8]",
-                image: "text-[#2ea765]",
-              };
-              return (
-                <a
-                  key={d.id}
-                  href={d.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/30 transition-colors"
+          <div className="parent-soft-orange space-y-3 p-4">
+            {announcements.length === 0 ? (
+              <p className="text-[11px] text-[hsl(var(--dashboard-soft-ink))]">No announcements</p>
+            ) : (
+              announcements.map((announcement) => (
+                <button
+                  key={announcement.id}
+                  type="button"
+                  onClick={() => navigate("/portal/announcements")}
+                  className="block w-full text-left"
                 >
-                  <FileText className={`h-4 w-4 flex-shrink-0 ${colorMap[ext] || "text-[#d94d3a]"}`} strokeWidth={2} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-semibold text-foreground truncate">
-                      {d.document_name}
-                      {d.created_at && (
-                        <span className="text-muted-foreground font-normal"> - {format(new Date(d.created_at), "MMM yyyy")}</span>
-                      )}
-                    </p>
-                  </div>
-                  <span className="text-[10px] font-bold text-muted-foreground border border-border rounded px-1.5 py-0.5 uppercase">
-                    {ext}
-                  </span>
-                </a>
-              );
-            })
-          )}
-        </div>
+                  <p className="text-[12.5px] font-bold text-[hsl(var(--dashboard-ink))]">{announcement.title}</p>
+                  <p className="mt-1 text-[11px] text-[hsl(var(--dashboard-ink))]">
+                    {announcement.published_at ? format(new Date(announcement.published_at), "MMM d, h:mm a") : "Published recently"}
+                  </p>
+                  <p className="mt-2 line-clamp-3 text-[11px] leading-5 text-[hsl(var(--dashboard-ink))]">{announcement.content}</p>
+                </button>
+              ))
+            )}
+          </div>
+        </section>
+
+        <section className="parent-card order-1 overflow-hidden rounded-2xl md:order-5">
+          <div className="parent-card-header-red flex items-center gap-2 px-4 py-3 text-primary-foreground">
+            <CreditCard className="h-4.5 w-4.5" strokeWidth={2.1} />
+            <h3 className="text-[12.5px] font-bold">Fees Summary</h3>
+          </div>
+          <div className="parent-soft-red space-y-4 p-4">
+            <div>
+              <p className="text-[11px] font-semibold text-[hsl(var(--parent-red-end))]">GHS {outstanding.toLocaleString()}</p>
+              <p className="mt-1 text-[12px] text-[hsl(var(--dashboard-ink))]">Outstanding</p>
+            </div>
+            <div className="rounded-xl bg-[hsl(var(--parent-orange-end))] px-3 py-2 text-center text-[12px] font-bold text-primary-foreground shadow-sm">
+              {feeStatus}
+            </div>
+            <Button size="sm" className="h-8 w-full rounded-xl text-[11px] font-semibold" onClick={() => navigate("/portal/fees")}>
+              View All Fees
+            </Button>
+          </div>
+        </section>
+
+        <section className="parent-card order-6 overflow-hidden rounded-2xl md:order-6 md:col-span-2">
+          <div className="flex items-center justify-between gap-3 border-b border-border/70 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4.5 w-4.5 text-[hsl(var(--dashboard-soft-ink))]" strokeWidth={2.1} />
+              <h3 className="text-[12.5px] font-bold text-[hsl(var(--dashboard-ink))]">Recent Documents</h3>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate("/portal/documents")}
+              className="parent-pill rounded-xl px-3 py-1.5 text-[10.5px] font-semibold text-primary"
+            >
+              Mark All Documents
+            </button>
+          </div>
+
+          <div className="space-y-1 p-3">
+            {documents.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-[11px] text-muted-foreground">
+                No documents available
+              </div>
+            ) : (
+              documents.map((document) => {
+                const ext = (document.document_type || "pdf").toLowerCase();
+                const isPdf = ext === "pdf";
+
+                return (
+                  <a
+                    key={document.id}
+                    href={document.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-muted/40"
+                  >
+                    <div
+                      className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${
+                        isPdf ? "bg-[hsl(var(--parent-red-soft))]" : "bg-[hsl(var(--parent-blue-soft))]"
+                      }`}
+                    >
+                      <FileText
+                        className={`h-4.5 w-4.5 ${
+                          isPdf ? "text-[hsl(var(--parent-red-end))]" : "text-[hsl(var(--parent-blue-end))]"
+                        }`}
+                        strokeWidth={2.1}
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[12.5px] font-bold text-[hsl(var(--dashboard-ink))]">{document.document_name}</p>
+                      <p className="mt-0.5 flex items-center gap-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
+                        <Clock3 className="h-3.5 w-3.5" />
+                        {document.created_at ? format(new Date(document.created_at), "MMM yyyy") : "Recent"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="parent-pill rounded-lg px-2 py-1 text-[10px] font-bold uppercase text-primary">{ext}</span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </a>
+                );
+              })
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );

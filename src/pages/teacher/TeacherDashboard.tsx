@@ -1,12 +1,21 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Users, BookOpen, ClipboardList, CheckSquare, FileEdit, PencilRuler,
-  ChevronRight, CheckCircle2, MessageCircle, CalendarDays, SunMedium,
+  Users,
+  School,
+  ClipboardList,
+  CalendarCheck2,
+  FileSignature,
+  NotebookPen,
+  SunMedium,
+  ChevronRight,
+  CircleCheckBig,
+  MessageSquareText,
+  CalendarRange,
 } from "lucide-react";
+import { format } from "date-fns";
 import { useTeacherAuth } from "@/hooks/useTeacherAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
 
 interface ActivityItem {
   id: string;
@@ -25,41 +34,68 @@ const TeacherDashboard = () => {
 
   useEffect(() => {
     if (assignedClasses.length > 0 && user) {
-      const classNames = assignedClasses.map(c => c.class_name);
+      const classNames = assignedClasses.map((assignment) => assignment.class_name);
 
-      supabase.from("students").select("id", { count: "exact", head: true })
-        .in("current_class", classNames).eq("status", "active")
+      supabase
+        .from("students")
+        .select("id", { count: "exact", head: true })
+        .in("current_class", classNames)
+        .eq("status", "active")
         .then(({ count }) => setStudentCount(count || 0));
 
-      supabase.from("assignments").select("id", { count: "exact", head: true })
-        .in("class_name", classNames).gte("due_date", new Date().toISOString().split("T")[0])
+      supabase
+        .from("assignments")
+        .select("id", { count: "exact", head: true })
+        .in("class_name", classNames)
+        .gte("due_date", new Date().toISOString().split("T")[0])
         .then(({ count }) => setPendingTasks(count || 0));
 
       (async () => {
         const activities: ActivityItem[] = [];
-        const { data: grades } = await supabase.from("grades")
+        const { data: grades } = await supabase
+          .from("grades")
           .select("id, posted_at, subjects(name)")
-          .eq("posted_by", user.id).order("posted_at", { ascending: false }).limit(2);
-        grades?.forEach((g: any) => {
-          if (g.posted_at) activities.push({
-            id: g.id, type: "grade",
-            title: `Graded results for ${g.subjects?.name || "class"}`,
-            timestamp: g.posted_at,
+          .eq("posted_by", user.id)
+          .order("posted_at", { ascending: false })
+          .limit(2);
+
+        grades?.forEach((grade: any) => {
+          if (grade.posted_at) {
+            activities.push({
+              id: grade.id,
+              type: "grade",
+              title: `Graded results for ${grade.subjects?.name || "class"}`,
+              timestamp: grade.posted_at,
+            });
+          }
+        });
+
+        const { data: messages } = await supabase
+          .from("parent_messages")
+          .select("id, subject, created_at")
+          .eq("sender_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(2);
+
+        messages?.forEach((message) => {
+          activities.push({
+            id: message.id,
+            type: "message",
+            title: message.subject,
+            timestamp: message.created_at,
           });
         });
-        const { data: msgs } = await supabase.from("parent_messages")
-          .select("id, subject, created_at").eq("sender_id", user.id)
-          .order("created_at", { ascending: false }).limit(2);
-        msgs?.forEach(m => activities.push({
-          id: m.id, type: "message", title: m.subject, timestamp: m.created_at,
-        }));
-        activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+        activities.sort((first, second) => new Date(second.timestamp).getTime() - new Date(first.timestamp).getTime());
         setRecentActivity(activities.slice(0, 3));
       })();
 
-      supabase.from("portal_announcements")
-        .select("id, title, published_at").eq("is_published", true)
-        .order("published_at", { ascending: false }).limit(3)
+      supabase
+        .from("portal_announcements")
+        .select("id, title, published_at")
+        .eq("is_published", true)
+        .order("published_at", { ascending: false })
+        .limit(3)
         .then(({ data }) => setUpcomingEvents(data || []));
     }
   }, [assignedClasses, user]);
@@ -74,122 +110,200 @@ const TeacherDashboard = () => {
   const lastName = teacherProfile?.full_name?.split(" ").slice(-1)[0] || "Teacher";
   const classCount = assignedClasses.length;
 
+  const stats = [
+    {
+      label: "My Students",
+      value: studentCount,
+      Icon: Users,
+      soft: "bg-[hsl(var(--teacher-coral-soft))]",
+      icon: "text-[hsl(var(--teacher-coral))]",
+    },
+    {
+      label: "Assigned Classes",
+      value: classCount,
+      Icon: School,
+      soft: "bg-[hsl(var(--teacher-green-soft))]",
+      icon: "text-[hsl(var(--teacher-green))]",
+    },
+    {
+      label: "Pending Tasks",
+      value: pendingTasks,
+      Icon: ClipboardList,
+      soft: "bg-[hsl(var(--teacher-amber-soft))]",
+      icon: "text-[hsl(var(--teacher-amber))]",
+    },
+  ];
+
+  const quickActions = [
+    {
+      label: "Mark Attendance",
+      Icon: CalendarCheck2,
+      onClick: () => navigate("/teacher/attendance"),
+      soft: "bg-[hsl(var(--teacher-green-soft))]",
+      icon: "text-[hsl(var(--teacher-green))]",
+      accent: "bg-[hsl(var(--teacher-green))/0.14]",
+    },
+    {
+      label: "Enter Results",
+      Icon: FileSignature,
+      onClick: () => navigate("/teacher/results"),
+      soft: "bg-[hsl(var(--teacher-coral-soft))]",
+      icon: "text-[hsl(var(--teacher-coral))]",
+      accent: "bg-[hsl(var(--teacher-coral))/0.14]",
+    },
+    {
+      label: "Create Assignment",
+      Icon: NotebookPen,
+      onClick: () => navigate("/teacher/assignments"),
+      soft: "bg-[hsl(var(--teacher-blue-soft))]",
+      icon: "text-[hsl(var(--teacher-blue))]",
+      accent: "bg-[hsl(var(--teacher-blue))/0.14]",
+    },
+  ];
+
   return (
-    <div className="space-y-5 max-w-6xl">
-      {/* Welcome banner - beige */}
-      <div className="rounded-xl bg-[#fdf6ec] border border-[#f0e6cf] px-5 py-3.5 flex items-center gap-3">
-        <div className="h-9 w-9 rounded-full bg-[#f5d76e] flex items-center justify-center flex-shrink-0">
-          <SunMedium className="h-5 w-5 text-[#8a6400]" strokeWidth={2.2} />
-        </div>
-        <div>
-          <p className="text-[14px] font-bold text-foreground">
-            {greeting()}, Mr. {lastName}
-          </p>
-          <p className="text-[12px] text-muted-foreground mt-0.5">
-            You have {classCount} class{classCount !== 1 ? "es" : ""} today.
-          </p>
-        </div>
-      </div>
-
-      {/* Stats row - 3 cards with colored icon + label + big number */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {[
-          { icon: Users, label: "My Students", value: studentCount, iconBg: "bg-[#fde8ec]", iconColor: "text-[#c44a6a]" },
-          { icon: BookOpen, label: "Assigned Classes", value: classCount, iconBg: "bg-[#e0f1d7]", iconColor: "text-[#4a8b2e]" },
-          { icon: ClipboardList, label: "Pending Tasks", value: pendingTasks, iconBg: "bg-[#fef1d6]", iconColor: "text-[#c98a1e]" },
-        ].map((stat) => (
-          <div key={stat.label} className="bg-white rounded-xl border border-border/50 px-4 py-3.5 flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className={`h-9 w-9 rounded-lg ${stat.iconBg} flex items-center justify-center flex-shrink-0`}>
-                <stat.icon className={`h-5 w-5 ${stat.iconColor}`} strokeWidth={2} />
-              </div>
-              <span className="text-[12.5px] font-medium text-foreground">{stat.label}</span>
-            </div>
-            <span className="text-[22px] font-bold text-[#1a3563] tabular-nums">{stat.value}</span>
+    <div className="mx-auto max-w-6xl space-y-5">
+      <section className="teacher-welcome-banner rounded-2xl px-4 py-4 md:px-6">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[hsl(var(--teacher-welcome-icon)/0.16)] text-[hsl(var(--teacher-welcome-icon-foreground))]">
+            <SunMedium className="h-5 w-5" strokeWidth={2.2} />
           </div>
-        ))}
-      </div>
+          <div>
+            <h2 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))] md:text-[14px]">
+              {greeting()}, Mr. {lastName}
+            </h2>
+            <p className="mt-1 text-[12px] text-[hsl(var(--dashboard-soft-ink))]">
+              You have {classCount} class{classCount === 1 ? "" : "es"} today.
+            </p>
+          </div>
+        </div>
+      </section>
 
-      {/* Quick Actions */}
-      <div>
-        <h3 className="text-[13px] font-semibold text-foreground mb-2.5">Quick Actions</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {[
-            { onClick: () => navigate("/teacher/attendance"), label: "Mark Attendance", Icon: CheckSquare, bg: "bg-[#d9f1ec]", color: "text-[#1b9e7e]" },
-            { onClick: () => navigate("/teacher/results"), label: "Enter Results", Icon: FileEdit, bg: "bg-[#fde8ec]", color: "text-[#c44a6a]" },
-            { onClick: () => navigate("/teacher/assignments"), label: "Create Assignment", Icon: PencilRuler, bg: "bg-[#e5ecfb]", color: "text-[#3a5fcd]" },
-          ].map((action) => (
+      <section className="grid gap-3 md:grid-cols-3">
+        {stats.map((stat) => (
+          <article key={stat.label} className="teacher-stat-card rounded-2xl px-4 py-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl ${stat.soft}`}>
+                  <stat.Icon className={`h-5 w-5 ${stat.icon}`} strokeWidth={2.1} />
+                </div>
+                <div className="h-10 w-px bg-border/80" />
+                <span className="truncate text-[12.5px] font-semibold text-[hsl(var(--dashboard-ink))]">{stat.label}</span>
+              </div>
+              <span className="text-[22px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">{stat.value}</span>
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center gap-3">
+          <h3 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">Quick Actions</h3>
+          <div className="teacher-divider h-px flex-1 border-t" />
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-3">
+          {quickActions.map((action) => (
             <button
               key={action.label}
+              type="button"
               onClick={action.onClick}
-              className="bg-white rounded-xl border border-border/50 px-4 py-6 flex flex-col items-center gap-3 hover:shadow-md hover:-translate-y-0.5 transition-all shadow-sm"
+              className="teacher-action-card group rounded-2xl px-5 py-5 text-left transition-transform hover:-translate-y-0.5"
             >
-              <div className={`h-14 w-14 rounded-xl ${action.bg} flex items-center justify-center`}>
-                <action.Icon className={`h-7 w-7 ${action.color}`} strokeWidth={2} />
+              <div className="flex flex-col items-center gap-4 text-center">
+                <div className={`relative flex h-24 w-24 items-center justify-center rounded-[20px] ${action.soft}`}>
+                  <div className={`absolute inset-3 rounded-2xl ${action.accent}`} />
+                  <action.Icon className={`relative h-11 w-11 ${action.icon}`} strokeWidth={1.9} />
+                </div>
+                <span className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">{action.label}</span>
               </div>
-              <span className="text-[13px] font-semibold text-foreground">{action.label}</span>
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* Recent Activity + Upcoming Events */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-border/50 bg-white overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-border/40">
-            <h3 className="text-[12.5px] font-semibold text-foreground">Recent Activity</h3>
+      <section className="grid gap-4 lg:grid-cols-2">
+        <article className="teacher-list-card rounded-2xl p-4">
+          <div className="mb-3 flex items-center gap-3">
+            <h3 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">Recent Activity</h3>
+            <div className="teacher-divider h-px flex-1 border-t" />
           </div>
-          <div className="divide-y divide-border/30">
+
+          <div className="space-y-2">
             {recentActivity.length === 0 ? (
-              <p className="text-[11.5px] text-muted-foreground text-center py-6">No recent activity</p>
+              <div className="teacher-panel rounded-xl border border-dashed border-border bg-card px-4 py-6 text-center text-[11px] text-muted-foreground">
+                No recent activity
+              </div>
             ) : (
-              recentActivity.map(a => (
-                <button
-                  key={a.id}
-                  onClick={() => navigate(a.type === "grade" ? "/teacher/results" : "/teacher/messages")}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 hover:bg-muted/30 transition-colors text-left"
-                >
-                  {a.type === "grade" ? (
-                    <CheckCircle2 className="h-4 w-4 text-[#3a5fcd] flex-shrink-0" strokeWidth={2} />
-                  ) : (
-                    <MessageCircle className="h-4 w-4 text-[#c98a1e] flex-shrink-0" strokeWidth={2} />
-                  )}
-                  <span className="text-[12px] text-foreground flex-1 truncate">{a.title}</span>
-                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                </button>
-              ))
+              recentActivity.map((item) => {
+                const isGrade = item.type === "grade";
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => navigate(isGrade ? "/teacher/results" : "/teacher/messages")}
+                    className="teacher-panel flex w-full items-center gap-3 rounded-xl bg-card px-4 py-3 text-left transition-colors hover:bg-muted/40"
+                  >
+                    <div
+                      className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${
+                        isGrade ? "bg-[hsl(var(--teacher-blue-soft))]" : "bg-[hsl(var(--teacher-amber-soft))]"
+                      }`}
+                    >
+                      {isGrade ? (
+                        <CircleCheckBig className="h-4.5 w-4.5 text-[hsl(var(--teacher-blue))]" strokeWidth={2.1} />
+                      ) : (
+                        <MessageSquareText className="h-4.5 w-4.5 text-[hsl(var(--teacher-amber))]" strokeWidth={2.1} />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[12.5px] font-semibold text-[hsl(var(--dashboard-ink))]">{item.title}</p>
+                      <p className="mt-0.5 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
+                        {format(new Date(item.timestamp), "MMM d, yyyy")}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                  </button>
+                );
+              })
             )}
           </div>
-        </div>
+        </article>
 
-        <div className="rounded-xl border border-border/50 bg-white overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-border/40">
-            <h3 className="text-[12.5px] font-semibold text-foreground">Upcoming Events</h3>
+        <article className="teacher-list-card rounded-2xl p-4">
+          <div className="mb-3 flex items-center gap-3">
+            <h3 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">Upcoming Events</h3>
+            <div className="teacher-divider h-px flex-1 border-t" />
           </div>
-          <div className="divide-y divide-border/30">
+
+          <div className="space-y-2">
             {upcomingEvents.length === 0 ? (
-              <p className="text-[11.5px] text-muted-foreground text-center py-6">No upcoming events</p>
+              <div className="teacher-panel rounded-xl border border-dashed border-border bg-card px-4 py-6 text-center text-[11px] text-muted-foreground">
+                No upcoming events
+              </div>
             ) : (
-              upcomingEvents.map(e => (
+              upcomingEvents.map((event) => (
                 <button
-                  key={e.id}
+                  key={event.id}
+                  type="button"
                   onClick={() => navigate("/teacher/announcements")}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 hover:bg-muted/30 transition-colors text-left"
+                  className="teacher-panel flex w-full items-center gap-3 rounded-xl bg-card px-4 py-3 text-left transition-colors hover:bg-muted/40"
                 >
-                  <CalendarDays className="h-4 w-4 text-[#c44a6a] flex-shrink-0" strokeWidth={2} />
-                  <span className="text-[12px] text-foreground flex-1 truncate">
-                    {e.title}
-                    {e.published_at && (
-                      <span className="text-muted-foreground font-normal">: {format(new Date(e.published_at), "MMM d")}</span>
-                    )}
-                  </span>
-                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[hsl(var(--teacher-coral-soft))]">
+                    <CalendarRange className="h-4.5 w-4.5 text-[hsl(var(--teacher-coral))]" strokeWidth={2.1} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[12.5px] font-semibold text-[hsl(var(--dashboard-ink))]">{event.title}</p>
+                    <p className="mt-0.5 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
+                      {event.published_at ? format(new Date(event.published_at), "MMM d, yyyy") : "Published recently"}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                 </button>
               ))
             )}
           </div>
-        </div>
-      </div>
+        </article>
+      </section>
     </div>
   );
 };
