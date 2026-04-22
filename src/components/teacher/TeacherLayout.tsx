@@ -13,8 +13,8 @@ const TeacherLayout = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#3d7dd8]">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white" />
+      <div className="dashboard-shell flex min-h-screen items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-primary-foreground" />
       </div>
     );
   }
@@ -23,17 +23,22 @@ const TeacherLayout = () => {
 
   if (!teacherProfile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#3d7dd8]">
-        <div className="text-center bg-white rounded-xl px-6 py-5">
-          <h1 className="text-base font-bold text-foreground mb-1">Access Denied</h1>
-          <p className="text-xs text-muted-foreground">You don't have teacher permissions.</p>
+      <div className="dashboard-shell flex min-h-screen items-center justify-center px-4">
+        <div className="dashboard-panel w-full max-w-sm rounded-2xl px-6 py-6 text-center">
+          <h1 className="text-sm font-bold text-foreground">Access Denied</h1>
+          <p className="mt-1 text-xs text-muted-foreground">You do not have teacher access for this portal.</p>
         </div>
       </div>
     );
   }
 
   const name = teacherProfile.full_name || "Teacher";
-  const initials = name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  const initials = name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
   const lastName = name.split(" ").slice(-1)[0];
 
   const handleLogout = async () => {
@@ -42,50 +47,64 @@ const TeacherLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#3d7dd8] p-0 md:p-5">
-      <div className="bg-white md:rounded-2xl overflow-hidden md:shadow-2xl min-h-screen md:min-h-[calc(100vh-2.5rem)] flex">
+    <div className="dashboard-shell min-h-screen p-0 md:p-5">
+      <div className="dashboard-frame flex min-h-screen overflow-hidden md:min-h-[calc(100vh-2.5rem)] md:rounded-[24px]">
         <TeacherSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        <div className="flex-1 lg:ml-56 flex flex-col min-w-0">
-          {/* Top bar */}
-          <header className="flex items-center justify-between px-4 md:px-6 h-14 border-b border-border/40 bg-white">
-            <div className="flex items-center gap-2 min-w-0">
-              <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8" onClick={() => setSidebarOpen(true)}>
+        <div className="flex min-w-0 flex-1 flex-col lg:ml-60">
+          <header className="dashboard-topbar flex h-16 items-center justify-between px-4 md:px-6">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 lg:hidden"
+                onClick={() => setSidebarOpen(true)}
+              >
                 <Menu className="h-4 w-4" />
               </Button>
-              <h1 className="text-[15px] md:text-base font-bold text-foreground truncate">
+              <h1 className="truncate text-[15px] font-bold text-[hsl(var(--dashboard-ink))] md:text-[16px]">
                 Welcome, Mr. {lastName}!
               </h1>
             </div>
 
-            <div className="flex items-center gap-2">
-              <button className="relative h-8 w-8 rounded-full hover:bg-muted/60 flex items-center justify-center">
-                <Bell className="h-[18px] w-[18px] text-foreground/80" strokeWidth={1.75} />
-                <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white rounded-full text-[9px] font-bold flex items-center justify-center">3</span>
+            <div className="flex items-center gap-2 md:gap-3">
+              <button
+                type="button"
+                className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-card transition-colors hover:bg-muted"
+              >
+                <Bell className="h-[18px] w-[18px] text-[hsl(var(--dashboard-ink))]" strokeWidth={1.9} />
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[hsl(var(--dashboard-badge))] px-1 text-[9px] font-bold text-primary-foreground">
+                  3
+                </span>
               </button>
 
               <button
+                type="button"
                 onClick={() => navigate("/teacher/profile")}
-                className="flex items-center gap-2 rounded-full border border-border/60 pl-1 pr-3 py-0.5 hover:bg-muted/40 transition-colors"
+                className="flex items-center gap-2 rounded-2xl border border-border/80 bg-card px-1.5 py-1 shadow-sm transition-colors hover:bg-muted"
               >
-                <Avatar className="h-7 w-7">
+                <Avatar className="h-8 w-8">
                   {teacherProfile.avatar_url && <AvatarImage src={teacherProfile.avatar_url} alt={name} />}
-                  <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{initials}</AvatarFallback>
+                  <AvatarFallback className="bg-primary/10 text-[10px] font-bold text-primary">
+                    {initials}
+                  </AvatarFallback>
                 </Avatar>
-                <span className="text-[12px] font-medium text-foreground hidden sm:block">Mr. {lastName}</span>
+                <span className="hidden pr-1 text-[12px] font-semibold text-[hsl(var(--dashboard-ink))] sm:block">
+                  Mr. {lastName}
+                </span>
               </button>
 
               <Button
                 size="sm"
                 onClick={handleLogout}
-                className="text-[12px] h-8 px-4 rounded-md bg-[#1a3563] hover:bg-[#152d52] text-white font-medium"
+                className="h-10 rounded-xl px-4 text-[12px] font-semibold text-primary-foreground shadow-sm"
               >
                 Logout
               </Button>
             </div>
           </header>
 
-          <main className="flex-1 p-4 md:p-6 bg-white overflow-auto">
+          <main className="flex-1 overflow-auto bg-transparent px-4 py-4 md:px-6 md:py-5">
             <Outlet />
           </main>
         </div>

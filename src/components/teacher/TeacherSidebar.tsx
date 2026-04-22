@@ -1,7 +1,14 @@
 import { Link, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard, Users, CalendarCheck, GraduationCap,
-  ClipboardList, Megaphone, Mail, User, X,
+  LayoutDashboard,
+  Users,
+  CalendarCheck2,
+  GraduationCap,
+  ClipboardList,
+  Megaphone,
+  Mail,
+  User,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -10,7 +17,7 @@ import schoolCrest from "@/assets/school-crest.jpeg";
 const navItems = [
   { href: "/teacher", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/teacher/classes", label: "My Classes", icon: Users },
-  { href: "/teacher/attendance", label: "Attendance", icon: CalendarCheck },
+  { href: "/teacher/attendance", label: "Attendance", icon: CalendarCheck2 },
   { href: "/teacher/results", label: "Results", icon: GraduationCap },
   { href: "/teacher/assignments", label: "Assignments", icon: ClipboardList },
   { href: "/teacher/announcements", label: "Announcements", icon: Megaphone },
@@ -29,52 +36,67 @@ const TeacherSidebar = ({ isOpen, onClose }: TeacherSidebarProps) => {
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={onClose} />
+        <div
+          className="fixed inset-0 z-40 bg-foreground/35 backdrop-blur-[1px] lg:hidden"
+          onClick={onClose}
+        />
       )}
+
       <aside
         className={cn(
-          "fixed left-0 top-0 h-full w-56 z-50 transition-transform duration-300 flex flex-col",
-          "bg-[#2e5fa3] text-white lg:rounded-l-2xl",
-          "lg:left-5 lg:top-5 lg:h-[calc(100vh-2.5rem)]",
+          "teacher-sidebar-surface fixed left-0 top-0 z-50 flex h-full w-60 flex-col transition-transform duration-300",
+          "lg:left-5 lg:top-5 lg:h-[calc(100vh-2.5rem)] lg:rounded-l-[22px]",
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
-        {/* Header with crest */}
-        <div className="px-4 py-5 flex items-center justify-between flex-shrink-0 border-b border-white/10">
-          <Link to="/teacher" className="flex items-center gap-2.5" onClick={onClose}>
-            <img src={schoolCrest} alt="" className="h-9 w-9 rounded-full object-cover ring-1 ring-white/30" />
-            <div className="leading-tight">
-              <p className="font-bold text-[10px] tracking-[0.08em] uppercase">GOOD SHEPHERD</p>
-              <p className="font-semibold text-[9px] tracking-[0.1em] uppercase text-blue-200/90">INTERNATIONAL SCHOOL</p>
+        <div className="flex items-center justify-between border-b border-primary-foreground/10 px-4 py-5">
+          <Link to="/teacher" className="flex items-center gap-3" onClick={onClose}>
+            <img
+              src={schoolCrest}
+              alt="Good Shepherd International School crest"
+              className="h-11 w-11 rounded-xl object-cover ring-1 ring-primary-foreground/20"
+            />
+            <div className="min-w-0 leading-tight text-primary-foreground">
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em]">GOOD SHEPHERD</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-primary-foreground/86">
+                INTERNATIONAL SCHOOL
+              </p>
             </div>
           </Link>
-          <Button variant="ghost" size="icon" className="lg:hidden text-white hover:bg-white/10 h-7 w-7" onClick={onClose}>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground lg:hidden"
+            onClick={onClose}
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-2.5 py-3">
-          <div className="space-y-1">
+        <nav className="flex-1 overflow-y-auto px-3 py-4">
+          <div className="space-y-1.5">
             {navItems.map((item) => {
               const isActive = item.exact
                 ? location.pathname === item.href
                 : location.pathname === item.href || location.pathname.startsWith(item.href + "/");
+
               return (
                 <Link
                   key={item.href}
                   to={item.href}
                   onClick={onClose}
                   className={cn(
-                    "relative flex items-center gap-3 px-3 py-2.5 rounded-md text-[13px] font-medium transition-colors",
+                    "relative flex items-center gap-3 rounded-xl px-4 py-3 text-[12.5px] font-semibold transition-all",
                     isActive
-                      ? "bg-[#1a3563] text-white"
-                      : "text-blue-100/85 hover:bg-white/10"
+                      ? "teacher-sidebar-link-active"
+                      : "teacher-sidebar-link hover:bg-primary-foreground/10 hover:text-primary-foreground"
                   )}
                 >
                   {isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-white" />
+                    <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-primary-foreground" />
                   )}
-                  <item.icon className="h-[17px] w-[17px] flex-shrink-0" strokeWidth={2} />
+                  <item.icon className="h-[18px] w-[18px] flex-shrink-0" strokeWidth={2.1} />
                   <span>{item.label}</span>
                 </Link>
               );
