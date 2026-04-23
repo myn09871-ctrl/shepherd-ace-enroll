@@ -52,30 +52,30 @@ const ParentSidebar = ({ isOpen, onClose, unreadCount = 0 }: ParentSidebarProps)
         />
       )}
 
-      <aside
-        className={cn(
-          "parent-sidebar-surface fixed left-0 top-0 z-50 flex h-full w-56 flex-col transition-transform duration-200 ease-in-out",
-          "lg:left-5 lg:top-5 lg:h-[calc(100vh-2.5rem)] lg:rounded-l-[24px]",
-          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        )}
-      >
-        <div className="flex items-center justify-between border-b border-[hsl(var(--parent-sidebar-border))] px-4 py-5 lg:block">
+        <aside
+          className={cn(
+            "parent-sidebar-surface fixed left-0 top-0 z-50 flex h-full w-56 flex-col transition-transform duration-200 ease-in-out",
+            "lg:left-5 lg:top-5 lg:h-[calc(100vh-2.5rem)] lg:rounded-l-[18px]",
+            isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          )}
+        >
+          <div className="flex items-center justify-between border-b border-primary-foreground/10 px-4 py-5 lg:block">
           <Link to="/portal" className="flex items-center gap-3" onClick={onClose}>
             <img
               src={schoolCrest}
               alt="Good Shepherd International School crest"
               className="h-12 w-12 rounded-xl object-cover ring-1 ring-border/70"
             />
-            <div className="leading-tight text-[hsl(var(--parent-sidebar-text))]">
-              <p className="text-[10px] font-bold uppercase tracking-[0.08em]">GOOD SHEPHERD</p>
-              <p className="text-[11px] font-semibold">School</p>
+              <div className="leading-tight text-primary-foreground">
+                <p className="text-[10px] font-bold uppercase tracking-[0.1em]">GOOD SHEPHERD</p>
+                <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-primary-foreground/86">INTERNATIONAL SCHOOL</p>
             </div>
           </Link>
 
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-[hsl(var(--parent-sidebar-text))] hover:bg-card lg:hidden"
+              className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground lg:hidden"
             onClick={onClose}
           >
             <X className="h-4 w-4" />
@@ -95,10 +95,10 @@ const ParentSidebar = ({ isOpen, onClose, unreadCount = 0 }: ParentSidebarProps)
                   to={item.href}
                   onClick={onClose}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl px-3.5 py-3 text-[12.5px] font-semibold transition-all",
+                    "flex items-center gap-3 rounded-xl px-3.5 py-3 text-[11.5px] font-semibold uppercase tracking-[0.03em] transition-all",
                     isActive
                       ? "parent-sidebar-link-active"
-                      : "parent-sidebar-link hover:bg-card hover:shadow-sm"
+                      : "parent-sidebar-link"
                   )}
                 >
                   <item.icon className="h-[18px] w-[18px] flex-shrink-0" strokeWidth={2.1} />
@@ -117,7 +117,7 @@ const ParentSidebar = ({ isOpen, onClose, unreadCount = 0 }: ParentSidebarProps)
         <div className="px-3 py-4">
           <button
             onClick={() => signOut()}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-[hsl(var(--parent-sidebar-border))] bg-card px-3 py-2.5 text-[12px] font-semibold text-[hsl(var(--parent-sidebar-text))] transition-colors hover:bg-muted"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary-foreground/20 bg-primary-foreground/6 px-3 py-2.5 text-[11px] font-semibold uppercase tracking-[0.03em] text-primary-foreground transition-colors hover:bg-primary-foreground/10"
           >
             <LogOut className="h-3.5 w-3.5" />
             <span>Log Out</span>

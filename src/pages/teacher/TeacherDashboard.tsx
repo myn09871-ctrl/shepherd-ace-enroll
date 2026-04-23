@@ -12,6 +12,7 @@ import {
   CircleCheckBig,
   MessageSquareText,
   CalendarRange,
+  ArrowRight,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useTeacherAuth } from "@/hooks/useTeacherAuth";
@@ -115,22 +116,19 @@ const TeacherDashboard = () => {
       label: "My Students",
       value: studentCount,
       Icon: Users,
-      soft: "bg-[hsl(var(--teacher-coral-soft))]",
-      icon: "text-[hsl(var(--teacher-coral))]",
+      panel: "teacher-stat-panel-blue",
     },
     {
       label: "Assigned Classes",
       value: classCount,
       Icon: School,
-      soft: "bg-[hsl(var(--teacher-green-soft))]",
-      icon: "text-[hsl(var(--teacher-green))]",
+      panel: "teacher-stat-panel-green",
     },
     {
       label: "Pending Tasks",
       value: pendingTasks,
       Icon: ClipboardList,
-      soft: "bg-[hsl(var(--teacher-amber-soft))]",
-      icon: "text-[hsl(var(--teacher-amber))]",
+      panel: "teacher-stat-panel-amber",
     },
   ];
 
@@ -139,31 +137,25 @@ const TeacherDashboard = () => {
       label: "Mark Attendance",
       Icon: CalendarCheck2,
       onClick: () => navigate("/teacher/attendance"),
-      soft: "bg-[hsl(var(--teacher-green-soft))]",
       icon: "text-[hsl(var(--teacher-green))]",
-      accent: "bg-[hsl(var(--teacher-green))/0.14]",
     },
     {
       label: "Enter Results",
       Icon: FileSignature,
       onClick: () => navigate("/teacher/results"),
-      soft: "bg-[hsl(var(--teacher-coral-soft))]",
       icon: "text-[hsl(var(--teacher-coral))]",
-      accent: "bg-[hsl(var(--teacher-coral))/0.14]",
     },
     {
       label: "Create Assignment",
       Icon: NotebookPen,
       onClick: () => navigate("/teacher/assignments"),
-      soft: "bg-[hsl(var(--teacher-blue-soft))]",
       icon: "text-[hsl(var(--teacher-blue))]",
-      accent: "bg-[hsl(var(--teacher-blue))/0.14]",
     },
   ];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
-      <section className="teacher-welcome-banner rounded-2xl px-4 py-4 md:px-6">
+    <div className="space-y-4 pb-3">
+      <section className="teacher-welcome-banner rounded-[18px] px-4 py-4 md:px-5">
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[hsl(var(--teacher-welcome-icon)/0.16)] text-[hsl(var(--teacher-welcome-icon-foreground))]">
             <SunMedium className="h-5 w-5" strokeWidth={2.2} />
@@ -172,60 +164,55 @@ const TeacherDashboard = () => {
             <h2 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))] md:text-[14px]">
               {greeting()}, Mr. {lastName}
             </h2>
-            <p className="mt-1 text-[12px] text-[hsl(var(--dashboard-soft-ink))]">
+            <p className="mt-1 text-[11px] text-[hsl(var(--dashboard-soft-ink))]">
               You have {classCount} class{classCount === 1 ? "" : "es"} today.
             </p>
           </div>
         </div>
       </section>
 
-      <section className="grid gap-3 md:grid-cols-3">
+      <section className="space-y-2.5">
         {stats.map((stat) => (
-          <article key={stat.label} className="teacher-stat-card rounded-2xl px-4 py-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl ${stat.soft}`}>
-                  <stat.Icon className={`h-5 w-5 ${stat.icon}`} strokeWidth={2.1} />
-                </div>
-                <div className="h-10 w-px bg-border/80" />
-                <span className="truncate text-[12.5px] font-semibold text-[hsl(var(--dashboard-ink))]">{stat.label}</span>
+          <article key={stat.label} className={`teacher-stat-panel ${stat.panel} rounded-[18px] px-4 py-4`}>
+            <div className="relative flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold text-primary-foreground/88">{stat.label}</p>
+                <p className="mt-2 text-[29px] font-bold leading-none text-primary-foreground">{stat.value}</p>
               </div>
-              <span className="text-[22px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">{stat.value}</span>
+              <stat.Icon className="teacher-watermark-icon h-14 w-14 flex-shrink-0" strokeWidth={1.5} />
             </div>
           </article>
         ))}
       </section>
 
       <section className="space-y-3">
-        <div className="flex items-center gap-3">
-          <h3 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">Quick Actions</h3>
-          <div className="teacher-divider h-px flex-1 border-t" />
-        </div>
+        <h3 className="text-[12px] font-bold uppercase tracking-[0.04em] text-[hsl(var(--dashboard-ink))]">Quick Actions</h3>
 
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="space-y-2.5">
           {quickActions.map((action) => (
             <button
               key={action.label}
               type="button"
               onClick={action.onClick}
-              className="teacher-action-card group rounded-2xl px-5 py-5 text-left transition-transform hover:-translate-y-0.5"
+              className="teacher-action-card group flex w-full items-center gap-3 rounded-[16px] px-4 py-4 text-left transition-colors hover:bg-muted/30"
             >
-              <div className="flex flex-col items-center gap-4 text-center">
-                <div className={`relative flex h-24 w-24 items-center justify-center rounded-[20px] ${action.soft}`}>
-                  <div className={`absolute inset-3 rounded-2xl ${action.accent}`} />
-                  <action.Icon className={`relative h-11 w-11 ${action.icon}`} strokeWidth={1.9} />
-                </div>
-                <span className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">{action.label}</span>
+              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-[hsl(var(--teacher-card-muted))]">
+                <action.Icon className={`h-5 w-5 ${action.icon}`} strokeWidth={2} />
               </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[12px] font-bold text-[hsl(var(--dashboard-ink))]">{action.label}</p>
+                <p className="mt-0.5 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Open</p>
+              </div>
+              <ArrowRight className="h-4 w-4 flex-shrink-0 text-[hsl(var(--dashboard-soft-ink))]" strokeWidth={2} />
             </button>
           ))}
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
-        <article className="teacher-list-card rounded-2xl p-4">
+      <section className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
+        <article className="teacher-list-card rounded-[18px] p-4">
           <div className="mb-3 flex items-center gap-3">
-            <h3 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">Recent Activity</h3>
+            <h3 className="text-[12px] font-bold uppercase tracking-[0.04em] text-[hsl(var(--dashboard-ink))]">Recent Activity</h3>
             <div className="teacher-divider h-px flex-1 border-t" />
           </div>
 
@@ -242,7 +229,7 @@ const TeacherDashboard = () => {
                     key={item.id}
                     type="button"
                     onClick={() => navigate(isGrade ? "/teacher/results" : "/teacher/messages")}
-                    className="teacher-panel flex w-full items-center gap-3 rounded-xl bg-card px-4 py-3 text-left transition-colors hover:bg-muted/40"
+                    className="teacher-panel flex w-full items-center gap-3 rounded-xl bg-card px-3 py-3 text-left transition-colors hover:bg-muted/40"
                   >
                     <div
                       className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${
@@ -256,7 +243,7 @@ const TeacherDashboard = () => {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[12.5px] font-semibold text-[hsl(var(--dashboard-ink))]">{item.title}</p>
+                        <p className="truncate text-[11.5px] font-semibold text-[hsl(var(--dashboard-ink))]">{item.title}</p>
                       <p className="mt-0.5 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
                         {format(new Date(item.timestamp), "MMM d, yyyy")}
                       </p>
@@ -269,9 +256,9 @@ const TeacherDashboard = () => {
           </div>
         </article>
 
-        <article className="teacher-list-card rounded-2xl p-4">
+        <article className="teacher-list-card rounded-[18px] p-4">
           <div className="mb-3 flex items-center gap-3">
-            <h3 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">Upcoming Events</h3>
+            <h3 className="text-[12px] font-bold uppercase tracking-[0.04em] text-[hsl(var(--dashboard-ink))]">Upcoming Events</h3>
             <div className="teacher-divider h-px flex-1 border-t" />
           </div>
 
@@ -286,13 +273,13 @@ const TeacherDashboard = () => {
                   key={event.id}
                   type="button"
                   onClick={() => navigate("/teacher/announcements")}
-                  className="teacher-panel flex w-full items-center gap-3 rounded-xl bg-card px-4 py-3 text-left transition-colors hover:bg-muted/40"
+                  className="teacher-panel flex w-full items-center gap-3 rounded-xl bg-card px-3 py-3 text-left transition-colors hover:bg-muted/40"
                 >
                   <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[hsl(var(--teacher-coral-soft))]">
                     <CalendarRange className="h-4.5 w-4.5 text-[hsl(var(--teacher-coral))]" strokeWidth={2.1} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[12.5px] font-semibold text-[hsl(var(--dashboard-ink))]">{event.title}</p>
+                    <p className="truncate text-[11.5px] font-semibold text-[hsl(var(--dashboard-ink))]">{event.title}</p>
                     <p className="mt-0.5 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
                       {event.published_at ? format(new Date(event.published_at), "MMM d, yyyy") : "Published recently"}
                     </p>

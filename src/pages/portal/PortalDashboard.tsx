@@ -10,8 +10,9 @@ import {
   CircleAlert,
   Clock3,
   ChevronRight,
+  ArrowRight,
+  ReceiptText,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useParentAuth } from "@/hooks/useParentAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -130,7 +131,7 @@ const PortalDashboard = () => {
   };
 
   const attendancePct = attendanceTotal > 0 ? Math.round((attendancePresent / attendanceTotal) * 100) : 100;
-  const absentPct = 100 - attendancePct;
+  const absentPct = Math.max(100 - attendancePct, 0);
   const outstanding = Math.max(feesTotal - feesPaid, 0);
   const feeStatus = outstanding <= 0 && feesTotal > 0 ? "Fully Paid" : feesPaid > 0 ? "Partially Paid" : outstanding > 0 ? "Unpaid" : "No Fees";
   const firstName = parentAccount?.parent_name?.split(" ")[0] || "Parent";
@@ -141,16 +142,8 @@ const PortalDashboard = () => {
     { label: "Cs", count: gradeDist["C"] || 0 },
     { label: "Ds", count: gradeDist["D"] || 0 },
   ];
-  const trendPoints = [
-    [0, 18],
-    [14, 17],
-    [28, 16],
-    [42, 13],
-    [56, 11],
-    [70, 8],
-    [84, 5],
-    [98, 3],
-  ];
+  const latestMessage = messages[0] ?? null;
+  const paidPercentage = feesTotal > 0 ? Math.round((feesPaid / feesTotal) * 100) : 0;
 
   if (loading) {
     return (
@@ -161,292 +154,289 @@ const PortalDashboard = () => {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-4">
+    <div className="space-y-3 pb-3">
       <div>
-        <h2 className="text-[16px] font-bold text-[hsl(var(--dashboard-ink))] md:text-[17px]">Welcome, {firstName}!</h2>
+        <h2 className="text-[14px] font-bold text-[hsl(var(--dashboard-ink))] md:text-[15px]">Welcome, {firstName}</h2>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-[1.35fr_1fr_0.95fr] md:auto-rows-min">
-        <section className="parent-card order-3 overflow-hidden rounded-2xl md:order-1">
-          <div className="parent-card-header-blue flex items-center gap-2 px-4 py-3 text-primary-foreground">
-            <GraduationCap className="h-4.5 w-4.5" strokeWidth={2.1} />
-            <h3 className="text-[12.5px] font-bold">Academic Performance</h3>
+      <section className="dashboard-compact-card rounded-[18px] p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4 text-primary" strokeWidth={2.1} />
+              <h3 className="text-[12px] font-bold text-[hsl(var(--dashboard-ink))]">Academic Performance</h3>
+            </div>
+            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
+              {latestTerm ? `Latest result • ${latestTerm}` : "Latest result"}
+            </p>
           </div>
-          <div className="parent-soft-blue space-y-3 p-4">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[11px] font-semibold text-[hsl(var(--dashboard-ink))]">
-                Latest Exam Result
-                {latestTerm ? <span className="font-medium text-[hsl(var(--dashboard-soft-ink))]"> - {latestTerm}</span> : null}
-              </p>
-              <span className="parent-pill rounded-lg px-2 py-1 text-[9.5px] font-semibold text-primary">Cy 2029</span>
+          <span className="dashboard-compact-pill rounded-full px-2.5 py-1 text-[9px] font-semibold">Current Term</span>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+          <div>
+            <div className="flex items-end gap-2">
+              <span className="text-[28px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">
+                {termAverage != null ? `${termAverage}%` : "—"}
+              </span>
+              <span className="pb-1 text-[11px] text-[hsl(var(--dashboard-soft-ink))]">Average</span>
             </div>
 
-            <div className="rounded-xl bg-card px-4 py-4 shadow-sm">
-              <div className="flex items-end gap-2">
-                <span className="text-[28px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">
-                  {termAverage != null ? `${termAverage}%` : "—"}
-                </span>
-                <span className="pb-1 text-[12px] text-[hsl(var(--dashboard-ink))]">Current Average</span>
-              </div>
-
-              <div className="mt-4 flex items-end justify-between gap-3">
-                <div className="flex items-center gap-3 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
-                  {gradeSummary.map((item) => (
-                    <div key={item.label} className="text-center">
-                      <p className="font-semibold">{item.label}</p>
-                      <p>{item.count}</p>
+            <div className="mt-3 space-y-2">
+              {gradeSummary.map((item) => {
+                const width = Math.min(item.count * 22, 100);
+                return (
+                  <div key={item.label} className="grid grid-cols-[30px_1fr_24px] items-center gap-2 text-[10.5px]">
+                    <span className="font-semibold text-[hsl(var(--dashboard-ink))]">{item.label}</span>
+                    <div className="h-2 rounded-full bg-[hsl(var(--parent-blue-soft))]">
+                      <div className="h-2 rounded-full bg-primary" style={{ width: `${width}%` }} />
                     </div>
-                  ))}
-                </div>
+                    <span className="text-right text-[hsl(var(--dashboard-soft-ink))]">{item.count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
-                <svg width="124" height="34" viewBox="0 0 124 34" className="flex-shrink-0">
-                  <polyline
-                    points={trendPoints.map(([x, y]) => `${x + 8},${y + 6}`).join(" ")}
-                    fill="none"
-                    stroke="hsl(var(--parent-blue-end))"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                  {trendPoints.map(([x, y], index) => (
-                    <circle
-                      key={index}
-                      cx={x + 8}
-                      cy={y + 6}
-                      r="4"
-                      fill={index < 4 ? "hsl(var(--parent-orange-start))" : "hsl(var(--parent-blue-start))"}
-                    />
-                  ))}
-                </svg>
+          <button
+            type="button"
+            onClick={() => navigate("/portal/academics")}
+            className="dashboard-compact-button inline-flex items-center gap-2 rounded-full px-3 py-2 text-[10.5px] font-semibold"
+          >
+            View All
+            <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.2} />
+          </button>
+        </div>
+      </section>
+
+      <section className="dashboard-compact-card rounded-[18px] p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <CalendarCheck2 className="h-4 w-4 text-primary" strokeWidth={2.1} />
+              <h3 className="text-[12px] font-bold text-[hsl(var(--dashboard-ink))]">Attendance This Term</h3>
+            </div>
+            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">{attendancePresent} days present out of {attendanceTotal || 0}</p>
+          </div>
+          <span className="text-[10px] font-semibold text-[hsl(var(--dashboard-soft-ink))]">{absentPct}% absent</span>
+        </div>
+
+        <div className="mt-4 flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[28px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">{attendancePct}%</p>
+            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Attendance rate</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[20px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">{attendanceTotal || 0}</p>
+            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Total days</p>
+          </div>
+        </div>
+
+        <div className="mt-4 h-2.5 rounded-full bg-[hsl(var(--parent-blue-soft))]">
+          <div className="h-2.5 rounded-full bg-primary" style={{ width: `${attendancePct}%` }} />
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          {recentAbsences.length === 0 ? (
+            <p className="text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">No recent absences</p>
+          ) : (
+            recentAbsences.map((absence) => (
+              <div key={absence.date} className="dashboard-compact-pill flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium">
+                <CircleAlert className="h-3.5 w-3.5 text-[hsl(var(--parent-red-end))]" strokeWidth={2.1} />
+                {format(new Date(absence.date), "MMM d")}
               </div>
-            </div>
+            ))
+          )}
+        </div>
 
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Logg.d Inking</span>
-              <Button size="sm" className="h-8 rounded-xl px-4 text-[11px] font-semibold" onClick={() => navigate("/portal/academics")}>
-                View All Results
-              </Button>
-            </div>
-          </div>
-        </section>
+        <button
+          type="button"
+          onClick={() => navigate("/portal/attendance")}
+          className="dashboard-compact-button mt-4 inline-flex items-center gap-2 rounded-full px-3 py-2 text-[10.5px] font-semibold"
+        >
+          View Attendance
+          <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.2} />
+        </button>
+      </section>
 
-        <section className="parent-card order-2 overflow-hidden rounded-2xl md:order-2 md:col-span-2">
-          <div className="parent-card-header-green flex items-center gap-2 px-4 py-3 text-primary-foreground">
-            <CalendarCheck2 className="h-4.5 w-4.5" strokeWidth={2.1} />
-            <h3 className="text-[12.5px] font-bold">Attendance This Term</h3>
+      <section className="dashboard-compact-card rounded-[18px] p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-primary" strokeWidth={2.1} />
+              <h3 className="text-[12px] font-bold text-[hsl(var(--dashboard-ink))]">Messages</h3>
+            </div>
+            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Latest conversation</p>
           </div>
-          <div className="parent-soft-green p-4">
-            <div className="flex items-start gap-4">
-              <div className="flex-1">
-                <div className="flex items-end gap-3">
-                  <span className="text-[32px] font-bold leading-none text-[hsl(var(--parent-green-end))]">{absentPct}%</span>
-                  <div className="pb-1 leading-tight">
-                    <p className="text-[11px] font-semibold text-[hsl(var(--dashboard-ink))]">Current Days Present</p>
-                    <p className="text-[10px] text-[hsl(var(--dashboard-soft-ink))]">
-                      {attendancePresent}/{attendanceTotal || 0}
+          <span className="dashboard-compact-pill rounded-full px-2.5 py-1 text-[9px] font-semibold">{unreadMsgCount} unread</span>
+        </div>
+
+        {latestMessage ? (
+          <button
+            type="button"
+            onClick={() => navigate("/portal/messages")}
+            className="mt-4 block w-full rounded-[14px] border border-[hsl(var(--parent-card-border))] px-3 py-3 text-left transition-colors hover:bg-muted/30"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <p className="truncate text-[11.5px] font-bold text-[hsl(var(--dashboard-ink))]">{latestMessage.subject}</p>
+              <span className="text-[10px] text-[hsl(var(--dashboard-soft-ink))]">{format(new Date(latestMessage.created_at), "MMM d")}</span>
+            </div>
+            <p className="mt-1 line-clamp-2 text-[10.5px] leading-5 text-[hsl(var(--dashboard-soft-ink))]">{latestMessage.message}</p>
+          </button>
+        ) : (
+          <div className="mt-4 rounded-[14px] border border-dashed border-[hsl(var(--parent-card-border))] px-4 py-5 text-center text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
+            No messages
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => navigate("/portal/messages")}
+          className="dashboard-compact-button mt-4 inline-flex items-center gap-2 rounded-full px-3 py-2 text-[10.5px] font-semibold"
+        >
+          View Messages
+          <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.2} />
+        </button>
+      </section>
+
+      <section className="dashboard-compact-card rounded-[18px] p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <Megaphone className="h-4 w-4 text-primary" strokeWidth={2.1} />
+              <h3 className="text-[12px] font-bold text-[hsl(var(--dashboard-ink))]">Latest Announcements</h3>
+            </div>
+            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">School updates</p>
+          </div>
+          <span className="dashboard-compact-pill rounded-full px-2.5 py-1 text-[9px] font-semibold">{announcements.length}</span>
+        </div>
+
+        <div className="mt-4 space-y-2">
+          {announcements.length === 0 ? (
+            <div className="rounded-[14px] border border-dashed border-[hsl(var(--parent-card-border))] px-4 py-5 text-center text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
+              No announcements
+            </div>
+          ) : (
+            announcements.map((announcement) => (
+              <button
+                key={announcement.id}
+                type="button"
+                onClick={() => navigate("/portal/announcements")}
+                className="block w-full rounded-[14px] border border-[hsl(var(--parent-card-border))] px-3 py-3 text-left transition-colors hover:bg-muted/30"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="truncate text-[11.5px] font-bold text-[hsl(var(--dashboard-ink))]">{announcement.title}</p>
+                  <span className="text-[9.5px] text-[hsl(var(--dashboard-soft-ink))]">
+                    {announcement.published_at ? format(new Date(announcement.published_at), "MMM d") : "Recent"}
+                  </span>
+                </div>
+                <p className="mt-1 line-clamp-2 text-[10.5px] leading-5 text-[hsl(var(--dashboard-soft-ink))]">{announcement.content}</p>
+              </button>
+            ))
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => navigate("/portal/announcements")}
+          className="dashboard-compact-button mt-4 inline-flex items-center gap-2 rounded-full px-3 py-2 text-[10.5px] font-semibold"
+        >
+          View All
+          <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.2} />
+        </button>
+      </section>
+
+      <section className="dashboard-compact-card rounded-[18px] p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-primary" strokeWidth={2.1} />
+              <h3 className="text-[12px] font-bold text-[hsl(var(--dashboard-ink))]">Fees Summary</h3>
+            </div>
+            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Current balance overview</p>
+          </div>
+          <span className="rounded-full bg-[hsl(var(--parent-green-soft))] px-2.5 py-1 text-[9px] font-semibold text-[hsl(var(--parent-green-end))]">{feeStatus}</span>
+        </div>
+
+        <div className="mt-4 flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[28px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">GH¢ {outstanding.toLocaleString()}</p>
+            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Outstanding</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[20px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">{paidPercentage}%</p>
+            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Paid</p>
+          </div>
+        </div>
+
+        <div className="mt-4 h-2.5 rounded-full bg-[hsl(var(--parent-green-soft))]">
+          <div className="h-2.5 rounded-full bg-[hsl(var(--parent-green-end))]" style={{ width: `${paidPercentage}%` }} />
+        </div>
+
+        <button
+          type="button"
+          onClick={() => navigate("/portal/fees")}
+          className="dashboard-compact-button mt-4 inline-flex items-center gap-2 rounded-full px-3 py-2 text-[10.5px] font-semibold"
+        >
+          View Fees
+          <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.2} />
+        </button>
+      </section>
+
+      <section className="dashboard-compact-card rounded-[18px] p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <ReceiptText className="h-4 w-4 text-primary" strokeWidth={2.1} />
+              <h3 className="text-[12px] font-bold text-[hsl(var(--dashboard-ink))]">Recent Documents</h3>
+            </div>
+            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Latest files for your child</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/portal/documents")}
+            className="text-[10px] font-semibold text-primary"
+          >
+            View All
+          </button>
+        </div>
+
+        <div className="mt-4 space-y-2">
+          {documents.length === 0 ? (
+            <div className="rounded-[14px] border border-dashed border-[hsl(var(--parent-card-border))] px-4 py-5 text-center text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
+              No documents available
+            </div>
+          ) : (
+            documents.map((document) => {
+              const ext = (document.document_type || "pdf").toLowerCase();
+              return (
+                <a
+                  key={document.id}
+                  href={document.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 rounded-[14px] border border-[hsl(var(--parent-card-border))] px-3 py-3 transition-colors hover:bg-muted/30"
+                >
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[hsl(var(--parent-blue-soft))]">
+                    <FileText className="h-4 w-4 text-primary" strokeWidth={2.1} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[11.5px] font-bold text-[hsl(var(--dashboard-ink))]">{document.document_name}</p>
+                    <p className="mt-0.5 flex items-center gap-1 text-[10px] text-[hsl(var(--dashboard-soft-ink))]">
+                      <Clock3 className="h-3.5 w-3.5" />
+                      {document.created_at ? format(new Date(document.created_at), "MMM yyyy") : "Recent"}
                     </p>
                   </div>
-                </div>
-
-                <div className="mt-4 space-y-2 border-t border-border/70 pt-3">
-                  {recentAbsences.length === 0 ? (
-                    <p className="text-[11px] text-[hsl(var(--dashboard-soft-ink))]">No recent absences</p>
-                  ) : (
-                    recentAbsences.map((absence) => (
-                      <div key={absence.date} className="flex items-center gap-3 text-[11px]">
-                        <CircleAlert className="h-4 w-4 text-[hsl(var(--parent-green-end))]" strokeWidth={2.1} />
-                        <span className="min-w-[92px] font-medium text-[hsl(var(--dashboard-ink))]">
-                          {format(new Date(absence.date), "MMM d")}
-                        </span>
-                        <span className="text-[hsl(var(--dashboard-soft-ink))]">Absent</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              <div className="relative flex h-[104px] w-[104px] flex-shrink-0 items-center justify-center">
-                <svg className="h-full w-full -rotate-90" viewBox="0 0 44 44">
-                  <circle cx="22" cy="22" r="18" fill="none" stroke="hsl(var(--parent-green-soft))" strokeWidth="4" />
-                  <circle
-                    cx="22"
-                    cy="22"
-                    r="18"
-                    fill="none"
-                    stroke="hsl(var(--parent-green-start))"
-                    strokeWidth="4"
-                    strokeDasharray={`${(attendancePct / 100) * 113} 113`}
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-[15px] font-bold leading-none text-[hsl(var(--parent-green-end))]">{attendancePct}%</span>
-                  <span className="mt-1 text-[9px] font-medium text-[hsl(var(--dashboard-soft-ink))]">Attendant</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-3 flex justify-end">
-              <Button size="sm" className="h-8 rounded-xl px-4 text-[11px] font-semibold" onClick={() => navigate("/portal/attendance")}>
-                View Attendance
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        <section className="parent-card order-5 overflow-hidden rounded-2xl md:order-3 md:row-span-2">
-          <div className="parent-card-header-blue flex items-center justify-between gap-2 px-4 py-3 text-primary-foreground">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="h-4.5 w-4.5" strokeWidth={2.1} />
-              <h3 className="text-[12.5px] font-bold">Messages</h3>
-            </div>
-            <span className="rounded-lg bg-card/85 px-2 py-1 text-[9.5px] font-semibold text-primary">
-              {unreadMsgCount} Not read
-            </span>
-          </div>
-          <div className="space-y-2 p-3">
-            {messages.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-[11px] text-muted-foreground">
-                No messages
-              </div>
-            ) : (
-              messages.map((message, index) => (
-                <button
-                  key={message.id}
-                  type="button"
-                  onClick={() => navigate("/portal/messages")}
-                  className="flex w-full items-start gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-muted/40"
-                >
-                  <div
-                    className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
-                      index === 0 ? "bg-[hsl(var(--parent-blue-soft))] text-[hsl(var(--parent-blue-end))]" : "bg-[hsl(var(--parent-orange-soft))] text-[hsl(var(--parent-orange-end))]"
-                    }`}
-                  >
-                    <MessageSquare className="h-4.5 w-4.5" strokeWidth={2.1} />
+                  <div className="flex items-center gap-2">
+                    <span className="dashboard-compact-pill rounded-full px-2 py-1 text-[9px] font-semibold uppercase">{ext}</span>
+                    <ChevronRight className="h-4 w-4 text-[hsl(var(--dashboard-soft-ink))]" />
                   </div>
-                  <div className="min-w-0 flex-1 border-b border-border/60 pb-2 last:border-b-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-[12.5px] font-bold text-[hsl(var(--dashboard-ink))]">{message.subject}</p>
-                      <span className="text-[10px] text-[hsl(var(--dashboard-soft-ink))]">
-                        {format(new Date(message.created_at), "MMM d")}
-                      </span>
-                    </div>
-                    <p className="mt-1 line-clamp-2 text-[11px] leading-5 text-[hsl(var(--dashboard-ink))]">{message.message}</p>
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
-        </section>
-
-        <section className="parent-card order-4 overflow-hidden rounded-2xl md:order-4">
-          <div className="parent-card-header-orange flex items-center gap-2 px-4 py-3 text-primary-foreground">
-            <Megaphone className="h-4.5 w-4.5" strokeWidth={2.1} />
-            <h3 className="text-[12.5px] font-bold">Latest Announcements</h3>
-          </div>
-          <div className="parent-soft-orange space-y-3 p-4">
-            {announcements.length === 0 ? (
-              <p className="text-[11px] text-[hsl(var(--dashboard-soft-ink))]">No announcements</p>
-            ) : (
-              announcements.map((announcement) => (
-                <button
-                  key={announcement.id}
-                  type="button"
-                  onClick={() => navigate("/portal/announcements")}
-                  className="block w-full text-left"
-                >
-                  <p className="text-[12.5px] font-bold text-[hsl(var(--dashboard-ink))]">{announcement.title}</p>
-                  <p className="mt-1 text-[11px] text-[hsl(var(--dashboard-ink))]">
-                    {announcement.published_at ? format(new Date(announcement.published_at), "MMM d, h:mm a") : "Published recently"}
-                  </p>
-                  <p className="mt-2 line-clamp-3 text-[11px] leading-5 text-[hsl(var(--dashboard-ink))]">{announcement.content}</p>
-                </button>
-              ))
-            )}
-          </div>
-        </section>
-
-        <section className="parent-card order-1 overflow-hidden rounded-2xl md:order-5">
-          <div className="parent-card-header-red flex items-center gap-2 px-4 py-3 text-primary-foreground">
-            <CreditCard className="h-4.5 w-4.5" strokeWidth={2.1} />
-            <h3 className="text-[12.5px] font-bold">Fees Summary</h3>
-          </div>
-          <div className="parent-soft-red space-y-4 p-4">
-            <div>
-              <p className="text-[11px] font-semibold text-[hsl(var(--parent-red-end))]">GHS {outstanding.toLocaleString()}</p>
-              <p className="mt-1 text-[12px] text-[hsl(var(--dashboard-ink))]">Outstanding</p>
-            </div>
-            <div className="rounded-xl bg-[hsl(var(--parent-orange-end))] px-3 py-2 text-center text-[12px] font-bold text-primary-foreground shadow-sm">
-              {feeStatus}
-            </div>
-            <Button size="sm" className="h-8 w-full rounded-xl text-[11px] font-semibold" onClick={() => navigate("/portal/fees")}>
-              View All Fees
-            </Button>
-          </div>
-        </section>
-
-        <section className="parent-card order-6 overflow-hidden rounded-2xl md:order-6 md:col-span-2">
-          <div className="flex items-center justify-between gap-3 border-b border-border/70 px-4 py-3">
-            <div className="flex items-center gap-2">
-              <FileText className="h-4.5 w-4.5 text-[hsl(var(--dashboard-soft-ink))]" strokeWidth={2.1} />
-              <h3 className="text-[12.5px] font-bold text-[hsl(var(--dashboard-ink))]">Recent Documents</h3>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate("/portal/documents")}
-              className="parent-pill rounded-xl px-3 py-1.5 text-[10.5px] font-semibold text-primary"
-            >
-              Mark All Documents
-            </button>
-          </div>
-
-          <div className="space-y-1 p-3">
-            {documents.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-[11px] text-muted-foreground">
-                No documents available
-              </div>
-            ) : (
-              documents.map((document) => {
-                const ext = (document.document_type || "pdf").toLowerCase();
-                const isPdf = ext === "pdf";
-
-                return (
-                  <a
-                    key={document.id}
-                    href={document.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-muted/40"
-                  >
-                    <div
-                      className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${
-                        isPdf ? "bg-[hsl(var(--parent-red-soft))]" : "bg-[hsl(var(--parent-blue-soft))]"
-                      }`}
-                    >
-                      <FileText
-                        className={`h-4.5 w-4.5 ${
-                          isPdf ? "text-[hsl(var(--parent-red-end))]" : "text-[hsl(var(--parent-blue-end))]"
-                        }`}
-                        strokeWidth={2.1}
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[12.5px] font-bold text-[hsl(var(--dashboard-ink))]">{document.document_name}</p>
-                      <p className="mt-0.5 flex items-center gap-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
-                        <Clock3 className="h-3.5 w-3.5" />
-                        {document.created_at ? format(new Date(document.created_at), "MMM yyyy") : "Recent"}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="parent-pill rounded-lg px-2 py-1 text-[10px] font-bold uppercase text-primary">{ext}</span>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </a>
-                );
-              })
-            )}
-          </div>
-        </section>
-      </div>
+                </a>
+              );
+            })
+          )}
+        </div>
+      </section>
     </div>
   );
 };

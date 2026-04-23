@@ -43,11 +43,11 @@ const TeacherSidebar = ({ isOpen, onClose }: TeacherSidebarProps) => {
       )}
 
       <aside
-        className={cn(
-          "teacher-sidebar-surface fixed left-0 top-0 z-50 flex h-full w-60 flex-col transition-transform duration-300",
-          "lg:left-5 lg:top-5 lg:h-[calc(100vh-2.5rem)] lg:rounded-l-[22px]",
-          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        )}
+          className={cn(
+            "teacher-sidebar-surface fixed left-0 top-0 z-50 flex h-full w-60 flex-col transition-transform duration-300",
+            "lg:left-5 lg:top-5 lg:h-[calc(100vh-2.5rem)] lg:rounded-l-[18px]",
+            isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          )}
       >
         <div className="flex items-center justify-between border-b border-primary-foreground/10 px-4 py-5">
           <Link to="/teacher" className="flex items-center gap-3" onClick={onClose}>
@@ -57,8 +57,8 @@ const TeacherSidebar = ({ isOpen, onClose }: TeacherSidebarProps) => {
               className="h-11 w-11 rounded-xl object-cover ring-1 ring-primary-foreground/20"
             />
             <div className="min-w-0 leading-tight text-primary-foreground">
-              <p className="text-[11px] font-bold uppercase tracking-[0.08em]">GOOD SHEPHERD</p>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-primary-foreground/86">
+              <p className="text-[10px] font-bold uppercase tracking-[0.1em]">GOOD SHEPHERD</p>
+              <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-primary-foreground/86">
                 INTERNATIONAL SCHOOL
               </p>
             </div>
@@ -87,7 +87,7 @@ const TeacherSidebar = ({ isOpen, onClose }: TeacherSidebarProps) => {
                   to={item.href}
                   onClick={onClose}
                   className={cn(
-                    "relative flex items-center gap-3 rounded-xl px-4 py-3 text-[12.5px] font-semibold transition-all",
+                    "relative flex items-center gap-3 rounded-xl px-4 py-3 text-[11.5px] font-semibold uppercase tracking-[0.03em] transition-all",
                     isActive
                       ? "teacher-sidebar-link-active"
                       : "teacher-sidebar-link hover:bg-primary-foreground/10 hover:text-primary-foreground"

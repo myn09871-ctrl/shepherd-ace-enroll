@@ -52,7 +52,7 @@ const TeacherLayout = () => {
         <TeacherSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         <div className="flex min-w-0 flex-1 flex-col lg:ml-60">
-          <header className="dashboard-topbar flex h-16 items-center justify-between px-4 md:px-6">
+          <header className="dashboard-topbar flex h-[64px] items-center justify-between px-4 md:px-6">
             <div className="flex min-w-0 items-center gap-2.5">
               <Button
                 variant="ghost"
@@ -62,7 +62,7 @@ const TeacherLayout = () => {
               >
                 <Menu className="h-4 w-4" />
               </Button>
-              <h1 className="truncate text-[15px] font-bold text-[hsl(var(--dashboard-ink))] md:text-[16px]">
+              <h1 className="truncate text-[13px] font-bold uppercase tracking-[0.04em] text-[hsl(var(--dashboard-ink))] md:text-[14px]">
                 Welcome, Mr. {lastName}!
               </h1>
             </div>
@@ -81,7 +81,7 @@ const TeacherLayout = () => {
               <button
                 type="button"
                 onClick={() => navigate("/teacher/profile")}
-                className="flex items-center gap-2 rounded-2xl border border-border/80 bg-card px-1.5 py-1 shadow-sm transition-colors hover:bg-muted"
+                className="flex items-center gap-2 rounded-full border border-border/80 bg-card px-1.5 py-1 shadow-sm transition-colors hover:bg-muted"
               >
                 <Avatar className="h-8 w-8">
                   {teacherProfile.avatar_url && <AvatarImage src={teacherProfile.avatar_url} alt={name} />}
@@ -89,7 +89,7 @@ const TeacherLayout = () => {
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden pr-1 text-[12px] font-semibold text-[hsl(var(--dashboard-ink))] sm:block">
+                  <span className="hidden pr-1 text-[11px] font-semibold text-[hsl(var(--dashboard-ink))] sm:block">
                   Mr. {lastName}
                 </span>
               </button>
@@ -97,15 +97,17 @@ const TeacherLayout = () => {
               <Button
                 size="sm"
                 onClick={handleLogout}
-                className="h-10 rounded-xl px-4 text-[12px] font-semibold text-primary-foreground shadow-sm"
+                className="h-9 rounded-full px-4 text-[11px] font-semibold text-primary-foreground shadow-sm"
               >
                 Logout
               </Button>
             </div>
           </header>
 
-          <main className="flex-1 overflow-auto bg-transparent px-4 py-4 md:px-6 md:py-5">
-            <Outlet />
+          <main className="flex-1 overflow-auto bg-transparent px-3 py-3 md:px-6 md:py-5">
+            <div className="dashboard-route-shell">
+              <Outlet />
+            </div>
           </main>
         </div>
       </div>
