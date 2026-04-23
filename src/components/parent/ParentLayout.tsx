@@ -102,7 +102,7 @@ const ParentLayout = () => {
         />
 
         <div className="flex min-w-0 flex-1 flex-col lg:ml-56">
-          <header className="dashboard-topbar flex h-[74px] items-center justify-between gap-3 px-3 md:px-5">
+          <header className="dashboard-topbar flex h-[64px] items-center justify-between gap-2 px-3 md:px-5">
             <div className="flex min-w-0 items-center gap-2.5">
               <Button
                 variant="ghost"
@@ -113,36 +113,28 @@ const ParentLayout = () => {
                 <Menu className="h-4 w-4" />
               </Button>
 
-              <div className="hidden items-center gap-2.5 md:flex">
-                <img
-                  src={schoolCrest}
-                  alt="Good Shepherd International School crest"
-                  className="h-12 w-12 rounded-xl object-cover ring-1 ring-border/70"
-                />
-                <div className="leading-tight text-[hsl(var(--dashboard-ink))]">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.08em]">GOOD SHEPHERD</p>
-                  <p className="text-[11px] font-semibold">School</p>
-                </div>
-              </div>
+              <p className="hidden text-[11px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--dashboard-ink))] md:block">
+                GOOD SHEPHERD INTERNATIONAL SCHOOL
+              </p>
             </div>
 
             <div className="flex min-w-0 flex-1 justify-center">
               {students.length > 1 ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="parent-pill flex w-full max-w-[280px] items-center gap-2 rounded-2xl px-2 py-1.5 text-left shadow-sm transition-colors hover:bg-card">
-                      <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-[11px] font-bold text-primary">
+                    <button className="dashboard-compact-card flex w-full max-w-[240px] items-center gap-2 rounded-full px-2 py-1.5 text-left transition-colors hover:bg-card">
+                      <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-[10px] font-bold text-primary">
                         {selectedStudent?.photo_url ? (
                           <img
                             src={selectedStudent.photo_url}
                             alt={selectedStudentName}
-                            className="h-9 w-9 rounded-full object-cover"
+                            className="h-8 w-8 rounded-full object-cover"
                           />
                         ) : (
                           <span>{selectedStudent?.first_name?.[0] ?? "S"}</span>
                         )}
                       </div>
-                      <span className="min-w-0 flex-1 truncate text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">
+                      <span className="min-w-0 flex-1 truncate text-[11.5px] font-semibold text-[hsl(var(--dashboard-ink))]">
                         {selectedStudentName}
                       </span>
                       <ChevronDown className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
@@ -186,57 +178,30 @@ const ParentLayout = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <div className="parent-pill flex w-full max-w-[280px] items-center gap-2 rounded-2xl px-2 py-1.5 shadow-sm">
-                  <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-[11px] font-bold text-primary">
+                <div className="dashboard-compact-card flex w-full max-w-[240px] items-center gap-2 rounded-full px-2 py-1.5 shadow-sm">
+                  <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-[10px] font-bold text-primary">
                     {selectedStudent?.photo_url ? (
                       <img
                         src={selectedStudent.photo_url}
                         alt={selectedStudentName}
-                        className="h-9 w-9 rounded-full object-cover"
+                        className="h-8 w-8 rounded-full object-cover"
                       />
                     ) : (
                       <span>{selectedStudent?.first_name?.[0] ?? "S"}</span>
                     )}
                   </div>
-                  <span className="truncate text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">{selectedStudentName}</span>
+                  <span className="truncate text-[11.5px] font-semibold text-[hsl(var(--dashboard-ink))]">{selectedStudentName}</span>
                 </div>
               )}
             </div>
 
             <div className="flex items-center gap-2.5">
-              {selectedStudent && (
-                <button
-                  type="button"
-                  onClick={() => navigate("/portal/profile")}
-                  className="hidden items-center gap-2 rounded-2xl border border-border/80 bg-card px-2 py-1.5 shadow-sm md:flex"
-                >
-                  <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-[11px] font-bold text-primary">
-                    {selectedStudent.photo_url ? (
-                      <img
-                        src={selectedStudent.photo_url}
-                        alt={selectedStudentName}
-                        className="h-11 w-11 rounded-full object-cover"
-                      />
-                    ) : (
-                      <span>
-                        {selectedStudent.first_name[0]}
-                        {selectedStudent.surname[0]}
-                      </span>
-                    )}
-                  </div>
-                  <div className="leading-tight text-left">
-                    <p className="text-[12.5px] font-bold text-[hsl(var(--dashboard-ink))]">{selectedStudentName}</p>
-                    <p className="text-[11px] text-[hsl(var(--dashboard-soft-ink))]">{selectedStudent.current_class}</p>
-                  </div>
-                </button>
-              )}
-
               <button
                 type="button"
                 onClick={() => navigate("/portal/announcements")}
-                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border/80 bg-card shadow-sm transition-colors hover:bg-muted"
+                className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card shadow-sm transition-colors hover:bg-muted"
               >
-                <Bell className="h-5 w-5 text-[hsl(var(--dashboard-ink))]" strokeWidth={1.9} />
+                <Bell className="h-[18px] w-[18px] text-[hsl(var(--dashboard-ink))]" strokeWidth={1.9} />
                 {unreadCount > 0 && (
                   <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[hsl(var(--dashboard-badge))] px-1 text-[9px] font-bold text-primary-foreground">
                     {unreadCount > 9 ? "9+" : unreadCount}
@@ -246,11 +211,13 @@ const ParentLayout = () => {
             </div>
           </header>
 
-          <main className="flex-1 overflow-auto bg-transparent px-3 py-4 pb-20 md:px-5 md:py-5 lg:pb-5">
-            <Outlet />
+          <main className="flex-1 overflow-auto bg-transparent px-3 py-3 pb-20 md:px-5 md:py-5 lg:pb-5">
+            <div className="dashboard-route-shell">
+              <Outlet />
+            </div>
           </main>
 
-          <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-[hsl(var(--parent-sidebar-border))] bg-card/95 backdrop-blur">
+          <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-[hsl(var(--parent-card-border))] bg-card/95 backdrop-blur lg:hidden">
             <div className="flex h-15 items-center justify-around px-1 py-1">
               {bottomNavItems.map((item) => {
                 const isActive = location.pathname === item.path;
