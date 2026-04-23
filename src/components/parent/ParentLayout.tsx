@@ -226,7 +226,7 @@ const ParentLayout = () => {
                     key={item.path}
                     onClick={() => navigate(item.path)}
                     className={`relative flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-2 py-1 transition-colors ${
-                      isActive ? "text-primary" : "text-[hsl(var(--parent-sidebar-text))]"
+                      isActive ? "text-primary" : "text-[hsl(var(--dashboard-soft-ink))]"
                     }`}
                   >
                     <item.icon className="h-[18px] w-[18px]" strokeWidth={isActive ? 2.2 : 1.9} />
