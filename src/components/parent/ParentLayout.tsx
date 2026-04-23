@@ -22,7 +22,6 @@ import {
 import ParentSidebar from "./ParentSidebar";
 import { useParentAuth } from "@/hooks/useParentAuth";
 import { supabase } from "@/integrations/supabase/client";
-import schoolCrest from "@/assets/school-crest.jpeg";
 
 const ParentLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);

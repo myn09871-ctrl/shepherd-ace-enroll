@@ -13,7 +13,6 @@ import {
   ArrowRight,
   ReceiptText,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useParentAuth } from "@/hooks/useParentAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
