@@ -170,17 +170,55 @@ const PortalDashboard = () => {
   return (
     <div className="space-y-3 pb-3">
       <div>
-        <h2 className="text-[14px] font-bold text-[hsl(var(--dashboard-ink))] md:text-[15px]">Welcome, {firstName}</h2>
+        <h2 className="text-[16px] font-bold text-[hsl(var(--dashboard-ink))]">Welcome, {firstName}</h2>
       </div>
+
+      {urgentItems.length > 0 ? (
+        <section
+          className="rounded-[18px] p-4"
+          style={{ background: "hsl(var(--gsis-status-urgent-soft))", border: "1px solid hsl(var(--gsis-status-urgent))" }}
+        >
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.04em] text-[hsl(var(--gsis-status-urgent))]">At a Glance</h3>
+          <div className="mt-3 space-y-2">
+            {urgentItems.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                onClick={item.action}
+                className="flex w-full items-center gap-2.5 rounded-[14px] bg-[hsl(var(--card))] px-3 py-2.5 text-left transition-colors hover:bg-muted/30"
+              >
+                <CircleAlert className="h-4 w-4 flex-shrink-0 text-[hsl(var(--gsis-status-urgent))]" strokeWidth={2.1} />
+                <span className="min-w-0 flex-1 truncate text-[11.5px] font-semibold text-[hsl(var(--dashboard-ink))]">{item.label}</span>
+                {item.value ? (
+                  <span className="text-[11.5px] font-bold text-[hsl(var(--gsis-status-urgent))]">{item.value}</span>
+                ) : null}
+                <ChevronRight className="h-4 w-4 flex-shrink-0 text-[hsl(var(--dashboard-soft-ink))]" />
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <section
+          className="rounded-[18px] p-4"
+          style={{ background: "hsl(var(--gsis-gold-soft))", border: "1px solid hsl(var(--gsis-gold))" }}
+        >
+          <div className="flex items-center justify-center gap-2 text-center">
+            <GraduationCap className="h-4 w-4 text-[hsl(var(--gsis-gold))]" strokeWidth={2.1} />
+            <p className="text-[11.5px] font-semibold text-[hsl(var(--dashboard-ink))]">
+              All caught up — nothing needs your attention right now
+            </p>
+          </div>
+        </section>
+      )}
 
       <section className="dashboard-compact-card rounded-[18px] p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
               <GraduationCap className="h-4 w-4 text-primary" strokeWidth={2.1} />
-              <h3 className="text-[12px] font-bold text-[hsl(var(--dashboard-ink))]">Academic Performance</h3>
+              <h3 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">Academic Performance</h3>
             </div>
-            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
+            <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">
               {latestTerm ? `Latest result • ${latestTerm}` : "Latest result"}
             </p>
           </div>
@@ -190,27 +228,43 @@ const PortalDashboard = () => {
         <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
           <div>
             <div className="flex items-end gap-2">
-              <span className="text-[28px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">
+              <span className="font-heading text-[26px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">
                 {termAverage != null ? `${termAverage}%` : "—"}
               </span>
-              <span className="pb-1 text-[11px] text-[hsl(var(--dashboard-soft-ink))]">Average</span>
+              <span className="pb-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">Average</span>
             </div>
 
-            <div className="mt-3 space-y-2">
-              {gradeSummary.map((item) => {
-                const width = Math.min(item.count * 22, 100);
-                return (
-                  <div key={item.label} className="grid grid-cols-[30px_1fr_24px] items-center gap-2 text-[10.5px]">
-                    <span className="font-semibold text-[hsl(var(--dashboard-ink))]">{item.label}</span>
-                    <div className="h-2 rounded-full bg-[hsl(var(--parent-blue-soft))]">
-                      <div className="h-2 rounded-full bg-primary" style={{ width: `${width}%` }} />
-                    </div>
-                    <span className="text-right text-[hsl(var(--dashboard-soft-ink))]">{item.count}</span>
-                  </div>
-                );
-              })}
+            <div className="mt-4">
+              <div className="relative h-20 w-full">
+                <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="h-full w-full">
+                  <polyline
+                    fill="none"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth="1"
+                    vectorEffect="non-scaling-stroke"
+                    points={gradeSummary
+                      .map((item, index) => {
+                        const x = 8 + index * ((100 - 16) / (gradeSummary.length - 1));
+                        const y = 36 - (item.count / maxGradeCount) * 30;
+                        return `${x},${y}`;
+                      })
+                      .join(" ")}
+                  />
+                  {gradeSummary.map((item, index) => {
+                    const x = 8 + index * ((100 - 16) / (gradeSummary.length - 1));
+                    const y = 36 - (item.count / maxGradeCount) * 30;
+                    return <circle key={item.label} cx={x} cy={y} r="1.6" fill="hsl(var(--primary))" vectorEffect="non-scaling-stroke" />;
+                  })}
+                </svg>
+              </div>
+              <div className="mt-1 flex justify-between px-1 text-[11.5px] font-semibold text-[hsl(var(--dashboard-soft-ink))]">
+                {gradeSummary.map((item) => (
+                  <span key={item.label}>{item.label}</span>
+                ))}
+              </div>
             </div>
           </div>
+
 
           <button
             type="button"
