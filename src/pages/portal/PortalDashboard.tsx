@@ -282,21 +282,26 @@ const PortalDashboard = () => {
           <div>
             <div className="flex items-center gap-2">
               <CalendarCheck2 className="h-4 w-4 text-primary" strokeWidth={2.1} />
-              <h3 className="text-[12px] font-bold text-[hsl(var(--dashboard-ink))]">Attendance This Term</h3>
+              <h3 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">Attendance This Term</h3>
             </div>
-            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">{attendancePresent} days present out of {attendanceTotal || 0}</p>
+            <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">{attendancePresent} days present out of {attendanceTotal || 0}</p>
           </div>
           <span className="text-[10px] font-semibold text-[hsl(var(--dashboard-soft-ink))]">{absentPct}% absent</span>
         </div>
 
         <div className="mt-4 flex items-end justify-between gap-3">
           <div>
-            <p className="text-[28px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">{attendancePct}%</p>
-            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Attendance rate</p>
+            <p
+              className="font-heading text-[26px] font-bold leading-none"
+              style={{ color: attendancePct >= 95 ? "hsl(var(--gsis-status-good))" : "hsl(var(--dashboard-ink))" }}
+            >
+              {attendancePct}%
+            </p>
+            <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">Attendance rate</p>
           </div>
           <div className="text-right">
             <p className="text-[20px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">{attendanceTotal || 0}</p>
-            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Total days</p>
+            <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">Total days</p>
           </div>
         </div>
 
@@ -306,11 +311,14 @@ const PortalDashboard = () => {
 
         <div className="mt-4 flex flex-wrap gap-2">
           {recentAbsences.length === 0 ? (
-            <p className="text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">No recent absences</p>
+            <p className="text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">No recent absences</p>
           ) : (
             recentAbsences.map((absence) => (
-              <div key={absence.date} className="dashboard-compact-pill flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium">
-                <CircleAlert className="h-3.5 w-3.5 text-[hsl(var(--parent-red-end))]" strokeWidth={2.1} />
+              <div
+                key={absence.date}
+                className="flex items-center gap-1.5 rounded-full bg-[hsl(var(--gsis-status-urgent-soft))] px-2.5 py-1 text-[10px] font-medium text-[hsl(var(--gsis-status-urgent))]"
+              >
+                <CircleAlert className="h-3.5 w-3.5" strokeWidth={2.1} />
                 {format(new Date(absence.date), "MMM d")}
               </div>
             ))
@@ -320,7 +328,7 @@ const PortalDashboard = () => {
         <button
           type="button"
           onClick={() => navigate("/portal/attendance")}
-          className="dashboard-compact-button mt-4 inline-flex items-center gap-2 rounded-full px-3 py-2 text-[10.5px] font-semibold"
+          className="dashboard-compact-button mt-4 inline-flex items-center gap-2 rounded-full px-3 py-2 text-[11.5px] font-semibold"
         >
           View Attendance
           <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.2} />
@@ -332,30 +340,50 @@ const PortalDashboard = () => {
           <div>
             <div className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4 text-primary" strokeWidth={2.1} />
-              <h3 className="text-[12px] font-bold text-[hsl(var(--dashboard-ink))]">Messages</h3>
+              <h3 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">Messages</h3>
             </div>
-            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Latest conversation</p>
+            <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">Latest conversations</p>
           </div>
-          <span className="dashboard-compact-pill rounded-full px-2.5 py-1 text-[9px] font-semibold">{unreadMsgCount} unread</span>
+          <span
+            className="rounded-full px-2.5 py-1 text-[9px] font-semibold"
+            style={
+              unreadMsgCount > 0
+                ? { background: "hsl(var(--gsis-status-urgent-soft))", color: "hsl(var(--gsis-status-urgent))" }
+                : undefined
+            }
+          >
+            <span className={unreadMsgCount > 0 ? "" : "dashboard-compact-pill rounded-full px-2.5 py-1"}>{unreadMsgCount} unread</span>
+          </span>
         </div>
 
-        {latestMessage ? (
-          <button
-            type="button"
-            onClick={() => navigate("/portal/messages")}
-            className="mt-4 block w-full rounded-[14px] border border-[hsl(var(--parent-card-border))] px-3 py-3 text-left transition-colors hover:bg-muted/30"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <p className="truncate text-[11.5px] font-bold text-[hsl(var(--dashboard-ink))]">{latestMessage.subject}</p>
-              <span className="text-[10px] text-[hsl(var(--dashboard-soft-ink))]">{format(new Date(latestMessage.created_at), "MMM d")}</span>
-            </div>
-            <p className="mt-1 line-clamp-2 text-[10.5px] leading-5 text-[hsl(var(--dashboard-soft-ink))]">{latestMessage.message}</p>
-          </button>
+        {previewMessages.length > 0 ? (
+          <div className="mt-4 space-y-2">
+            {previewMessages.map((message) => (
+              <button
+                key={message.id}
+                type="button"
+                onClick={() => navigate("/portal/messages")}
+                className="flex w-full items-start gap-3 rounded-[14px] border border-[hsl(var(--parent-card-border))] px-3 py-3 text-left transition-colors hover:bg-muted/30"
+              >
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[hsl(var(--parent-blue-soft))] text-[11.5px] font-bold text-primary">
+                  {(message.subject || "M").charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-[11.5px] font-bold text-[hsl(var(--dashboard-ink))]">{message.subject}</p>
+                    <span className="flex-shrink-0 text-[10px] text-[hsl(var(--dashboard-soft-ink))]">{format(new Date(message.created_at), "MMM d")}</span>
+                  </div>
+                  <p className="mt-1 line-clamp-2 text-[11.5px] leading-5 text-[hsl(var(--dashboard-soft-ink))]">{message.message}</p>
+                </div>
+              </button>
+            ))}
+          </div>
         ) : (
-          <div className="mt-4 rounded-[14px] border border-dashed border-[hsl(var(--parent-card-border))] px-4 py-5 text-center text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
+          <div className="mt-4 rounded-[14px] border border-dashed border-[hsl(var(--parent-card-border))] px-4 py-5 text-center text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">
             No messages
           </div>
         )}
+
 
         <button
           type="button"
