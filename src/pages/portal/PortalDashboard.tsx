@@ -446,27 +446,45 @@ const PortalDashboard = () => {
           <div>
             <div className="flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-primary" strokeWidth={2.1} />
-              <h3 className="text-[12px] font-bold text-[hsl(var(--dashboard-ink))]">Fees Summary</h3>
+              <h3 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">Fees Summary</h3>
             </div>
-            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Current balance overview</p>
+            <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">Current balance overview</p>
           </div>
-          <span className="rounded-full bg-[hsl(var(--parent-green-soft))] px-2.5 py-1 text-[9px] font-semibold text-[hsl(var(--parent-green-end))]">{feeStatus}</span>
+          <span
+            className={`rounded-full px-2.5 py-1 text-[9px] font-semibold ${
+              feesResolved
+                ? "bg-[hsl(var(--parent-green-soft))] text-[hsl(var(--parent-green-end))]"
+                : "bg-[hsl(var(--gsis-status-urgent-soft))] text-[hsl(var(--gsis-status-urgent))]"
+            }`}
+          >
+            {feeStatus}
+          </span>
         </div>
 
         <div className="mt-4 flex items-end justify-between gap-3">
           <div>
-            <p className="text-[28px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">GH¢ {outstanding.toLocaleString()}</p>
-            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Outstanding</p>
+            <p className="font-heading text-[26px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">GH¢ {outstanding.toLocaleString()}</p>
+            <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">Outstanding</p>
           </div>
           <div className="text-right">
             <p className="text-[20px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">{paidPercentage}%</p>
-            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Paid</p>
+            <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">Paid</p>
           </div>
         </div>
 
-        <div className="mt-4 h-2.5 rounded-full bg-[hsl(var(--parent-green-soft))]">
-          <div className="h-2.5 rounded-full bg-[hsl(var(--parent-green-end))]" style={{ width: `${paidPercentage}%` }} />
+        <div
+          className={`mt-4 h-2.5 rounded-full ${
+            outstanding > 0 ? "bg-[hsl(var(--gsis-status-urgent-soft))]" : "bg-[hsl(var(--parent-green-soft))]"
+          }`}
+        >
+          <div
+            className={`h-2.5 rounded-full ${
+              outstanding > 0 ? "bg-[hsl(var(--gsis-status-urgent))]" : "bg-[hsl(var(--parent-green-end))]"
+            }`}
+            style={{ width: `${paidPercentage}%` }}
+          />
         </div>
+
 
         <button
           type="button"
