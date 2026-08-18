@@ -142,8 +142,22 @@ const PortalDashboard = () => {
     { label: "Cs", count: gradeDist["C"] || 0 },
     { label: "Ds", count: gradeDist["D"] || 0 },
   ];
-  const latestMessage = messages[0] ?? null;
+  const previewMessages = messages.slice(0, 3);
   const paidPercentage = feesTotal > 0 ? Math.round((feesPaid / feesTotal) * 100) : 0;
+  const feesResolved = feeStatus === "Fully Paid";
+
+  const urgentItems: { label: string; value?: string; action: () => void }[] = [];
+  if (outstanding > 0) {
+    urgentItems.push({ label: "Fee balance due", value: `GH¢ ${outstanding.toLocaleString()}`, action: () => navigate("/portal/fees") });
+  }
+  if (unreadMsgCount > 0) {
+    urgentItems.push({ label: `${unreadMsgCount} unread message${unreadMsgCount === 1 ? "" : "s"}`, action: () => navigate("/portal/messages") });
+  }
+  if (recentAbsences.length > 0) {
+    urgentItems.push({ label: `${recentAbsences.length} recent absence${recentAbsences.length === 1 ? "" : "s"}`, action: () => navigate("/portal/attendance") });
+  }
+
+  const maxGradeCount = Math.max(...gradeSummary.map((item) => item.count), 1);
 
   if (loading) {
     return (
