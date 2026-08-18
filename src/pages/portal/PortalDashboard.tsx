@@ -345,14 +345,13 @@ const PortalDashboard = () => {
             <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">Latest conversations</p>
           </div>
           <span
-            className="rounded-full px-2.5 py-1 text-[9px] font-semibold"
-            style={
+            className={`rounded-full px-2.5 py-1 text-[9px] font-semibold ${
               unreadMsgCount > 0
-                ? { background: "hsl(var(--gsis-status-urgent-soft))", color: "hsl(var(--gsis-status-urgent))" }
-                : undefined
-            }
+                ? "bg-[hsl(var(--gsis-status-urgent-soft))] text-[hsl(var(--gsis-status-urgent))]"
+                : "dashboard-compact-pill"
+            }`}
           >
-            <span className={unreadMsgCount > 0 ? "" : "dashboard-compact-pill rounded-full px-2.5 py-1"}>{unreadMsgCount} unread</span>
+            {unreadMsgCount} unread
           </span>
         </div>
 
