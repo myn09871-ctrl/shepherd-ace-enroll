@@ -105,6 +105,14 @@
     --parent-pill: 220 57% 96%;
     --parent-shadow: 220 35% 42%;
 
+    --gsis-gold: 40 46% 54%;
+    --gsis-gold-soft: 40 55% 94%;
+    --gsis-status-good: 91 52% 39%;
+    --gsis-status-good-soft: 108 44% 96%;
+    --gsis-status-urgent: 7 82% 56%;
+    --gsis-status-urgent-soft: 0 100% 97%;
+    --gsis-status-neutral: 219 24% 43%;
+
     --font-heading: 'Space Grotesk', system-ui, sans-serif;
     --font-body: 'DM Sans', system-ui, sans-serif;
 

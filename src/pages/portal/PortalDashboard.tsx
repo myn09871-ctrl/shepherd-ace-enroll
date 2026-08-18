@@ -142,8 +142,22 @@ const PortalDashboard = () => {
     { label: "Cs", count: gradeDist["C"] || 0 },
     { label: "Ds", count: gradeDist["D"] || 0 },
   ];
-  const latestMessage = messages[0] ?? null;
+  const previewMessages = messages.slice(0, 3);
   const paidPercentage = feesTotal > 0 ? Math.round((feesPaid / feesTotal) * 100) : 0;
+  const feesResolved = feeStatus === "Fully Paid";
+
+  const urgentItems: { label: string; value?: string; action: () => void }[] = [];
+  if (outstanding > 0) {
+    urgentItems.push({ label: "Fee balance due", value: `GH¢ ${outstanding.toLocaleString()}`, action: () => navigate("/portal/fees") });
+  }
+  if (unreadMsgCount > 0) {
+    urgentItems.push({ label: `${unreadMsgCount} unread message${unreadMsgCount === 1 ? "" : "s"}`, action: () => navigate("/portal/messages") });
+  }
+  if (recentAbsences.length > 0) {
+    urgentItems.push({ label: `${recentAbsences.length} recent absence${recentAbsences.length === 1 ? "" : "s"}`, action: () => navigate("/portal/attendance") });
+  }
+
+  const maxGradeCount = Math.max(...gradeSummary.map((item) => item.count), 1);
 
   if (loading) {
     return (
@@ -156,17 +170,55 @@ const PortalDashboard = () => {
   return (
     <div className="space-y-3 pb-3">
       <div>
-        <h2 className="text-[14px] font-bold text-[hsl(var(--dashboard-ink))] md:text-[15px]">Welcome, {firstName}</h2>
+        <h2 className="text-[16px] font-bold text-[hsl(var(--dashboard-ink))]">Welcome, {firstName}</h2>
       </div>
+
+      {urgentItems.length > 0 ? (
+        <section
+          className="rounded-[18px] p-4"
+          style={{ background: "hsl(var(--gsis-status-urgent-soft))", border: "1px solid hsl(var(--gsis-status-urgent))" }}
+        >
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.04em] text-[hsl(var(--gsis-status-urgent))]">At a Glance</h3>
+          <div className="mt-3 space-y-2">
+            {urgentItems.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                onClick={item.action}
+                className="flex w-full items-center gap-2.5 rounded-[14px] bg-[hsl(var(--card))] px-3 py-2.5 text-left transition-colors hover:bg-muted/30"
+              >
+                <CircleAlert className="h-4 w-4 flex-shrink-0 text-[hsl(var(--gsis-status-urgent))]" strokeWidth={2.1} />
+                <span className="min-w-0 flex-1 truncate text-[11.5px] font-semibold text-[hsl(var(--dashboard-ink))]">{item.label}</span>
+                {item.value ? (
+                  <span className="text-[11.5px] font-bold text-[hsl(var(--gsis-status-urgent))]">{item.value}</span>
+                ) : null}
+                <ChevronRight className="h-4 w-4 flex-shrink-0 text-[hsl(var(--dashboard-soft-ink))]" />
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <section
+          className="rounded-[18px] p-4"
+          style={{ background: "hsl(var(--gsis-gold-soft))", border: "1px solid hsl(var(--gsis-gold))" }}
+        >
+          <div className="flex items-center justify-center gap-2 text-center">
+            <GraduationCap className="h-4 w-4 text-[hsl(var(--gsis-gold))]" strokeWidth={2.1} />
+            <p className="text-[11.5px] font-semibold text-[hsl(var(--dashboard-ink))]">
+              All caught up — nothing needs your attention right now
+            </p>
+          </div>
+        </section>
+      )}
 
       <section className="dashboard-compact-card rounded-[18px] p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
               <GraduationCap className="h-4 w-4 text-primary" strokeWidth={2.1} />
-              <h3 className="text-[12px] font-bold text-[hsl(var(--dashboard-ink))]">Academic Performance</h3>
+              <h3 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">Academic Performance</h3>
             </div>
-            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
+            <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">
               {latestTerm ? `Latest result • ${latestTerm}` : "Latest result"}
             </p>
           </div>
@@ -176,27 +228,43 @@ const PortalDashboard = () => {
         <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
           <div>
             <div className="flex items-end gap-2">
-              <span className="text-[28px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">
+              <span className="font-heading text-[26px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">
                 {termAverage != null ? `${termAverage}%` : "—"}
               </span>
-              <span className="pb-1 text-[11px] text-[hsl(var(--dashboard-soft-ink))]">Average</span>
+              <span className="pb-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">Average</span>
             </div>
 
-            <div className="mt-3 space-y-2">
-              {gradeSummary.map((item) => {
-                const width = Math.min(item.count * 22, 100);
-                return (
-                  <div key={item.label} className="grid grid-cols-[30px_1fr_24px] items-center gap-2 text-[10.5px]">
-                    <span className="font-semibold text-[hsl(var(--dashboard-ink))]">{item.label}</span>
-                    <div className="h-2 rounded-full bg-[hsl(var(--parent-blue-soft))]">
-                      <div className="h-2 rounded-full bg-primary" style={{ width: `${width}%` }} />
-                    </div>
-                    <span className="text-right text-[hsl(var(--dashboard-soft-ink))]">{item.count}</span>
-                  </div>
-                );
-              })}
+            <div className="mt-4">
+              <div className="relative h-20 w-full">
+                <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="h-full w-full">
+                  <polyline
+                    fill="none"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth="1"
+                    vectorEffect="non-scaling-stroke"
+                    points={gradeSummary
+                      .map((item, index) => {
+                        const x = 8 + index * ((100 - 16) / (gradeSummary.length - 1));
+                        const y = 36 - (item.count / maxGradeCount) * 30;
+                        return `${x},${y}`;
+                      })
+                      .join(" ")}
+                  />
+                  {gradeSummary.map((item, index) => {
+                    const x = 8 + index * ((100 - 16) / (gradeSummary.length - 1));
+                    const y = 36 - (item.count / maxGradeCount) * 30;
+                    return <circle key={item.label} cx={x} cy={y} r="1.6" fill="hsl(var(--primary))" vectorEffect="non-scaling-stroke" />;
+                  })}
+                </svg>
+              </div>
+              <div className="mt-1 flex justify-between px-1 text-[11.5px] font-semibold text-[hsl(var(--dashboard-soft-ink))]">
+                {gradeSummary.map((item) => (
+                  <span key={item.label}>{item.label}</span>
+                ))}
+              </div>
             </div>
           </div>
+
 
           <button
             type="button"
@@ -214,21 +282,26 @@ const PortalDashboard = () => {
           <div>
             <div className="flex items-center gap-2">
               <CalendarCheck2 className="h-4 w-4 text-primary" strokeWidth={2.1} />
-              <h3 className="text-[12px] font-bold text-[hsl(var(--dashboard-ink))]">Attendance This Term</h3>
+              <h3 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">Attendance This Term</h3>
             </div>
-            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">{attendancePresent} days present out of {attendanceTotal || 0}</p>
+            <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">{attendancePresent} days present out of {attendanceTotal || 0}</p>
           </div>
           <span className="text-[10px] font-semibold text-[hsl(var(--dashboard-soft-ink))]">{absentPct}% absent</span>
         </div>
 
         <div className="mt-4 flex items-end justify-between gap-3">
           <div>
-            <p className="text-[28px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">{attendancePct}%</p>
-            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Attendance rate</p>
+            <p
+              className="font-heading text-[26px] font-bold leading-none"
+              style={{ color: attendancePct >= 95 ? "hsl(var(--gsis-status-good))" : "hsl(var(--dashboard-ink))" }}
+            >
+              {attendancePct}%
+            </p>
+            <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">Attendance rate</p>
           </div>
           <div className="text-right">
             <p className="text-[20px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">{attendanceTotal || 0}</p>
-            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Total days</p>
+            <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">Total days</p>
           </div>
         </div>
 
@@ -238,11 +311,14 @@ const PortalDashboard = () => {
 
         <div className="mt-4 flex flex-wrap gap-2">
           {recentAbsences.length === 0 ? (
-            <p className="text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">No recent absences</p>
+            <p className="text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">No recent absences</p>
           ) : (
             recentAbsences.map((absence) => (
-              <div key={absence.date} className="dashboard-compact-pill flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium">
-                <CircleAlert className="h-3.5 w-3.5 text-[hsl(var(--parent-red-end))]" strokeWidth={2.1} />
+              <div
+                key={absence.date}
+                className="flex items-center gap-1.5 rounded-full bg-[hsl(var(--gsis-status-urgent-soft))] px-2.5 py-1 text-[10px] font-medium text-[hsl(var(--gsis-status-urgent))]"
+              >
+                <CircleAlert className="h-3.5 w-3.5" strokeWidth={2.1} />
                 {format(new Date(absence.date), "MMM d")}
               </div>
             ))
@@ -252,7 +328,7 @@ const PortalDashboard = () => {
         <button
           type="button"
           onClick={() => navigate("/portal/attendance")}
-          className="dashboard-compact-button mt-4 inline-flex items-center gap-2 rounded-full px-3 py-2 text-[10.5px] font-semibold"
+          className="dashboard-compact-button mt-4 inline-flex items-center gap-2 rounded-full px-3 py-2 text-[11.5px] font-semibold"
         >
           View Attendance
           <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.2} />
@@ -264,30 +340,49 @@ const PortalDashboard = () => {
           <div>
             <div className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4 text-primary" strokeWidth={2.1} />
-              <h3 className="text-[12px] font-bold text-[hsl(var(--dashboard-ink))]">Messages</h3>
+              <h3 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">Messages</h3>
             </div>
-            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Latest conversation</p>
+            <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">Latest conversations</p>
           </div>
-          <span className="dashboard-compact-pill rounded-full px-2.5 py-1 text-[9px] font-semibold">{unreadMsgCount} unread</span>
+          <span
+            className={`rounded-full px-2.5 py-1 text-[9px] font-semibold ${
+              unreadMsgCount > 0
+                ? "bg-[hsl(var(--gsis-status-urgent-soft))] text-[hsl(var(--gsis-status-urgent))]"
+                : "dashboard-compact-pill"
+            }`}
+          >
+            {unreadMsgCount} unread
+          </span>
         </div>
 
-        {latestMessage ? (
-          <button
-            type="button"
-            onClick={() => navigate("/portal/messages")}
-            className="mt-4 block w-full rounded-[14px] border border-[hsl(var(--parent-card-border))] px-3 py-3 text-left transition-colors hover:bg-muted/30"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <p className="truncate text-[11.5px] font-bold text-[hsl(var(--dashboard-ink))]">{latestMessage.subject}</p>
-              <span className="text-[10px] text-[hsl(var(--dashboard-soft-ink))]">{format(new Date(latestMessage.created_at), "MMM d")}</span>
-            </div>
-            <p className="mt-1 line-clamp-2 text-[10.5px] leading-5 text-[hsl(var(--dashboard-soft-ink))]">{latestMessage.message}</p>
-          </button>
+        {previewMessages.length > 0 ? (
+          <div className="mt-4 space-y-2">
+            {previewMessages.map((message) => (
+              <button
+                key={message.id}
+                type="button"
+                onClick={() => navigate("/portal/messages")}
+                className="flex w-full items-start gap-3 rounded-[14px] border border-[hsl(var(--parent-card-border))] px-3 py-3 text-left transition-colors hover:bg-muted/30"
+              >
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[hsl(var(--parent-blue-soft))] text-[11.5px] font-bold text-primary">
+                  {(message.subject || "M").charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-[11.5px] font-bold text-[hsl(var(--dashboard-ink))]">{message.subject}</p>
+                    <span className="flex-shrink-0 text-[10px] text-[hsl(var(--dashboard-soft-ink))]">{format(new Date(message.created_at), "MMM d")}</span>
+                  </div>
+                  <p className="mt-1 line-clamp-2 text-[11.5px] leading-5 text-[hsl(var(--dashboard-soft-ink))]">{message.message}</p>
+                </div>
+              </button>
+            ))}
+          </div>
         ) : (
-          <div className="mt-4 rounded-[14px] border border-dashed border-[hsl(var(--parent-card-border))] px-4 py-5 text-center text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
+          <div className="mt-4 rounded-[14px] border border-dashed border-[hsl(var(--parent-card-border))] px-4 py-5 text-center text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">
             No messages
           </div>
         )}
+
 
         <button
           type="button"
@@ -351,27 +446,45 @@ const PortalDashboard = () => {
           <div>
             <div className="flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-primary" strokeWidth={2.1} />
-              <h3 className="text-[12px] font-bold text-[hsl(var(--dashboard-ink))]">Fees Summary</h3>
+              <h3 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">Fees Summary</h3>
             </div>
-            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Current balance overview</p>
+            <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">Current balance overview</p>
           </div>
-          <span className="rounded-full bg-[hsl(var(--parent-green-soft))] px-2.5 py-1 text-[9px] font-semibold text-[hsl(var(--parent-green-end))]">{feeStatus}</span>
+          <span
+            className={`rounded-full px-2.5 py-1 text-[9px] font-semibold ${
+              feesResolved
+                ? "bg-[hsl(var(--parent-green-soft))] text-[hsl(var(--parent-green-end))]"
+                : "bg-[hsl(var(--gsis-status-urgent-soft))] text-[hsl(var(--gsis-status-urgent))]"
+            }`}
+          >
+            {feeStatus}
+          </span>
         </div>
 
         <div className="mt-4 flex items-end justify-between gap-3">
           <div>
-            <p className="text-[28px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">GH¢ {outstanding.toLocaleString()}</p>
-            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Outstanding</p>
+            <p className="font-heading text-[26px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">GH¢ {outstanding.toLocaleString()}</p>
+            <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">Outstanding</p>
           </div>
           <div className="text-right">
             <p className="text-[20px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">{paidPercentage}%</p>
-            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Paid</p>
+            <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">Paid</p>
           </div>
         </div>
 
-        <div className="mt-4 h-2.5 rounded-full bg-[hsl(var(--parent-green-soft))]">
-          <div className="h-2.5 rounded-full bg-[hsl(var(--parent-green-end))]" style={{ width: `${paidPercentage}%` }} />
+        <div
+          className={`mt-4 h-2.5 rounded-full ${
+            outstanding > 0 ? "bg-[hsl(var(--gsis-status-urgent-soft))]" : "bg-[hsl(var(--parent-green-soft))]"
+          }`}
+        >
+          <div
+            className={`h-2.5 rounded-full ${
+              outstanding > 0 ? "bg-[hsl(var(--gsis-status-urgent))]" : "bg-[hsl(var(--parent-green-end))]"
+            }`}
+            style={{ width: `${paidPercentage}%` }}
+          />
         </div>
+
 
         <button
           type="button"

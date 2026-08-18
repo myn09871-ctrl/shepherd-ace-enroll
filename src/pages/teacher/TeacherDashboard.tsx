@@ -112,24 +112,9 @@ const TeacherDashboard = () => {
   const classCount = assignedClasses.length;
 
   const stats = [
-    {
-      label: "My Students",
-      value: studentCount,
-      Icon: Users,
-      panel: "teacher-stat-panel-blue",
-    },
-    {
-      label: "Assigned Classes",
-      value: classCount,
-      Icon: School,
-      panel: "teacher-stat-panel-green",
-    },
-    {
-      label: "Pending Tasks",
-      value: pendingTasks,
-      Icon: ClipboardList,
-      panel: "teacher-stat-panel-amber",
-    },
+    { label: "My Students", value: studentCount, Icon: Users },
+    { label: "Assigned Classes", value: classCount, Icon: School },
+    { label: "Pending Tasks", value: pendingTasks, Icon: ClipboardList },
   ];
 
   const quickActions = [
@@ -153,6 +138,32 @@ const TeacherDashboard = () => {
     },
   ];
 
+  const feedItems = [
+    ...recentActivity.map((item) => ({
+      id: item.id,
+      kind: item.type as "grade" | "message",
+      title: item.title,
+      date: item.timestamp,
+      route: item.type === "grade" ? "/teacher/results" : "/teacher/messages",
+    })),
+    ...upcomingEvents.map((event: any) => ({
+      id: event.id,
+      kind: "event" as const,
+      title: event.title,
+      date: event.published_at,
+      route: "/teacher/announcements",
+    })),
+  ]
+    .filter((item) => item.date)
+    .sort((first, second) => new Date(second.date).getTime() - new Date(first.date).getTime())
+    .slice(0, 5);
+
+  const feedStyles = {
+    grade: { Icon: CircleCheckBig, bg: "bg-[hsl(var(--teacher-blue-soft))]", fg: "text-[hsl(var(--teacher-blue))]" },
+    message: { Icon: MessageSquareText, bg: "bg-[hsl(var(--teacher-amber-soft))]", fg: "text-[hsl(var(--teacher-amber))]" },
+    event: { Icon: CalendarRange, bg: "bg-[hsl(var(--teacher-coral-soft))]", fg: "text-[hsl(var(--teacher-coral))]" },
+  } as const;
+
   return (
     <div className="space-y-4 pb-3">
       <section className="teacher-welcome-banner rounded-[18px] px-4 py-4 md:px-5">
@@ -161,132 +172,81 @@ const TeacherDashboard = () => {
             <SunMedium className="h-5 w-5" strokeWidth={2.2} />
           </div>
           <div>
-            <h2 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))] md:text-[14px]">
+            <h2 className="text-[15px] font-bold text-[hsl(var(--dashboard-ink))]">
               {greeting()}, Mr. {lastName}
             </h2>
-            <p className="mt-1 text-[11px] text-[hsl(var(--dashboard-soft-ink))]">
+            <p className="mt-1 text-[12px] text-[hsl(var(--dashboard-soft-ink))]">
               You have {classCount} class{classCount === 1 ? "" : "es"} today.
             </p>
           </div>
         </div>
       </section>
 
-      <section className="space-y-2.5">
-        {stats.map((stat) => (
-          <article key={stat.label} className={`teacher-stat-panel ${stat.panel} rounded-[18px] px-4 py-4`}>
-            <div className="relative flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-semibold text-primary-foreground/88">{stat.label}</p>
-                <p className="mt-2 text-[29px] font-bold leading-none text-primary-foreground">{stat.value}</p>
-              </div>
-              <stat.Icon className="teacher-watermark-icon h-14 w-14 flex-shrink-0" strokeWidth={1.5} />
-            </div>
-          </article>
-        ))}
-      </section>
-
       <section className="space-y-3">
         <h3 className="text-[12px] font-bold uppercase tracking-[0.04em] text-[hsl(var(--dashboard-ink))]">Quick Actions</h3>
 
-        <div className="space-y-2.5">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {quickActions.map((action) => (
             <button
               key={action.label}
               type="button"
               onClick={action.onClick}
-              className="teacher-action-card group flex w-full items-center gap-3 rounded-[16px] px-4 py-4 text-left transition-colors hover:bg-muted/30"
+              className="teacher-action-card group w-full rounded-[16px] px-3 py-4 text-center transition-colors hover:bg-muted/30"
             >
-              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-[hsl(var(--teacher-card-muted))]">
-                <action.Icon className={`h-5 w-5 ${action.icon}`} strokeWidth={2} />
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(var(--teacher-card-muted))]">
+                <action.Icon className={`h-6 w-6 ${action.icon}`} strokeWidth={2} />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-bold text-[hsl(var(--dashboard-ink))]">{action.label}</p>
-                <p className="mt-0.5 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Open</p>
-              </div>
-              <ArrowRight className="h-4 w-4 flex-shrink-0 text-[hsl(var(--dashboard-soft-ink))]" strokeWidth={2} />
+              <p className="mt-2.5 text-center text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">{action.label}</p>
             </button>
           ))}
         </div>
       </section>
 
-      <section className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {stats.map((stat) => (
+          <article key={stat.label} className="teacher-list-card rounded-[18px] px-4 py-4">
+            <stat.Icon className="h-5 w-5 text-primary" strokeWidth={2.1} />
+            <p className="mt-2 text-[11px] font-semibold text-[hsl(var(--dashboard-soft-ink))]">{stat.label}</p>
+            <p className="mt-1 font-heading text-[24px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">{stat.value}</p>
+          </article>
+        ))}
+      </div>
+
+      <section>
         <article className="teacher-list-card rounded-[18px] p-4">
           <div className="mb-3 flex items-center gap-3">
-            <h3 className="text-[12px] font-bold uppercase tracking-[0.04em] text-[hsl(var(--dashboard-ink))]">Recent Activity</h3>
+            <h3 className="text-[12px] font-bold uppercase tracking-[0.04em] text-[hsl(var(--dashboard-ink))]">Recent Updates</h3>
             <div className="teacher-divider h-px flex-1 border-t" />
           </div>
 
           <div className="space-y-2">
-            {recentActivity.length === 0 ? (
+            {feedItems.length === 0 ? (
               <div className="teacher-panel rounded-xl border border-dashed border-border bg-card px-4 py-6 text-center text-[11px] text-muted-foreground">
-                No recent activity
+                No recent updates
               </div>
             ) : (
-              recentActivity.map((item) => {
-                const isGrade = item.type === "grade";
+              feedItems.map((item) => {
+                const style = feedStyles[item.kind];
                 return (
                   <button
-                    key={item.id}
+                    key={`${item.kind}-${item.id}`}
                     type="button"
-                    onClick={() => navigate(isGrade ? "/teacher/results" : "/teacher/messages")}
+                    onClick={() => navigate(item.route)}
                     className="teacher-panel flex w-full items-center gap-3 rounded-xl bg-card px-3 py-3 text-left transition-colors hover:bg-muted/40"
                   >
-                    <div
-                      className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${
-                        isGrade ? "bg-[hsl(var(--teacher-blue-soft))]" : "bg-[hsl(var(--teacher-amber-soft))]"
-                      }`}
-                    >
-                      {isGrade ? (
-                        <CircleCheckBig className="h-4.5 w-4.5 text-[hsl(var(--teacher-blue))]" strokeWidth={2.1} />
-                      ) : (
-                        <MessageSquareText className="h-4.5 w-4.5 text-[hsl(var(--teacher-amber))]" strokeWidth={2.1} />
-                      )}
+                    <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${style.bg}`}>
+                      <style.Icon className={`h-4 w-4 ${style.fg}`} strokeWidth={2.1} />
                     </div>
                     <div className="min-w-0 flex-1">
-                        <p className="truncate text-[11.5px] font-semibold text-[hsl(var(--dashboard-ink))]">{item.title}</p>
+                      <p className="truncate text-[12.5px] font-semibold text-[hsl(var(--dashboard-ink))]">{item.title}</p>
                       <p className="mt-0.5 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
-                        {format(new Date(item.timestamp), "MMM d, yyyy")}
+                        {format(new Date(item.date), "MMM d, yyyy")}
                       </p>
                     </div>
                     <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                   </button>
                 );
               })
-            )}
-          </div>
-        </article>
-
-        <article className="teacher-list-card rounded-[18px] p-4">
-          <div className="mb-3 flex items-center gap-3">
-            <h3 className="text-[12px] font-bold uppercase tracking-[0.04em] text-[hsl(var(--dashboard-ink))]">Upcoming Events</h3>
-            <div className="teacher-divider h-px flex-1 border-t" />
-          </div>
-
-          <div className="space-y-2">
-            {upcomingEvents.length === 0 ? (
-              <div className="teacher-panel rounded-xl border border-dashed border-border bg-card px-4 py-6 text-center text-[11px] text-muted-foreground">
-                No upcoming events
-              </div>
-            ) : (
-              upcomingEvents.map((event) => (
-                <button
-                  key={event.id}
-                  type="button"
-                  onClick={() => navigate("/teacher/announcements")}
-                  className="teacher-panel flex w-full items-center gap-3 rounded-xl bg-card px-3 py-3 text-left transition-colors hover:bg-muted/40"
-                >
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[hsl(var(--teacher-coral-soft))]">
-                    <CalendarRange className="h-4.5 w-4.5 text-[hsl(var(--teacher-coral))]" strokeWidth={2.1} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[11.5px] font-semibold text-[hsl(var(--dashboard-ink))]">{event.title}</p>
-                    <p className="mt-0.5 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
-                      {event.published_at ? format(new Date(event.published_at), "MMM d, yyyy") : "Published recently"}
-                    </p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                </button>
-              ))
             )}
           </div>
         </article>
