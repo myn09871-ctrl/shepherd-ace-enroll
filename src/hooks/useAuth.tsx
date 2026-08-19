@@ -70,7 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (data) {
         const role = data.role?.toLowerCase();
-        if (role === "admin" || role === "school_admin" || role === "teacher") {
+        if (role === "admin" || role === "school_admin" || role === "super_admin" || role === "teacher") {
           setIsAdmin(true);
           setUserRole(data.role);
         } else {

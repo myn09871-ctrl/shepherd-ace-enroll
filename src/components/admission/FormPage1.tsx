@@ -14,7 +14,7 @@ import {
   Page1Data,
   programLevels,
   careerTrainingOptions,
-  securityQuestions,
+  
   medicalConditions,
   immunizationsList,
   subjectCategories,
@@ -408,25 +408,6 @@ const FormPage1 = ({ form }: FormPage1Props) => {
               </button>
             </div>
             {errors.portal_password_confirm && <p className="text-destructive text-sm mt-1">{getErrorMessage(errors.portal_password_confirm)}</p>}
-          </div>
-          <div>
-            <Label>Security Question *</Label>
-            <Select onValueChange={(val) => setValue("security_question", val)} value={watch("security_question")}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a security question" />
-              </SelectTrigger>
-              <SelectContent>
-                {securityQuestions.map((q) => (
-                  <SelectItem key={q} value={q}>{q}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.security_question && <p className="text-destructive text-sm mt-1">{getErrorMessage(errors.security_question)}</p>}
-          </div>
-          <div>
-            <Label htmlFor="security_answer">Security Answer *</Label>
-            <Input id="security_answer" {...register("security_answer")} placeholder="Your answer (case-sensitive)" />
-            {errors.security_answer && <p className="text-destructive text-sm mt-1">{getErrorMessage(errors.security_answer)}</p>}
           </div>
         </div>
       </section>

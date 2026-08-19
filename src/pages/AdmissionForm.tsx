@@ -79,8 +79,6 @@ const AdmissionForm = () => {
       intended_start_date: "",
       // Portal account fields
       portal_email: "",
-      security_question: "",
-      security_answer: "",
     },
   });
 
@@ -302,7 +300,7 @@ const AdmissionForm = () => {
       // Portal Account
       addSection("PARENT PORTAL ACCOUNT");
       addField("Portal Email", page1Data.portal_email);
-      addField("Security Question", page1Data.security_question);
+      
 
       // SECTION E
       pdf.addPage(); yPos = 20;
@@ -462,8 +460,6 @@ const AdmissionForm = () => {
         // Portal account fields
         portal_email: page1Data.portal_email,
         portal_password_hash: page1Data.portal_password,
-        security_question: page1Data.security_question,
-        security_answer: page1Data.security_answer,
         // Section E - Father
         guardian1_relationship: page2Data.guardian1_relationship,
         guardian1_full_name: page2Data.guardian1_full_name,
