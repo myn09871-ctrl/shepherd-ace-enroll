@@ -1,134 +1,105 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, BookOpen, CalendarCheck, ClipboardList, CheckCircle, MessageSquare, Calendar } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import {
+  Users,
+  School,
+  ClipboardList,
+  CalendarCheck2,
+  FileSignature,
+  NotebookPen,
+  SunMedium,
+  ChevronRight,
+  CircleCheckBig,
+  MessageSquareText,
+  CalendarRange,
+  ArrowRight,
+} from "lucide-react";
+import { format } from "date-fns";
 import { useTeacherAuth } from "@/hooks/useTeacherAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
 
-interface RecentActivityItem {
+interface ActivityItem {
   id: string;
-  type: "assignment" | "message" | "grade";
+  type: "grade" | "message";
   title: string;
-  description: string;
   timestamp: string;
 }
 
-interface UpcomingEvent {
-  id: string;
-  title: string;
-  date: string;
-  type: "event" | "deadline";
-}
-
 const TeacherDashboard = () => {
-  const { teacherProfile, assignedClasses } = useTeacherAuth();
+  const { teacherProfile, assignedClasses, user } = useTeacherAuth();
   const navigate = useNavigate();
   const [studentCount, setStudentCount] = useState(0);
   const [pendingTasks, setPendingTasks] = useState(0);
-  const [recentActivity, setRecentActivity] = useState<RecentActivityItem[]>([]);
-  const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
 
   useEffect(() => {
-    if (assignedClasses.length > 0 || teacherProfile) {
-      fetchDashboardData();
-    }
-  }, [assignedClasses, teacherProfile]);
+    if (assignedClasses.length > 0 && user) {
+      const classNames = assignedClasses.map((assignment) => assignment.class_name);
 
-  const fetchDashboardData = async () => {
-    if (!teacherProfile) return;
+      supabase
+        .from("students")
+        .select("id", { count: "exact", head: true })
+        .in("current_class", classNames)
+        .eq("status", "active")
+        .then(({ count }) => setStudentCount(count || 0));
 
-    try {
-      // Fetch student count
-      if (assignedClasses.length > 0) {
-        const classNames = assignedClasses.map(c => c.class_name);
-        const { count } = await supabase
-          .from("students")
-          .select("id", { count: "exact", head: true })
-          .in("current_class", classNames)
-          .eq("status", "active");
-
-        setStudentCount(count || 0);
-      }
-
-      // Fetch assignments (pending tasks)
-      const { data: assignmentsData } = await supabase
+      supabase
         .from("assignments")
-        .select("id")
-        .eq("teacher_id", teacherProfile.id)
-        .gt("due_date", new Date().toISOString().split("T")[0]);
+        .select("id", { count: "exact", head: true })
+        .in("class_name", classNames)
+        .gte("due_date", new Date().toISOString().split("T")[0])
+        .then(({ count }) => setPendingTasks(count || 0));
 
-      setPendingTasks(assignmentsData?.length || 0);
+      (async () => {
+        const activities: ActivityItem[] = [];
+        const { data: grades } = await supabase
+          .from("grades")
+          .select("id, posted_at, subjects(name)")
+          .eq("posted_by", user.id)
+          .order("posted_at", { ascending: false })
+          .limit(2);
 
-      // Fetch recent activity (assignments + messages)
-      const activities: RecentActivityItem[] = [];
-
-      const { data: recentAssignments } = await supabase
-        .from("assignments")
-        .select("id, title, created_at")
-        .eq("teacher_id", teacherProfile.id)
-        .order("created_at", { ascending: false })
-        .limit(3);
-
-      recentAssignments?.forEach((assignment) => {
-        activities.push({
-          id: assignment.id,
-          type: "assignment",
-          title: assignment.title,
-          description: "New assignment created",
-          timestamp: assignment.created_at,
+        grades?.forEach((grade: any) => {
+          if (grade.posted_at) {
+            activities.push({
+              id: grade.id,
+              type: "grade",
+              title: `Graded results for ${grade.subjects?.name || "class"}`,
+              timestamp: grade.posted_at,
+            });
+          }
         });
-      });
 
-      // Recent messages to parents
-      const { data: recentMessages } = await supabase
-        .from("parent_messages")
-        .select("id, subject, created_at")
-        .eq("sender_id", teacherProfile.user_id)
-        .order("created_at", { ascending: false })
-        .limit(2);
+        const { data: messages } = await supabase
+          .from("parent_messages")
+          .select("id, subject, created_at")
+          .eq("sender_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(2);
 
-      recentMessages?.forEach((message) => {
-        activities.push({
-          id: message.id,
-          type: "message",
-          title: message.subject,
-          description: "Message to parent",
-          timestamp: message.created_at,
+        messages?.forEach((message) => {
+          activities.push({
+            id: message.id,
+            type: "message",
+            title: message.subject,
+            timestamp: message.created_at,
+          });
         });
-      });
 
-      activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-      setRecentActivity(activities.slice(0, 5));
+        activities.sort((first, second) => new Date(second.timestamp).getTime() - new Date(first.timestamp).getTime());
+        setRecentActivity(activities.slice(0, 3));
+      })();
 
-      // Fetch upcoming events (using portal_announcements for school events)
-      const { data: upcomingSchoolEvents } = await supabase
+      supabase
         .from("portal_announcements")
         .select("id, title, published_at")
         .eq("is_published", true)
         .order("published_at", { ascending: false })
-        .limit(2);
-
-      const events: UpcomingEvent[] = [];
-      upcomingSchoolEvents?.forEach((event) => {
-        events.push({
-          id: event.id,
-          title: event.title,
-          date: event.published_at || new Date().toISOString(),
-          type: "event",
-        });
-      });
-
-      setUpcomingEvents(events);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-    } finally {
-      setLoading(false);
+        .limit(3)
+        .then(({ data }) => setUpcomingEvents(data || []));
     }
-  };
+  }, [assignedClasses, user]);
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -137,139 +108,149 @@ const TeacherDashboard = () => {
     return "Good Evening";
   };
 
-  const teacherFirstName = teacherProfile?.full_name?.split(" ")[0] || "Teacher";
+  const lastName = teacherProfile?.full_name?.split(" ").slice(-1)[0] || "Teacher";
+  const classCount = assignedClasses.length;
 
   const stats = [
-    { label: "My Students", value: studentCount, icon: Users, color: "from-blue-500 to-blue-600" },
-    { label: "Assigned Classes", value: assignedClasses.length, icon: BookOpen, color: "from-emerald-500 to-emerald-600" },
-    { label: "Pending Tasks", value: pendingTasks, icon: ClipboardList, color: "from-orange-500 to-orange-600" },
+    { label: "My Students", value: studentCount, Icon: Users },
+    { label: "Assigned Classes", value: classCount, Icon: School },
+    { label: "Pending Tasks", value: pendingTasks, Icon: ClipboardList },
   ];
 
   const quickActions = [
-    { label: "Mark Attendance", icon: CalendarCheck, path: "/teacher/attendance" },
-    { label: "Enter Results", icon: CheckCircle, path: "/teacher/results" },
-    { label: "Create Assignment", icon: ClipboardList, path: "/teacher/assignments" },
+    {
+      label: "Mark Attendance",
+      Icon: CalendarCheck2,
+      onClick: () => navigate("/teacher/attendance"),
+      icon: "text-[hsl(var(--teacher-green))]",
+    },
+    {
+      label: "Enter Results",
+      Icon: FileSignature,
+      onClick: () => navigate("/teacher/results"),
+      icon: "text-[hsl(var(--teacher-coral))]",
+    },
+    {
+      label: "Create Assignment",
+      Icon: NotebookPen,
+      onClick: () => navigate("/teacher/assignments"),
+      icon: "text-[hsl(var(--teacher-blue))]",
+    },
   ];
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  const feedItems = [
+    ...recentActivity.map((item) => ({
+      id: item.id,
+      kind: item.type as "grade" | "message",
+      title: item.title,
+      date: item.timestamp,
+      route: item.type === "grade" ? "/teacher/results" : "/teacher/messages",
+    })),
+    ...upcomingEvents.map((event: any) => ({
+      id: event.id,
+      kind: "event" as const,
+      title: event.title,
+      date: event.published_at,
+      route: "/teacher/announcements",
+    })),
+  ]
+    .filter((item) => item.date)
+    .sort((first, second) => new Date(second.date).getTime() - new Date(first.date).getTime())
+    .slice(0, 5);
+
+  const feedStyles = {
+    grade: { Icon: CircleCheckBig, bg: "bg-[hsl(var(--teacher-blue-soft))]", fg: "text-[hsl(var(--teacher-blue))]" },
+    message: { Icon: MessageSquareText, bg: "bg-[hsl(var(--teacher-amber-soft))]", fg: "text-[hsl(var(--teacher-amber))]" },
+    event: { Icon: CalendarRange, bg: "bg-[hsl(var(--teacher-coral-soft))]", fg: "text-[hsl(var(--teacher-coral))]" },
+  } as const;
 
   return (
-    <div className="space-y-4">
-      {/* Greeting Card */}
-      <Card className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">👋</span>
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">{greeting()}, {teacherFirstName}!</h2>
-              <p className="text-sm text-muted-foreground">You have {assignedClasses.length} classes today.</p>
-            </div>
+    <div className="space-y-4 pb-3">
+      <section className="teacher-welcome-banner rounded-[18px] px-4 py-4 md:px-5">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[hsl(var(--teacher-welcome-icon)/0.16)] text-[hsl(var(--teacher-welcome-icon-foreground))]">
+            <SunMedium className="h-5 w-5" strokeWidth={2.2} />
           </div>
-        </CardContent>
-      </Card>
+          <div>
+            <h2 className="text-[15px] font-bold text-[hsl(var(--dashboard-ink))]">
+              {greeting()}, Mr. {lastName}
+            </h2>
+            <p className="mt-1 text-[12px] text-[hsl(var(--dashboard-soft-ink))]">
+              You have {classCount} class{classCount === 1 ? "" : "es"} today.
+            </p>
+          </div>
+        </div>
+      </section>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {stats.map((stat) => (
-          <Card key={stat.label} className="overflow-hidden">
-            <div className={`bg-gradient-to-r ${stat.color} p-4 text-white`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm opacity-90">{stat.label}</p>
-                  <p className="text-3xl md:text-4xl font-bold">{stat.value}</p>
-                </div>
-                <div className="opacity-20">
-                  <stat.icon className="h-12 w-12" />
-                </div>
+      <section className="space-y-3">
+        <h3 className="text-[12px] font-bold uppercase tracking-[0.04em] text-[hsl(var(--dashboard-ink))]">Quick Actions</h3>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {quickActions.map((action) => (
+            <button
+              key={action.label}
+              type="button"
+              onClick={action.onClick}
+              className="teacher-action-card group w-full rounded-[16px] px-3 py-4 text-center transition-colors hover:bg-muted/30"
+            >
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(var(--teacher-card-muted))]">
+                <action.Icon className={`h-6 w-6 ${action.icon}`} strokeWidth={2} />
               </div>
-            </div>
-          </Card>
+              <p className="mt-2.5 text-center text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">{action.label}</p>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {stats.map((stat) => (
+          <article key={stat.label} className="teacher-list-card rounded-[18px] px-4 py-4">
+            <stat.Icon className="h-5 w-5 text-primary" strokeWidth={2.1} />
+            <p className="mt-2 text-[11px] font-semibold text-[hsl(var(--dashboard-soft-ink))]">{stat.label}</p>
+            <p className="mt-1 font-heading text-[24px] font-bold leading-none text-[hsl(var(--dashboard-ink))]">{stat.value}</p>
+          </article>
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {quickActions.map((action) => (
-              <Button
-                key={action.label}
-                variant="outline"
-                className="h-auto py-5 flex flex-col gap-3 rounded-xl border-2 hover:border-primary hover:bg-primary/5 transition"
-                onClick={() => navigate(action.path)}
-              >
-                <div className="p-3 rounded-lg bg-primary/10">
-                  <action.icon className="h-6 w-6 text-primary" />
-                </div>
-                <span className="text-sm font-medium">{action.label}</span>
-              </Button>
-            ))}
+      <section>
+        <article className="teacher-list-card rounded-[18px] p-4">
+          <div className="mb-3 flex items-center gap-3">
+            <h3 className="text-[12px] font-bold uppercase tracking-[0.04em] text-[hsl(var(--dashboard-ink))]">Recent Updates</h3>
+            <div className="teacher-divider h-px flex-1 border-t" />
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Recent Activity & Upcoming Events */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {recentActivity.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No recent activity</p>
+          <div className="space-y-2">
+            {feedItems.length === 0 ? (
+              <div className="teacher-panel rounded-xl border border-dashed border-border bg-card px-4 py-6 text-center text-[11px] text-muted-foreground">
+                No recent updates
+              </div>
             ) : (
-              recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition cursor-pointer">
-                  <div className={`flex-shrink-0 p-2 rounded-lg ${activity.type === "assignment" ? "bg-blue-100 dark:bg-blue-900" : activity.type === "message" ? "bg-yellow-100 dark:bg-yellow-900" : "bg-green-100 dark:bg-green-900"}`}>
-                    {activity.type === "assignment" && <ClipboardList className={`h-4 w-4 ${activity.type === "assignment" ? "text-blue-600 dark:text-blue-300" : "text-yellow-600"}`} />}
-                    {activity.type === "message" && <MessageSquare className="h-4 w-4 text-yellow-600 dark:text-yellow-300" />}
-                    {activity.type === "grade" && <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-300" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{activity.title}</p>
-                    <p className="text-xs text-muted-foreground">{activity.description}</p>
-                  </div>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">{format(new Date(activity.timestamp), "MMM d")}</span>
-                </div>
-              ))
+              feedItems.map((item) => {
+                const style = feedStyles[item.kind];
+                return (
+                  <button
+                    key={`${item.kind}-${item.id}`}
+                    type="button"
+                    onClick={() => navigate(item.route)}
+                    className="teacher-panel flex w-full items-center gap-3 rounded-xl bg-card px-3 py-3 text-left transition-colors hover:bg-muted/40"
+                  >
+                    <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${style.bg}`}>
+                      <style.Icon className={`h-4 w-4 ${style.fg}`} strokeWidth={2.1} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[12.5px] font-semibold text-[hsl(var(--dashboard-ink))]">{item.title}</p>
+                      <p className="mt-0.5 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
+                        {format(new Date(item.date), "MMM d, yyyy")}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                  </button>
+                );
+              })
             )}
-          </CardContent>
-        </Card>
-
-        {/* Upcoming Events */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Upcoming Events</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {upcomingEvents.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No upcoming events</p>
-            ) : (
-              upcomingEvents.map((event) => (
-                <div key={event.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition cursor-pointer">
-                  <div className="flex-shrink-0 p-2 rounded-lg bg-red-100 dark:bg-red-900">
-                    <Calendar className="h-4 w-4 text-red-600 dark:text-red-300" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{event.title}</p>
-                  </div>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">{format(new Date(event.date), "MMM d")}</span>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </article>
+      </section>
     </div>
   );
 };

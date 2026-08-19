@@ -1,22 +1,17 @@
 import { Link, useLocation } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  GraduationCap, 
-  Megaphone, 
-  Folder, 
-  Clock, 
-  Mail, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Users,
+  Mail,
+  Folder,
+  Clock,
+  CreditCard,
   LogOut,
   X,
-  Home,
-  CreditCard,
-  CalendarCheck,
-  FileText,
-  ClipboardList
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useParentAuth } from "@/hooks/useParentAuth";
+import { cn } from "@/lib/utils";
 import schoolCrest from "@/assets/school-crest.jpeg";
 
 interface Student {
@@ -28,133 +23,105 @@ interface Student {
   photo_url: string | null;
 }
 
-// Full navigation with Fees and Attendance
 const navItems = [
-  { href: "/portal", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/portal/academics", label: "Academic Performance", icon: GraduationCap },
-  { href: "/portal/report-card", label: "Report Card", icon: FileText },
-  { href: "/portal/fees", label: "Fees & Payments", icon: CreditCard },
-  { href: "/portal/attendance", label: "Attendance", icon: CalendarCheck },
-  { href: "/portal/announcements", label: "Announcements", icon: Megaphone },
+  { href: "/portal", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/portal/profile", label: "My Children", icon: Users },
+  { href: "/portal/messages", label: "Messages", icon: Mail, hasBadge: true },
   { href: "/portal/documents", label: "Documents", icon: Folder },
-  { href: "/portal/assignments", label: "Assignments", icon: ClipboardList },
   { href: "/portal/timetable", label: "Timetable", icon: Clock },
-  { href: "/portal/messages", label: "Messages", icon: Mail },
-  { href: "/portal/profile", label: "Profile Settings", icon: Settings },
+  { href: "/portal/fees", label: "Fees", icon: CreditCard },
 ];
 
 interface ParentSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   student: Student | null;
+  unreadCount?: number;
 }
 
-const ParentSidebar = ({ isOpen, onClose, student }: ParentSidebarProps) => {
+const ParentSidebar = ({ isOpen, onClose, unreadCount = 0 }: ParentSidebarProps) => {
   const location = useLocation();
   const { signOut } = useParentAuth();
-
-  const handleSignOut = async () => {
-    await signOut();
-  };
 
   return (
     <>
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+        <div
+          className="fixed inset-0 z-40 bg-foreground/30 backdrop-blur-[1px] lg:hidden"
           onClick={onClose}
         />
       )}
 
-      <aside className={`
-        fixed top-0 left-0 z-50 h-full w-64 bg-card border-r border-border
-        transform transition-transform duration-200 ease-in-out flex flex-col
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0
-      `}>
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <img src={schoolCrest} alt="School Crest" className="h-10 w-10 rounded-full object-cover" />
-            <div>
-              <h2 className="font-semibold text-sm text-foreground">Parent Portal</h2>
-              <p className="text-xs text-muted-foreground">Good Shepherd Int'l</p>
+        <aside
+          className={cn(
+            "parent-sidebar-surface fixed left-0 top-0 z-50 flex h-full w-56 flex-col transition-transform duration-200 ease-in-out",
+            "lg:left-5 lg:top-5 lg:h-[calc(100vh-2.5rem)] lg:rounded-l-[18px]",
+            isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          )}
+        >
+          <div className="flex items-center justify-between border-b border-primary-foreground/10 px-4 py-5 lg:block">
+          <Link to="/portal" className="flex items-center gap-3" onClick={onClose}>
+            <img
+              src={schoolCrest}
+              alt="Good Shepherd International School crest"
+              className="h-12 w-12 rounded-xl object-cover ring-1 ring-border/70"
+            />
+              <div className="leading-tight text-primary-foreground">
+                <p className="text-[10px] font-bold uppercase tracking-[0.1em]">GOOD SHEPHERD</p>
+                <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-primary-foreground/86">INTERNATIONAL SCHOOL</p>
             </div>
-          </div>
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={onClose}>
-            <X className="h-5 w-5" />
+          </Link>
+
+          <Button
+            variant="ghost"
+            size="icon"
+              className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground lg:hidden"
+            onClick={onClose}
+          >
+            <X className="h-4 w-4" />
           </Button>
         </div>
 
-        {/* Student Card */}
-        {student && (
-          <div className="p-4 border-b border-border flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                {student.photo_url ? (
-                  <img src={student.photo_url} alt="" className="h-12 w-12 rounded-full object-cover" />
-                ) : (
-                  <span className="text-lg font-semibold text-primary">
-                    {student.first_name[0]}{student.surname[0]}
-                  </span>
-                )}
-              </div>
-              <div>
-                <p className="font-medium text-sm text-foreground">
-                  {student.first_name} {student.surname}
-                </p>
-                <p className="text-xs text-muted-foreground">{student.current_class}</p>
-                <p className="text-xs text-primary">{student.student_id}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Navigation - scrollable */}
-        <nav className="flex-1 overflow-y-auto p-3">
-          <ul className="space-y-1">
+        <nav className="flex-1 overflow-y-auto px-3 py-5">
+          <div className="space-y-2">
             {navItems.map((item) => {
-              const isActive = location.pathname === item.href || 
-                (item.href !== "/portal" && location.pathname.startsWith(item.href));
+              const isActive = item.exact
+                ? location.pathname === item.href
+                : location.pathname === item.href || location.pathname.startsWith(item.href + "/");
+
               return (
-                <li key={item.href}>
-                  <Link
-                    to={item.href}
-                    onClick={onClose}
-                    className={`
-                      flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors
-                      ${isActive 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                      }
-                    `}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {item.label}
-                  </Link>
-                </li>
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  onClick={onClose}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl px-3.5 py-3 text-[11.5px] font-semibold uppercase tracking-[0.03em] transition-all",
+                    isActive
+                      ? "parent-sidebar-link-active"
+                      : "parent-sidebar-link"
+                  )}
+                >
+                  <item.icon className="h-[18px] w-[18px] flex-shrink-0" strokeWidth={2.1} />
+                  <span className="flex-1">{item.label}</span>
+                  {item.hasBadge && unreadCount > 0 && (
+                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[hsl(var(--dashboard-badge))] px-1 text-[9px] font-bold text-primary-foreground">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </Link>
               );
             })}
-          </ul>
+          </div>
         </nav>
 
-        {/* Footer - fixed */}
-        <div className="p-3 border-t border-border space-y-1 flex-shrink-0">
-          <Link to="/" className="w-full">
-            <Button variant="outline" className="w-full justify-start" size="sm">
-              <Home className="h-4 w-4 mr-2" />
-              Visit Website
-            </Button>
-          </Link>
-          <Button 
-            variant="ghost" 
-            className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10" 
-            size="sm"
-            onClick={handleSignOut}
+        <div className="px-3 py-4">
+          <button
+            onClick={() => signOut()}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary-foreground/20 bg-primary-foreground/6 px-3 py-2.5 text-[11px] font-semibold uppercase tracking-[0.03em] text-primary-foreground transition-colors hover:bg-primary-foreground/10"
           >
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+            <LogOut className="h-3.5 w-3.5" />
+            <span>Log Out</span>
+          </button>
         </div>
       </aside>
     </>
