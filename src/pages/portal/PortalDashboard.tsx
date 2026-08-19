@@ -399,9 +399,9 @@ const PortalDashboard = () => {
           <div>
             <div className="flex items-center gap-2">
               <Megaphone className="h-4 w-4 text-primary" strokeWidth={2.1} />
-              <h3 className="text-[12px] font-bold text-[hsl(var(--dashboard-ink))]">Latest Announcements</h3>
+              <h3 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">Latest Announcements</h3>
             </div>
-            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">School updates</p>
+            <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">School updates</p>
           </div>
           <span className="dashboard-compact-pill rounded-full px-2.5 py-1 text-[9px] font-semibold">{announcements.length}</span>
         </div>
