@@ -516,7 +516,7 @@ const PortalDashboard = () => {
 
         <div className="mt-4 space-y-2">
           {documents.length === 0 ? (
-            <div className="rounded-[14px] border border-dashed border-[hsl(var(--parent-card-border))] px-4 py-5 text-center text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">
+            <div className="rounded-[14px] border border-dashed border-[hsl(var(--parent-card-border))] px-4 py-5 text-center text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">
               No documents available
             </div>
           ) : (
