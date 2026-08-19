@@ -53,13 +53,6 @@ const Hero = () => {
             className="text-primary-foreground space-y-4 sm:space-y-6 lg:space-y-8"
             style={{ transform: `translateY(${scrollY * -0.1}px)` }}
           >
-            {/* Badge with glassmorphism */}
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-lg border border-white/30 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 animate-fade-up hover:scale-105 hover:bg-white/20 transition-all duration-300 shadow-lg">
-              <Award className="h-3 w-3 sm:h-4 sm:w-4 text-accent animate-pulse" />
-              <span className="text-xs sm:text-sm font-medium">
-                100% BECE Distinction Rate
-              </span>
-            </div>
 
             {/* Heading */}
             <h1 className="font-heading text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight animate-fade-up animation-delay-100">
@@ -127,35 +120,18 @@ const Hero = () => {
             <div className="relative group">
               {/* Glow Effect */}
               <div className="absolute inset-0 bg-accent/30 blur-3xl rounded-full scale-75 group-hover:scale-90 transition-transform duration-500" />
-              
-              {/* Rotating Ring */}
-              <div className="absolute inset-0 border-4 border-dashed border-primary-foreground/10 rounded-full scale-150 animate-spin" style={{ animationDuration: "30s" }} />
-              
+
               {/* Crest */}
               <img
                 src={schoolCrest}
                 alt="Good Shepherd International School Crest"
                 className="relative z-10 w-80 h-auto drop-shadow-2xl animate-float group-hover:scale-105 transition-transform duration-500"
               />
-              
-              {/* Decorative Ring */}
-              <div className="absolute inset-0 border-4 border-primary-foreground/20 rounded-full scale-125 animate-pulse" />
-              
-              {/* Floating particles */}
-              <div className="absolute -top-4 -right-4 w-3 h-3 bg-accent rounded-full animate-float" />
-              <div className="absolute -bottom-6 -left-6 w-4 h-4 bg-secondary/50 rounded-full animate-float animation-delay-300" />
-              <div className="absolute top-1/2 -right-8 w-2 h-2 bg-primary-foreground/50 rounded-full animate-float animation-delay-600" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Scroll Indicator with better animation */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-        <div className="w-6 h-10 border-2 border-primary-foreground/50 rounded-full flex justify-center backdrop-blur-sm">
-          <div className="w-1 h-3 bg-primary-foreground/70 rounded-full mt-2 animate-pulse" />
-        </div>
-      </div>
     </section>
   );
 };
