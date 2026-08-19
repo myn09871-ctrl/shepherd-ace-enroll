@@ -60,11 +60,11 @@ export const programSchema = z.object({
   intended_start_date: z.string().optional(),
 });
 
-// Portal account schema for admission form (without password fields for security)
+// Portal account schema for admission form
 export const portalAccountBaseSchema = z.object({
   portal_email: z.string().email("Valid email is required for portal access"),
-  security_question: z.string().min(1, "Please select a security question"),
-  security_answer: z.string().min(2, "Security answer is required"),
+  portal_password: z.string().min(8, "Password must be at least 8 characters"),
+  portal_password_confirm: z.string().min(8, "Please confirm your password"),
 });
 
 // Section E: Biological Family Data - Father (reuses guardian1_ prefix)
@@ -244,15 +244,6 @@ export const specialNeedsOptions = [
   "Visual or Hearing Impairments",
   "Behavioral Challenges",
   "Other",
-];
-
-export const securityQuestions = [
-  "What is your mother's maiden name?",
-  "What city were you born in?",
-  "What was the name of your first pet?",
-  "What is your favorite teacher's name?",
-  "What is your favorite childhood memory location?",
-  "What was the make of your first car?",
 ];
 
 export const immunizationsList = [
