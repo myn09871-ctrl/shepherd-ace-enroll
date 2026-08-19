@@ -1,4 +1,4 @@
-import { Phone, MapPin, Heart } from "lucide-react";
+import { Phone, MapPin } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import schoolCrest from "@/assets/school-crest.jpeg";
 
@@ -140,12 +140,9 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-primary-foreground/10 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-primary-foreground/50 text-sm text-center md:text-left">
+        <div className="border-t border-primary-foreground/10 mt-12 pt-8">
+          <p className="w-full text-primary-foreground/50 text-sm text-center md:text-left">
             © {currentYear} Good Shepherd International School. All rights reserved.
-          </p>
-          <p className="text-primary-foreground/50 text-sm flex items-center gap-1">
-            Made with <Heart className="h-4 w-4 text-destructive fill-current" /> for our students
           </p>
         </div>
       </div>
