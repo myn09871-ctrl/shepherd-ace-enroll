@@ -501,9 +501,9 @@ const PortalDashboard = () => {
           <div>
             <div className="flex items-center gap-2">
               <ReceiptText className="h-4 w-4 text-primary" strokeWidth={2.1} />
-              <h3 className="text-[12px] font-bold text-[hsl(var(--dashboard-ink))]">Recent Documents</h3>
+              <h3 className="text-[13px] font-bold text-[hsl(var(--dashboard-ink))]">Recent Documents</h3>
             </div>
-            <p className="mt-1 text-[10.5px] text-[hsl(var(--dashboard-soft-ink))]">Latest files for your child</p>
+            <p className="mt-1 text-[11.5px] text-[hsl(var(--dashboard-soft-ink))]">Latest files for your child</p>
           </div>
           <button
             type="button"
