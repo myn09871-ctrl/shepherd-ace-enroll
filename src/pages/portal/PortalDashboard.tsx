@@ -421,11 +421,11 @@ const PortalDashboard = () => {
               >
                 <div className="flex items-center justify-between gap-2">
                   <p className="truncate text-[11.5px] font-bold text-[hsl(var(--dashboard-ink))]">{announcement.title}</p>
-                  <span className="text-[9.5px] text-[hsl(var(--dashboard-soft-ink))]">
+                  <span className="text-[10px] text-[hsl(var(--dashboard-soft-ink))]">
                     {announcement.published_at ? format(new Date(announcement.published_at), "MMM d") : "Recent"}
                   </span>
                 </div>
-                <p className="mt-1 line-clamp-2 text-[10.5px] leading-5 text-[hsl(var(--dashboard-soft-ink))]">{announcement.content}</p>
+                <p className="mt-1 line-clamp-2 text-[11.5px] leading-5 text-[hsl(var(--dashboard-soft-ink))]">{announcement.content}</p>
               </button>
             ))
           )}
