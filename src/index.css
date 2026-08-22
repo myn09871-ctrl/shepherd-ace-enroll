@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,41 +7,41 @@
 @layer base {
   :root {
     /* Good Shepherd International School - Blue & White Theme */
-    --background: 210 50% 98%;
-    --foreground: 220 60% 15%;
+    --background: 45 29% 97%;
+    --foreground: 210 24% 16%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 60% 15%;
+    --card-foreground: 210 24% 16%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 60% 15%;
+    --popover-foreground: 210 24% 16%;
 
     /* Royal Blue - Primary Brand Color */
-    --primary: 230 70% 35%;
+    --primary: 211 70% 24%;
     --primary-foreground: 0 0% 100%;
 
     /* Cyan/Turquoise - Secondary from crest cross */
-    --secondary: 180 60% 45%;
+    --secondary: 352 59% 30%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 30% 94%;
-    --muted-foreground: 220 20% 45%;
+    --muted: 42 22% 93%;
+    --muted-foreground: 210 12% 40%;
 
     /* Light Blue Accent - reduced gold, more blue/white */
-    --accent: 210 80% 50%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 41 56% 51%;
+    --accent-foreground: 211 70% 18%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 30% 88%;
-    --input: 210 30% 88%;
-    --ring: 230 70% 35%;
+    --border: 40 18% 86%;
+    --input: 40 18% 86%;
+    --ring: 211 70% 24%;
 
-    --radius: 0.75rem;
+    --radius: 0.25rem;
 
     /* Custom Design Tokens */
-    --gradient-hero: linear-gradient(135deg, hsl(230 70% 35%) 0%, hsl(220 80% 25%) 50%, hsl(180 60% 35%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsla(211 70% 12% / 0.55) 0%, hsla(211 70% 14% / 0.78) 100%);
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 50% 98%) 100%);
     --gradient-cta: linear-gradient(135deg, hsl(210 80% 50%) 0%, hsl(200 85% 45%) 100%);
     --gradient-overlay: linear-gradient(180deg, hsla(230 70% 35% / 0.9) 0%, hsla(220 80% 25% / 0.95) 100%);
@@ -113,8 +113,8 @@
     --gsis-status-urgent-soft: 0 100% 97%;
     --gsis-status-neutral: 219 24% 43%;
 
-    --font-heading: 'Space Grotesk', system-ui, sans-serif;
-    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-heading: 'Fraunces', 'Georgia', serif;
+    --font-body: 'Source Sans 3', system-ui, sans-serif;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -184,11 +184,26 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
-    letter-spacing: -0.025em;
+    letter-spacing: -0.01em;
   }
 }
 
 @layer components {
+  .eyebrow {
+    font-family: var(--font-body);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: hsl(var(--accent));
+  }
+
+  .rule-gold {
+    width: 3rem;
+    height: 2px;
+    background: hsl(var(--accent));
+  }
+
   .text-gradient {
     @apply bg-clip-text text-transparent;
     background-image: var(--gradient-hero);
