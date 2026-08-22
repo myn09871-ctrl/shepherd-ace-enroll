@@ -1,13 +1,13 @@
-import { ArrowRight, Award, Users, BookOpen } from "lucide-react";
+import { ArrowRight, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useRef } from "react";
-import schoolCrest from "@/assets/school-crest.jpeg";
 import schoolBuilding from "@/assets/school-building.webp";
 
 const Hero = () => {
   const [scrollY, setScrollY] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
+  const years = new Date().getFullYear() - 1992;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,117 +22,89 @@ const Hero = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const indicators = [
+    { value: `${years}+ Years`, label: "Serving Accra since 1992" },
+    { value: "100% BECE Distinction*", label: "Most recent graduating class" },
+    { value: "Crèche → JHS", label: "One continuous school journey" },
+  ];
+
   return (
-    <section
-      ref={sectionRef}
-      id="home"
-      className="relative min-h-screen flex items-center overflow-hidden"
-    >
-      {/* Background Image with Parallax */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-100"
-        style={{ 
-          backgroundImage: `url(${schoolBuilding})`,
-          transform: `translateY(${scrollY * 0.4}px) scale(1.1)`,
-        }}
+    <>
+      <section
+        ref={sectionRef}
+        id="home"
+        className="relative min-h-[92vh] flex items-end overflow-hidden"
       >
-        <div className="absolute inset-0 bg-hero-gradient opacity-90" />
-      </div>
+        {/* Real school photography with parallax */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url(${schoolBuilding})`,
+            transform: `translateY(${scrollY * 0.35}px) scale(1.08)`,
+          }}
+        >
+          <div className="absolute inset-0 bg-hero-gradient" />
+        </div>
 
-      {/* Single subtle background element */}
-      <div
-        className="absolute top-20 right-10 w-72 h-72 bg-secondary/20 rounded-full blur-3xl"
-        style={{ transform: `translateY(${scrollY * -0.2}px)` }}
-      />
+        {/* Content */}
+        <div className="container mx-auto px-4 pt-32 pb-16 lg:pb-24 relative z-10">
+          <div className="max-w-3xl text-primary-foreground">
+            <p className="eyebrow !text-accent animate-fade-up">Established 1992</p>
 
-      {/* Content */}
-      <div className="container mx-auto px-4 pt-24 pb-16 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Column - Text Content */}
-          <div 
-            className="text-primary-foreground space-y-4 sm:space-y-6 lg:space-y-8"
-            style={{ transform: `translateY(${scrollY * -0.1}px)` }}
-          >
-
-            {/* Heading */}
-            <h1 className="font-heading text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight animate-fade-up animation-delay-100">
-              Nurturing{" "}
-              <span className="text-accent relative">
-                Excellence
-                <span className="absolute -inset-1 bg-accent/20 blur-lg rounded-lg -z-10" />
-              </span>
+            <h1 className="mt-4 font-heading text-3xl sm:text-5xl lg:text-6xl font-semibold leading-[1.05] animate-fade-up animation-delay-100">
+              {years}+ Years of
               <br />
               Building Futures
             </h1>
 
-            {/* Motto */}
-            <p className="text-sm sm:text-lg text-primary-foreground/90 italic font-heading animate-fade-up animation-delay-200">
-              "In God We Trust"
+            <div className="rule-gold my-6 animate-fade-up animation-delay-200" />
+
+            <p className="text-sm sm:text-base lg:text-lg text-primary-foreground/85 max-w-xl leading-relaxed animate-fade-up animation-delay-200">
+              Good Shepherd International School provides quality education,
+              character development and practical learning for the next generation.
             </p>
 
-            {/* Description */}
-            <p className="text-xs sm:text-sm lg:text-base text-primary-foreground/80 max-w-xl animate-fade-up animation-delay-300">
-              Welcome to Good Shepherd International School, Mallam New Gbawe. 
-              Where every child achieves their full potential through quality 
-              education, moral values, and holistic development.
+            <p className="mt-5 flex items-center gap-2 text-xs sm:text-sm text-primary-foreground/70 animate-fade-up animation-delay-300">
+              <MapPin className="h-4 w-4 text-accent" />
+              Mallam, New Gbawe, Accra
             </p>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 animate-fade-up animation-delay-400">
-              <Button variant="hero" size="default" className="text-xs sm:text-sm group" asChild>
+            <div className="mt-8 flex flex-col sm:flex-row gap-3 animate-fade-up animation-delay-400">
+              <Button variant="hero" size="lg" className="text-sm group" asChild>
                 <Link to="/admission" className="flex items-center gap-2">
-                  <span>Enroll Now - FREE Admission</span>
+                  <span>Apply for Admission</span>
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
-              <Button variant="heroOutline" size="default" className="text-xs sm:text-sm hover:scale-105 transition-transform" asChild>
-                <a href="#programs">Explore Programs</a>
+              <Button variant="heroOutline" size="lg" className="text-sm" asChild>
+                <a href="#heritage">Explore GSIS</a>
               </Button>
-            </div>
-
-            {/* Stats with glassmorphism */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6 pt-4 sm:pt-6 lg:pt-8 animate-fade-up animation-delay-500">
-              {[
-                { icon: Award, value: "100%", label: "BECE Pass Rate" },
-                { icon: Users, value: "500+", label: "Students" },
-                { icon: BookOpen, value: `${new Date().getFullYear() - 1992}+`, label: "Years of Excellence" },
-              ].map((stat, index) => (
-                <div 
-                  key={stat.label}
-                  className="group p-2 sm:p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:scale-105 transition-all duration-300"
-                  style={{ animationDelay: `${600 + index * 100}ms` }}
-                >
-                  <div className="flex items-center gap-1 sm:gap-2 mb-1">
-                    <stat.icon className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-accent group-hover:scale-110 transition-transform" />
-                    <span className="font-heading text-lg sm:text-xl lg:text-2xl font-bold">{stat.value}</span>
-                  </div>
-                  <p className="text-[10px] sm:text-xs lg:text-sm text-primary-foreground/70">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right Column - Crest with Parallax */}
-          <div 
-            className="hidden lg:flex justify-center items-center"
-            style={{ transform: `translateY(${scrollY * -0.2}px)` }}
-          >
-            <div className="relative group">
-              {/* Glow Effect */}
-              <div className="absolute inset-0 bg-accent/30 blur-3xl rounded-full scale-75 group-hover:scale-90 transition-transform duration-500" />
-
-              {/* Crest */}
-              <img
-                src={schoolCrest}
-                alt="Good Shepherd International School Crest"
-                className="relative z-10 w-80 h-auto drop-shadow-2xl animate-float group-hover:scale-105 transition-transform duration-500"
-              />
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-    </section>
+      {/* Credibility indicators */}
+      <div className="bg-primary text-primary-foreground border-b border-primary-foreground/10">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-primary-foreground/15">
+            {indicators.map((item) => (
+              <div key={item.value} className="py-6 sm:py-8 sm:px-8 first:sm:pl-0 last:sm:pr-0">
+                <p className="font-heading text-xl lg:text-2xl font-semibold text-accent">
+                  {item.value}
+                </p>
+                <p className="mt-1 text-xs lg:text-sm text-primary-foreground/70">
+                  {item.label}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p className="pb-4 text-[10px] text-primary-foreground/45">
+            *Basic Education Certificate Examination results, most recent cohort.
+          </p>
+        </div>
+      </div>
+    </>
   );
 };
 
