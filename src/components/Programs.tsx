@@ -1,4 +1,4 @@
-import { Palette, Code, Scissors, Anchor, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import nurseryClass from "@/assets/nursery-class.webp";
@@ -43,33 +43,6 @@ const Programs = () => {
       description:
         "Focused BECE preparation with termly mock examinations, ranked class reports and individual revision support for every candidate.",
       image: ceremony,
-    },
-  ];
-
-  const careerPrograms = [
-    {
-      icon: Palette,
-      title: "Creative Arts",
-      description: "Visual arts, music, and drama to nurture artistic talents.",
-      image: graduationKids,
-    },
-    {
-      icon: Code,
-      title: "IT Coding",
-      description: "Programming and digital skills for the future economy.",
-      image: computerLab,
-    },
-    {
-      icon: Scissors,
-      title: "Fashion Designing",
-      description: "Design principles and garment construction techniques.",
-      image: studentsGroup,
-    },
-    {
-      icon: Anchor,
-      title: "Naval Corps",
-      description: "Military discipline, leadership, and physical training.",
-      image: nurseryClass,
     },
   ];
 
@@ -131,49 +104,6 @@ const Programs = () => {
               </div>
             </article>
           ))}
-        </div>
-
-        {/* Career Training Section (Pass 2 rework pending) */}
-        <div className="mt-16 border-t border-border pt-12">
-          <div className="text-center mb-8 lg:mb-12">
-            <p className="eyebrow">Beyond the classroom</p>
-            <h3 className="mt-3 font-heading text-xl lg:text-3xl font-semibold text-foreground">
-              Career Training Courses
-            </h3>
-            <p className="mt-3 text-sm lg:text-base text-muted-foreground max-w-2xl mx-auto">
-              Beyond academics, we prepare students for the real world with
-              practical skills and vocational training.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-            {careerPrograms.map((program) => (
-              <div key={program.title} className="group bg-card border border-border">
-                <div className="relative h-24 sm:h-32 lg:h-40 overflow-hidden">
-                  <img
-                    src={program.image}
-                    alt={program.title}
-                    loading="lazy"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/30 to-transparent" />
-                  <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 right-2">
-                    <div className="flex items-center gap-2 text-primary-foreground">
-                      <program.icon className="h-3.5 w-3.5 lg:h-4 lg:w-4 text-accent" />
-                      <h4 className="font-heading text-xs sm:text-sm lg:text-base font-semibold">
-                        {program.title}
-                      </h4>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-3">
-                  <p className="text-[11px] lg:text-sm text-muted-foreground">
-                    {program.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* CTA */}

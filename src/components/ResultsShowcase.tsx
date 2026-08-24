@@ -1,135 +1,120 @@
-import { Award, TrendingUp, Star } from "lucide-react";
+import graduation2 from "@/assets/graduation-2.webp";
 
 const ResultsShowcase = () => {
-  const results = [
-    { id: "0129036003", english: 1, social: 2, rme: 1, maths: 1, science: 1, career: 1, cad: 1, computing: 1, twi: 2, aggregate: 7 },
-    { id: "0129036004", english: 1, social: 2, rme: 2, maths: 1, science: 1, career: 1, cad: 1, computing: 1, twi: 2, aggregate: 7 },
-    { id: "0129036006", english: 1, social: 2, rme: 2, maths: 1, science: 1, career: 1, cad: 3, computing: 1, twi: 2, aggregate: 7 },
-    { id: "0129036005", english: 1, social: 2, rme: 2, maths: 1, science: 1, career: 1, cad: 1, computing: 2, twi: 2, aggregate: 7 },
-    { id: "0129036002", english: 1, social: 2, rme: 2, maths: 2, science: 1, career: 1, cad: 1, computing: 1, twi: 2, aggregate: 8 },
-    { id: "0129036007", english: 1, social: 3, rme: 2, maths: 1, science: 1, career: 1, cad: 3, computing: 2, twi: 2, aggregate: 9 },
-    { id: "0129036001", english: 1, social: 3, rme: 2, maths: 1, science: 2, career: 1, cad: 1, computing: 1, twi: 3, aggregate: 9 },
+  const figures = [
+    {
+      value: "100%",
+      label: "Distinction rate",
+      note: "Every candidate in the most recent BECE cohort passed with distinction.",
+    },
+    {
+      value: "07 – 09",
+      label: "Aggregate range",
+      note: "The full spread of aggregates achieved across the cohort.",
+    },
+    {
+      value: "7 / 7",
+      label: "Candidates presented",
+      note: "All candidates presented were placed, none referred or withdrawn.",
+    },
   ];
 
-  const subjects = [
-    { key: "english", label: "English" },
-    { key: "social", label: "Social Studies" },
-    { key: "rme", label: "R.M.E" },
-    { key: "maths", label: "Maths" },
-    { key: "science", label: "Science" },
-    { key: "career", label: "Career Tech" },
-    { key: "cad", label: "C.A.D" },
-    { key: "computing", label: "Computing" },
-    { key: "twi", label: "Twi" },
+  const strengths = [
+    {
+      title: "Termly mock examinations",
+      body: "JHS candidates sit full mock papers each term under examination conditions, so nothing about the BECE format is unfamiliar on the day.",
+    },
+    {
+      title: "Ranked, tracked reporting",
+      body: "Every pupil's continuous assessment and end-of-term scores are recorded and ranked, and parents see the same report through the parent portal.",
+    },
+    {
+      title: "Individual revision support",
+      body: "Teachers work subject by subject with candidates whose mock performance slips, rather than teaching only to the middle of the class.",
+    },
   ];
 
   return (
-    <section id="results" className="py-20 lg:py-32 bg-muted/30">
+    <section id="results" className="bg-primary text-primary-foreground py-16 lg:py-24 scroll-mt-20">
       <div className="container mx-auto px-4">
-        {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-12 lg:mb-16">
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-3 py-1.5 sm:px-4 sm:py-2 mb-4 sm:mb-6 animate-fade-up">
-            <Award className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span className="text-xs sm:text-sm font-semibold">Academic Excellence</span>
+        <div className="grid lg:grid-cols-12 gap-6 lg:gap-16 items-end border-b border-primary-foreground/15 pb-10">
+          <div className="lg:col-span-7">
+            <p className="eyebrow">Academic Results</p>
+            <h2 className="mt-4 font-heading text-2xl sm:text-3xl lg:text-4xl font-semibold leading-tight">
+              A 100% BECE distinction
+              <br className="hidden sm:block" /> record to defend
+            </h2>
           </div>
-          
-          <h2 className="font-heading text-xl sm:text-2xl lg:text-4xl font-bold text-foreground mb-4 sm:mb-6 animate-fade-up animation-delay-100">
-            100% BECE{" "}
-            <span className="text-primary">Distinction</span> Rate
-          </h2>
-          
-          <p className="text-sm sm:text-base lg:text-lg text-muted-foreground animate-fade-up animation-delay-200">
-            Our students consistently achieve outstanding results. All seven candidates 
-            in our recent BECE examination achieved aggregate scores between 07 and 09.
-          </p>
-        </div>
-
-        {/* Results Table */}
-        <div className="bg-card rounded-2xl shadow-elevated overflow-hidden animate-fade-up animation-delay-300">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-primary text-primary-foreground">
-                  <th className="px-4 py-4 text-left font-semibold text-sm">
-                    Candidate No.
-                  </th>
-                  {subjects.map((subject) => (
-                    <th key={subject.key} className="px-3 py-4 text-center font-semibold text-sm whitespace-nowrap">
-                      {subject.label}
-                    </th>
-                  ))}
-                  <th className="px-4 py-4 text-center font-bold text-sm bg-accent text-accent-foreground">
-                    Aggregate
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {results.map((result, index) => (
-                  <tr
-                    key={result.id}
-                    className={`border-b border-border last:border-0 ${
-                      index % 2 === 0 ? "bg-background" : "bg-muted/30"
-                    } hover:bg-muted/50 transition-colors`}
-                  >
-                    <td className="px-4 py-4 font-mono text-sm font-medium text-foreground">
-                      {result.id}
-                    </td>
-                    {subjects.map((subject) => {
-                      const grade = result[subject.key as keyof typeof result] as number;
-                      return (
-                        <td key={subject.key} className="px-3 py-4 text-center">
-                          <span
-                            className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
-                              grade === 1
-                                ? "bg-secondary text-secondary-foreground"
-                                : grade === 2
-                                ? "bg-primary/10 text-primary"
-                                : "bg-muted text-muted-foreground"
-                            }`}
-                          >
-                            {grade}
-                          </span>
-                        </td>
-                      );
-                    })}
-                    <td className="px-4 py-4 text-center">
-                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-accent text-accent-foreground font-bold text-lg shadow-soft">
-                        {String(result.aggregate).padStart(2, "0")}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="lg:col-span-5">
+            <p className="text-sm lg:text-base text-primary-foreground/75 leading-relaxed">
+              The Basic Education Certificate Examination is the measure that
+              matters at the end of Junior High School. GSIS presents small
+              cohorts and prepares each candidate individually.
+            </p>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mt-12">
-          <div className="bg-card rounded-xl p-6 shadow-card text-center animate-fade-up animation-delay-400">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 text-primary mb-4">
-              <TrendingUp className="h-7 w-7" />
+        {/* Headline figures */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-primary-foreground/15">
+          {figures.map((figure) => (
+            <div
+              key={figure.label}
+              className="py-8 lg:py-10 sm:px-8 first:sm:pl-0 last:sm:pr-0"
+            >
+              <p className="font-heading text-3xl lg:text-5xl font-semibold text-accent leading-none">
+                {figure.value}
+              </p>
+              <p className="mt-3 font-heading text-base lg:text-lg font-semibold">
+                {figure.label}
+              </p>
+              <p className="mt-2 text-xs lg:text-sm text-primary-foreground/65 leading-relaxed">
+                {figure.note}
+              </p>
             </div>
-            <h3 className="font-heading text-2xl font-bold text-foreground mb-2">100%</h3>
-            <p className="text-muted-foreground">Pass Rate</p>
+          ))}
+        </div>
+
+        {/* How the record is built */}
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 border-t border-primary-foreground/15 pt-10 lg:pt-14">
+          <div className="lg:col-span-5">
+            <img
+              src={graduation2}
+              alt="Good Shepherd International School graduating class"
+              loading="lazy"
+              className="w-full h-56 lg:h-80 object-cover"
+            />
           </div>
-          
-          <div className="bg-card rounded-xl p-6 shadow-card text-center animate-fade-up animation-delay-500">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-secondary/20 text-secondary mb-4">
-              <Star className="h-7 w-7" />
-            </div>
-            <h3 className="font-heading text-2xl font-bold text-foreground mb-2">07-09</h3>
-            <p className="text-muted-foreground">Aggregate Range</p>
-          </div>
-          
-          <div className="bg-card rounded-xl p-6 shadow-card text-center animate-fade-up animation-delay-600">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-accent/20 text-accent-foreground mb-4">
-              <Award className="h-7 w-7" />
-            </div>
-            <h3 className="font-heading text-2xl font-bold text-foreground mb-2">7/7</h3>
-            <p className="text-muted-foreground">Students with Distinction</p>
+
+          <div className="lg:col-span-7">
+            <h3 className="font-heading text-lg lg:text-2xl font-semibold">
+              How that record is built
+            </h3>
+            <div className="rule-gold my-5" />
+            <ol className="divide-y divide-primary-foreground/12">
+              {strengths.map((item, index) => (
+                <li key={item.title} className="py-5 first:pt-0 last:pb-0 flex gap-5">
+                  <span className="font-heading text-base lg:text-lg text-accent shrink-0">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <h4 className="font-heading text-base lg:text-lg font-semibold">
+                      {item.title}
+                    </h4>
+                    <p className="mt-1.5 text-sm text-primary-foreground/70 leading-relaxed max-w-2xl">
+                      {item.body}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
+
+        <p className="mt-10 text-[11px] text-primary-foreground/45 max-w-3xl">
+          Figures refer to the most recent BECE cohort. Individual candidate
+          index numbers and subject grades are confidential and are released only
+          to the pupil's parent or guardian through the parent portal.
+        </p>
       </div>
     </section>
   );
