@@ -1,10 +1,14 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import Heritage from "@/components/Heritage";
-import ResultsShowcase from "@/components/ResultsShowcase";
 import Programs from "@/components/Programs";
-import WhyUs from "@/components/WhyUs";
+import BeyondClassroom from "@/components/BeyondClassroom";
+import ResultsShowcase from "@/components/ResultsShowcase";
+import GalleryStrip from "@/components/GalleryStrip";
 import Announcements from "@/components/Announcements";
+import WhyUs from "@/components/WhyUs";
+import ParentConnect from "@/components/ParentConnect";
+import Admissions from "@/components/Admissions";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 
@@ -15,11 +19,14 @@ const Index = () => {
       <main>
         <Hero />
         <Heritage />
-        <ResultsShowcase />
-        <Announcements />
         <Programs />
+        <BeyondClassroom />
+        <ResultsShowcase />
+        <GalleryStrip />
+        <Announcements />
         <WhyUs />
-
+        <ParentConnect />
+        <Admissions />
         <Contact />
       </main>
       <Footer />
