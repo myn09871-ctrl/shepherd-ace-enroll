@@ -1,129 +1,110 @@
-import { 
-  Award, 
-  Heart, 
-  Users, 
-  BookOpen, 
-  Shield, 
-  Sparkles 
-} from "lucide-react";
+import { Award, Heart, Users, BookOpen, Shield, Sparkles } from "lucide-react";
 import graduation1 from "@/assets/graduation-1.webp";
 import graduation2 from "@/assets/graduation-2.webp";
 
 const WhyUs = () => {
+  const yearsOfExcellence = new Date().getFullYear() - 1992;
+
   const features = [
     {
       icon: Award,
-      title: "Academic Excellence",
-      description: "100% BECE distinction rate with all students achieving aggregate 07-09.",
+      title: "Academic excellence",
+      description:
+        "A 100% BECE distinction record, with candidates placed in the aggregate 07–09 range.",
     },
     {
       icon: Heart,
-      title: "Holistic Development",
-      description: "Nurturing mind, body, and spirit through comprehensive programs.",
+      title: "Holistic development",
+      description:
+        "Academic work is paired with creative, physical and moral formation across every level.",
     },
     {
       icon: Users,
-      title: "Experienced Faculty",
-      description: "Dedicated teachers committed to each child's success.",
+      title: "Experienced faculty",
+      description:
+        "Long-serving teachers who know each child by name and track progress class by class.",
     },
     {
       icon: BookOpen,
-      title: "Modern Curriculum",
-      description: "Updated syllabus with practical skills for the 21st century.",
+      title: "Modern curriculum",
+      description:
+        "The current national syllabus, taught with practical work and continuous assessment.",
     },
     {
       icon: Shield,
-      title: "Safe Environment",
-      description: "Secure facilities with a focus on student wellbeing.",
+      title: "Safe environment",
+      description:
+        "A secured, supervised campus with daily attendance reported to parents.",
     },
     {
       icon: Sparkles,
-      title: "Moral Values",
-      description: "Character building rooted in our motto: 'In God We Trust'.",
+      title: "Moral values",
+      description:
+        "Character formation rooted in the school motto: 'In God We Trust'.",
     },
   ];
 
   return (
-    <section id="about" className="py-20 lg:py-32 bg-background overflow-hidden">
+    <section id="about" className="bg-background py-16 lg:py-24 scroll-mt-20">
       <div className="container mx-auto px-4">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Left Column - Content */}
-          <div>
-            <div className="inline-flex items-center gap-2 bg-accent/10 text-accent-foreground rounded-full px-3 py-1.5 sm:px-4 sm:py-2 mb-4 sm:mb-6 animate-fade-up">
-              <Heart className="h-3 w-3 sm:h-4 sm:w-4 text-accent" />
-              <span className="text-xs sm:text-sm font-semibold">Why Choose Us</span>
-            </div>
-            
-            <h2 className="font-heading text-xl sm:text-2xl lg:text-4xl font-bold text-foreground mb-4 sm:mb-6 animate-fade-up animation-delay-100">
-              Join the <span className="text-primary">Winning Team</span> for 
-              Your Child's Success
+        <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-start">
+          {/* Statement */}
+          <div className="lg:col-span-5">
+            <p className="eyebrow">Why Choose GSIS</p>
+            <h2 className="mt-4 font-heading text-2xl sm:text-3xl lg:text-4xl font-semibold text-foreground leading-tight">
+              A record built one
+              <br className="hidden sm:block" /> class at a time
             </h2>
-            
-            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mb-6 sm:mb-10 animate-fade-up animation-delay-200">
-              At Good Shepherd International School, we don't just educate – we 
-              transform lives. Our proven track record of academic excellence, 
-              combined with character development, creates well-rounded graduates 
-              ready for the future.
+            <div className="rule-gold my-6" />
+            <p className="text-sm lg:text-base text-muted-foreground leading-relaxed">
+              Good Shepherd International School has taught children in Mallam,
+              New Gbawe for {yearsOfExcellence} years. The results are the
+              outcome of small classes, consistent teaching and parents kept
+              close to the work.
             </p>
 
-            <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
-              {features.map((feature, index) => (
-                <div
-                  key={feature.title}
-                  className="flex gap-3 sm:gap-4 animate-fade-up"
-                  style={{ animationDelay: `${(index + 3) * 100}ms` }}
-                >
-                  <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <feature.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-sm sm:text-base text-foreground mb-1">
-                      {feature.title}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right Column - Images */}
-          <div className="relative">
-            {/* Main Image */}
-            <div className="relative z-10 rounded-3xl overflow-hidden shadow-elevated animate-slide-left">
+            <div className="mt-8 grid grid-cols-2 gap-4">
               <img
                 src={graduation1}
                 alt="Graduation ceremony at Good Shepherd International School"
-                className="w-full h-auto"
+                loading="lazy"
+                className="w-full h-40 sm:h-48 object-cover"
               />
-            </div>
-            
-            {/* Secondary Image */}
-            <div className="absolute -bottom-8 -left-8 w-2/3 rounded-2xl overflow-hidden shadow-card border-4 border-card z-20 animate-slide-left animation-delay-200">
               <img
                 src={graduation2}
-                alt="Students at graduation"
-                className="w-full h-auto"
+                alt="Pupils at a Good Shepherd graduation"
+                loading="lazy"
+                className="w-full h-40 sm:h-48 object-cover"
               />
             </div>
 
-            {/* Decorative Elements */}
-            <div className="absolute -top-6 -right-6 w-24 h-24 bg-accent/20 rounded-full blur-2xl" />
-            <div className="absolute -bottom-6 right-12 w-32 h-32 bg-secondary/20 rounded-full blur-2xl" />
-            
-            {/* Badge */}
-            <div className="absolute top-8 -right-4 lg:right-4 bg-card shadow-elevated rounded-2xl p-4 z-30 animate-float">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center">
-                  <Award className="h-6 w-6 text-accent-foreground" />
+            <div className="mt-6 flex items-baseline gap-3 border-t border-border pt-6">
+              <span className="font-heading text-3xl lg:text-4xl font-semibold text-accent leading-none">
+                {yearsOfExcellence}+
+              </span>
+              <span className="text-sm text-muted-foreground">
+                years of continuous operation, since 1992
+              </span>
+            </div>
+          </div>
+
+          {/* Feature grid */}
+          <div className="lg:col-span-7">
+            <div className="grid sm:grid-cols-2 border-t border-l border-border">
+              {features.map((feature) => (
+                <div
+                  key={feature.title}
+                  className="border-b border-r border-border p-5 lg:p-6"
+                >
+                  <feature.icon className="h-5 w-5 text-accent" />
+                  <h3 className="mt-4 font-heading text-base lg:text-lg font-semibold text-foreground">
+                    {feature.title}
+                  </h3>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                    {feature.description}
+                  </p>
                 </div>
-                <div>
-                  <p className="font-heading text-2xl font-bold text-foreground">{new Date().getFullYear() - 1992}+</p>
-                  <p className="text-xs text-muted-foreground">Years of Excellence</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
