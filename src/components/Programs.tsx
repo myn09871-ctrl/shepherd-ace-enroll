@@ -1,11 +1,14 @@
+// NOTE: Several of these images are placeholders due to limited real photography.
+// Replace via the admin Gallery upload system as authentic photos of each specific
+// class/activity become available.
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import nurseryClass from "@/assets/nursery-class.webp";
 import computerLab from "@/assets/computer-lab.webp";
-import graduationKids from "@/assets/graduation-kids.webp";
-import studentsGroup from "@/assets/students-group.webp";
-import ceremony from "@/assets/ceremony.webp";
+import schoolBuilding from "@/assets/school-building.webp";
+import graduation1 from "@/assets/graduation-1.webp";
+import graduation2 from "@/assets/graduation-2.webp";
 
 const Programs = () => {
   const stages = [
@@ -14,21 +17,21 @@ const Programs = () => {
       age: "6 months – 2 years",
       description:
         "Full-day care in a small, supervised room. Feeding, rest and early sensory play, with daily feedback to parents.",
-      image: nurseryClass,
+      image: schoolBuilding,
     },
     {
       title: "Nursery",
       age: "2 – 4 years",
       description:
         "Structured play, language and number readiness. Children learn routine, sharing and self-expression before formal work begins.",
-      image: graduationKids,
+      image: nurseryClass,
     },
     {
       title: "Kindergarten",
       age: "4 – 6 years",
       description:
         "Reading, writing and early numeracy taught in small groups so no child moves on before the foundation is secure.",
-      image: studentsGroup,
+      image: graduation1,
     },
     {
       title: "Primary",
@@ -42,9 +45,10 @@ const Programs = () => {
       age: "12 – 15 years",
       description:
         "Focused BECE preparation with termly mock examinations, ranked class reports and individual revision support for every candidate.",
-      image: ceremony,
+      image: graduation2,
     },
   ];
+
 
   return (
     <section id="programs" className="py-16 lg:py-24 bg-muted/40 scroll-mt-20">
