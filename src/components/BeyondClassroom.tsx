@@ -1,8 +1,13 @@
+// NOTE: Several of these images are placeholders due to limited real photography.
+// Replace via the admin Gallery upload system as authentic photos of each specific
+// class/activity become available.
 import { Palette, Code, Scissors, Anchor } from "lucide-react";
 import computerLab from "@/assets/computer-lab.webp";
-import graduationKids from "@/assets/graduation-kids.webp";
-import studentsGroup from "@/assets/students-group.webp";
 import ceremony from "@/assets/ceremony.webp";
+// Royalty-free stock (objects only, no people): art materials (Unsplash) and
+// sewing machine with fabric (Openverse / rawpixel, CC0).
+import creativeArtsMaterials from "@/assets/creative-arts-materials.webp";
+import fashionSewingMaterials from "@/assets/fashion-sewing-materials.webp";
 
 const BeyondClassroom = () => {
   const tracks = [
@@ -11,7 +16,7 @@ const BeyondClassroom = () => {
       title: "Creative Arts",
       summary: "Visual art, music and drama",
       body: "Pupils work with paint, craft and performance each week, and the school's annual events give every class a stage to present what they have made and rehearsed.",
-      image: graduationKids,
+      image: creativeArtsMaterials,
     },
     {
       icon: Code,
@@ -25,7 +30,7 @@ const BeyondClassroom = () => {
       title: "Fashion Designing",
       summary: "Design and garment construction",
       body: "A practical vocational track covering measurement, pattern work and basic garment construction — real skills a pupil can carry beyond the classroom.",
-      image: studentsGroup,
+      image: fashionSewingMaterials,
     },
     {
       icon: Anchor,
@@ -35,6 +40,7 @@ const BeyondClassroom = () => {
       image: ceremony,
     },
   ];
+
 
   return (
     <section
