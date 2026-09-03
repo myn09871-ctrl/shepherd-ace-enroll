@@ -64,8 +64,9 @@ const ReportCardPreview = ({ data }: ReportCardPreviewProps) => {
             <img src={schoolCrest} alt="Crest" className="h-16 w-16 rounded-full border-2 border-white/50 object-cover" />
             <div>
               <h1 className="text-xl font-bold tracking-wide">GOOD SHEPHERD INTERNATIONAL SCHOOL</h1>
-              <p className="text-xs opacity-90">P.O. Box AF 1735, Adoagyiri - Nsawam, E/R</p>
-              <p className="text-xs opacity-90">Tel: 0243-316-853 / 0508-525-498 | Email: gsikibi@gmail.com</p>
+              <p className="text-xs opacity-90">Mallam New Gbawe, Accra — 100m from Mallam LAFA Police Station</p>
+              <p className="text-xs opacity-90">Tel: 0208163186 / 0244855184 / 0242225084 | Email: info.goodshepherdschoolgh@gmail.com</p>
+
               <p className="text-xs italic opacity-80 mt-1">"Training Up a Child in The Way He Should Go"</p>
             </div>
           </div>
