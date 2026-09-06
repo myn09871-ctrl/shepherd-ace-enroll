@@ -2,3 +2,6 @@ project_id = "xvcvmqjjazyvyiojbaic"
 
 [functions.create-student-portal]
 verify_jwt = false
+
+[functions.gmail-token-check]
+verify_jwt = false
