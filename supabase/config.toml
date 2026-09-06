@@ -2,3 +2,6 @@ project_id = "xvcvmqjjazyvyiojbaic"
 
 [functions.create-student-portal]
 verify_jwt = false
+
+[functions.tmp-purge-auth-users]
+verify_jwt = false
