@@ -88,7 +88,7 @@ const AdminProfile = () => {
           display_name: displayName,
           avatar_url: avatarUrl,
           updated_at: new Date().toISOString(),
-        });
+        }, { onConflict: "user_id" });
 
       if (error) throw error;
       toast.success("Profile saved successfully");
