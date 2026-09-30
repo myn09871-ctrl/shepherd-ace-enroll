@@ -1,23 +1,27 @@
 // NOTE: Several of these images are placeholders due to limited real photography.
 // Replace via the admin Gallery upload system as authentic photos of each specific
 // class/activity become available.
+import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import nurseryClass from "@/assets/nursery-class.webp";
 import computerLab from "@/assets/computer-lab.webp";
-import schoolBuilding from "@/assets/school-building.webp";
+// Crèche: licensed stock of a nursery room with a cot and soft toys, no people
+// (Pexels #4030073, Pexels License). Not a GSIS room.
+import crecheNursery from "@/assets/creche-nursery.webp";
 import graduation1 from "@/assets/graduation-1.webp";
 import graduation2 from "@/assets/graduation-2.webp";
 
 const Programs = () => {
+  const [active, setActive] = useState(0);
   const stages = [
     {
       title: "Crèche",
       age: "6 months – 2 years",
       description:
         "Full-day care in a small, supervised room. Feeding, rest and early sensory play, with daily feedback to parents.",
-      image: schoolBuilding,
+      image: crecheNursery,
     },
     {
       title: "Nursery",
@@ -71,43 +75,54 @@ const Programs = () => {
           </div>
         </div>
 
-        {/* Stage rows */}
-        <div className="divide-y divide-border">
+        {/* Stage selector */}
+        <div role="tablist" aria-label="Academic stages" className="mt-8 flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
           {stages.map((stage, index) => (
-            <article
+            <button
               key={stage.title}
-              className="grid lg:grid-cols-12 gap-5 lg:gap-12 py-8 lg:py-12 items-center group"
+              role="tab"
+              id={`stage-tab-${index}`}
+              aria-selected={active === index}
+              aria-controls="stage-panel"
+              onClick={() => setActive(index)}
+              className={`shrink-0 border px-4 py-2 text-sm font-medium transition-colors ${
+                active === index
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background text-foreground border-border hover:border-primary"
+              }`}
             >
-              <div className="lg:col-span-1">
-                <span className="font-heading text-lg lg:text-xl text-accent">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-              </div>
-
-              <div className="lg:col-span-4 order-first lg:order-none">
-                <div className="overflow-hidden">
-                  <img
-                    src={stage.image}
-                    alt={`${stage.title} pupils at Good Shepherd International School`}
-                    loading="lazy"
-                    className="w-full h-44 lg:h-52 object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                </div>
-              </div>
-
-              <div className="lg:col-span-7">
-                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                  <h3 className="font-heading text-xl lg:text-2xl font-semibold text-foreground">
-                    {stage.title}
-                  </h3>
-                  <span className="eyebrow !text-muted-foreground">{stage.age}</span>
-                </div>
-                <p className="mt-3 text-sm lg:text-base text-muted-foreground leading-relaxed max-w-2xl">
-                  {stage.description}
-                </p>
-              </div>
-            </article>
+              <span className="font-heading mr-2 opacity-70">{String(index + 1).padStart(2, "0")}</span>
+              {stage.title}
+            </button>
           ))}
+        </div>
+
+        <div
+          id="stage-panel"
+          role="tabpanel"
+          aria-labelledby={`stage-tab-${active}`}
+          className="mt-8 grid lg:grid-cols-12 gap-6 lg:gap-12 items-center"
+        >
+          <div className="lg:col-span-6 overflow-hidden">
+            <img
+              key={stages[active].title}
+              src={stages[active].image}
+              alt={`${stages[active].title} at Good Shepherd International School`}
+              className="w-full h-56 sm:h-72 lg:h-80 object-cover animate-fade-in"
+            />
+          </div>
+          <div className="lg:col-span-6">
+            <span className="font-heading text-lg text-accent">
+              {String(active + 1).padStart(2, "0")}
+            </span>
+            <h3 className="mt-2 font-heading text-2xl lg:text-3xl font-semibold text-foreground">
+              {stages[active].title}
+            </h3>
+            <p className="mt-1 eyebrow !text-muted-foreground">{stages[active].age}</p>
+            <p className="mt-4 text-sm lg:text-base text-muted-foreground leading-relaxed max-w-xl">
+              {stages[active].description}
+            </p>
+          </div>
         </div>
 
         {/* CTA */}
