@@ -3,7 +3,9 @@
 // class/activity become available.
 import { Palette, Code, Scissors, Anchor } from "lucide-react";
 import computerLab from "@/assets/computer-lab.webp";
-import ceremony from "@/assets/ceremony.webp";
+// Naval Corps: licensed stock of a uniformed cadet drill line (Pexels #35319607, Pexels License).
+// These are not GSIS cadets; replace with a real GSIS corps photo when available.
+import cadetDrill from "@/assets/cadet-drill.webp";
 // Royalty-free stock (objects only, no people): art materials (Unsplash) and
 // sewing machine with fabric (Openverse / rawpixel, CC0).
 import creativeArtsMaterials from "@/assets/creative-arts-materials.webp";
@@ -37,7 +39,8 @@ const BeyondClassroom = () => {
       title: "Naval Corps",
       summary: "Discipline, drill and leadership",
       body: "The school's cadet corps trains punctuality, bearing and teamwork through drill, parade and physical training, and represents GSIS at ceremonial occasions.",
-      image: ceremony,
+      image: cadetDrill,
+      position: "object-[center_70%]",
     },
   ];
 
@@ -83,7 +86,7 @@ const BeyondClassroom = () => {
                     src={track.image}
                     alt={`${track.title} at Good Shepherd International School`}
                     loading="lazy"
-                    className="w-full h-48 lg:h-64 object-cover group-hover:scale-105 transition-transform duration-700"
+                    className={`w-full h-48 lg:h-64 object-cover ${(track as { position?: string }).position ?? ""} group-hover:scale-105 transition-transform duration-700`}
                   />
                 </div>
               </div>

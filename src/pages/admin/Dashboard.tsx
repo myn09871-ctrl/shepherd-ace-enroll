@@ -121,58 +121,53 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* Header with gradient background */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary via-primary/90 to-accent p-4 md:p-6 text-primary-foreground">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
-        <div className="relative z-10 flex items-center justify-between">
+      {/* Welcome panel */}
+      <div className="rounded-md bg-primary p-4 md:p-6 text-primary-foreground">
+        <div className="flex items-center justify-between gap-3">
           <div>
-            <h1 className="text-lg md:text-2xl font-heading font-bold">Welcome Back!</h1>
-            <p className="text-xs md:text-sm text-primary-foreground/80">Good Shepherd International School Admin Portal</p>
+            <h1 className="text-xl md:text-2xl font-heading font-semibold">Welcome back</h1>
+            <div className="rule-gold mt-2" />
+            <p className="mt-2 text-xs md:text-sm text-primary-foreground/80">Good Shepherd International School Admin Portal</p>
           </div>
-          <ExpandableSearch 
-            value={searchQuery} 
+          <ExpandableSearch
+            value={searchQuery}
             onChange={setSearchQuery}
             placeholder="Search applications..."
           />
         </div>
       </div>
 
-      {/* Stats Cards with blue theme */}
+      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-3 md:p-4 text-white shadow-lg">
-          <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -translate-y-4 translate-x-4" />
-          <FileText className="h-5 w-5 md:h-6 md:w-6 mb-2 opacity-80" />
-          <p className="text-2xl md:text-3xl font-bold">{stats.todayCount}</p>
-          <p className="text-xs md:text-sm text-white/80">Today's Applications</p>
-        </div>
-        
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 p-3 md:p-4 text-white shadow-lg">
-          <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -translate-y-4 translate-x-4" />
-          <Clock className="h-5 w-5 md:h-6 md:w-6 mb-2 opacity-80" />
-          <p className="text-2xl md:text-3xl font-bold">{stats.pendingCount}</p>
-          <p className="text-xs md:text-sm text-white/80">Pending Review</p>
-        </div>
-        
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 p-3 md:p-4 text-white shadow-lg">
-          <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -translate-y-4 translate-x-4" />
-          <TrendingUp className="h-5 w-5 md:h-6 md:w-6 mb-2 opacity-80" />
-          <p className="text-2xl md:text-3xl font-bold">{stats.approvedThisWeek}</p>
-          <p className="text-xs md:text-sm text-white/80">Approved This Week</p>
-        </div>
-        
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary to-primary/80 p-3 md:p-4 text-white shadow-lg">
-          <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -translate-y-4 translate-x-4" />
-          <Users className="h-5 w-5 md:h-6 md:w-6 mb-2 opacity-80" />
-          <p className="text-2xl md:text-3xl font-bold">{stats.totalEnrolled}</p>
-          <p className="text-xs md:text-sm text-white/80">Total Enrolled</p>
-        </div>
+        {[
+          { label: "Today's Applications", value: stats.todayCount, icon: FileText, urgent: false },
+          { label: "Pending Review", value: stats.pendingCount, icon: Clock, urgent: stats.pendingCount > 0 },
+          { label: "Approved This Week", value: stats.approvedThisWeek, icon: TrendingUp, urgent: false },
+          { label: "Total Enrolled", value: stats.totalEnrolled, icon: Users, urgent: false },
+        ].map((s) => (
+          <div
+            key={s.label}
+            className={`rounded-md border p-3 md:p-4 ${
+              s.urgent
+                ? "bg-[hsl(var(--gsis-gold-soft))] border-[hsl(var(--gsis-gold))] border-l-4"
+                : "bg-card border-border"
+            }`}
+          >
+            <s.icon className={`h-4 w-4 ${s.urgent ? "text-[hsl(var(--gsis-gold))]" : "text-primary"}`} />
+            <p className="mt-2 font-heading text-2xl md:text-3xl font-semibold text-foreground">{s.value}</p>
+            <p className="text-xs md:text-sm text-muted-foreground">
+              {s.label}
+              {s.urgent && <span className="ml-1 font-medium text-foreground">· needs attention</span>}
+            </p>
+          </div>
+        ))}
       </div>
 
       {/* Two Column Layout */}
       <div className="grid lg:grid-cols-3 gap-3 md:gap-4">
         {/* Recent Activity */}
-        <div className="lg:col-span-2 bg-gradient-to-br from-card via-card to-primary/5 rounded-xl border border-border/50 shadow-card overflow-hidden">
-          <div className="p-3 md:p-4 border-b border-border bg-gradient-to-r from-primary/5 to-transparent">
+        <div className="lg:col-span-2 bg-card rounded-md border border-border overflow-hidden">
+          <div className="p-3 md:p-4 border-b border-border">
             <div className="flex items-center justify-between">
               <h2 className="text-sm md:text-base font-semibold text-foreground flex items-center gap-2">
                 <FileText className="h-4 w-4 text-primary" />
@@ -192,12 +187,11 @@ const Dashboard = () => {
               filteredApplications.slice(0, 5).map((app) => (
                 <div key={app.id} className="p-2 md:p-3 flex items-center justify-between hover:bg-primary/5 transition-colors">
                   <div className="flex items-center gap-2 md:gap-3 min-w-0">
-                    <div className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ring-2 ring-offset-2 ring-offset-card ${
-                      app.status === "pending" ? "bg-blue-500 ring-blue-500/30" :
-                      app.status === "under_review" ? "bg-yellow-500 ring-yellow-500/30" :
-                      app.status === "approved" ? "bg-green-500 ring-green-500/30" :
-                      app.status === "enrolled" ? "bg-primary ring-primary/30" :
-                      "bg-red-500 ring-red-500/30"
+                    <div className={`h-2 w-2 rounded-full flex-shrink-0 ${
+                      app.status === "pending" || app.status === "under_review" ? "bg-[hsl(var(--gsis-gold))]" :
+                      app.status === "approved" ? "bg-[hsl(var(--gsis-status-good))]" :
+                      app.status === "rejected" ? "bg-[hsl(var(--gsis-status-urgent))]" :
+                      "bg-[hsl(var(--gsis-status-neutral))]"
                     }`} />
                     <div className="min-w-0">
                       <p className="text-xs md:text-sm font-medium text-foreground truncate">
@@ -221,7 +215,7 @@ const Dashboard = () => {
             )}
           </div>
           {filteredApplications.length > 0 && (
-            <div className="p-2 md:p-3 border-t border-border/50 bg-gradient-to-r from-transparent to-primary/5">
+            <div className="p-2 md:p-3 border-t border-border/50">
               <Button variant="outline" size="sm" className="w-full text-xs md:text-sm h-8 border-primary/20 hover:bg-primary/10" asChild>
                 <Link to="/admin/applications">View All Applications</Link>
               </Button>
@@ -230,29 +224,23 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-gradient-to-br from-card via-card to-secondary/5 rounded-xl border border-border/50 shadow-card overflow-hidden">
-          <div className="p-3 md:p-4 border-b border-border bg-gradient-to-r from-secondary/5 to-transparent">
+        <div className="bg-card rounded-md border border-border overflow-hidden">
+          <div className="p-3 md:p-4 border-b border-border">
             <h2 className="text-sm md:text-base font-semibold text-foreground flex items-center gap-2">
-              <GraduationCap className="h-4 w-4 text-secondary" />
+              <GraduationCap className="h-4 w-4 text-primary" />
               Quick Actions
             </h2>
           </div>
-          <div className="p-2 md:p-3 space-y-1 md:space-y-2">
-            {quickActions.map((action, index) => (
-              <Button
+          <div className="p-2 md:p-3 grid grid-cols-3 lg:grid-cols-2 gap-2">
+            {quickActions.map((action) => (
+              <Link
                 key={action.label}
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start gap-3 text-xs md:text-sm h-9 md:h-10 hover:bg-primary/10 hover:text-primary transition-all"
-                asChild
+                to={action.href}
+                className="flex flex-col items-center justify-center gap-2 rounded-md border border-border bg-background p-3 text-center hover:border-primary transition-colors"
               >
-                <Link to={action.href}>
-                  <div className="p-1.5 rounded-lg bg-primary/10">
-                    <action.icon className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
-                  </div>
-                  {action.label}
-                </Link>
-              </Button>
+                <action.icon className="h-5 w-5 text-primary" />
+                <span className="text-[11px] md:text-xs font-medium text-foreground leading-tight">{action.label}</span>
+              </Link>
             ))}
           </div>
         </div>
