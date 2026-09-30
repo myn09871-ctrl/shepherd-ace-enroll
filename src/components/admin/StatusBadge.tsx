@@ -10,23 +10,23 @@ interface StatusBadgeProps {
 const statusConfig: Record<string, { label: string; className: string }> = {
   pending: {
     label: "New",
-    className: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400",
+    className: "bg-[hsl(var(--gsis-gold-soft))] text-foreground border border-[hsl(var(--gsis-gold))]",
   },
   under_review: {
     label: "Under Review",
-    className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400",
+    className: "bg-[hsl(var(--gsis-gold-soft))] text-foreground border border-[hsl(var(--gsis-gold))]",
   },
   approved: {
     label: "Approved",
-    className: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400",
+    className: "bg-[hsl(var(--gsis-status-good-soft))] text-[hsl(var(--gsis-status-good))]",
   },
   rejected: {
     label: "Rejected",
-    className: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400",
+    className: "bg-[hsl(var(--gsis-status-urgent-soft))] text-[hsl(var(--gsis-status-urgent))]",
   },
   enrolled: {
     label: "Enrolled",
-    className: "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-400",
+    className: "bg-muted text-muted-foreground",
   },
 };
 
@@ -44,11 +44,11 @@ const StatusBadge = ({ status, size = "md" }: StatusBadgeProps) => {
       <span className={cn(
         "rounded-full mr-1.5",
         size === "sm" ? "h-1.5 w-1.5" : "h-2 w-2",
-        status === "pending" && "bg-blue-500",
-        status === "under_review" && "bg-yellow-500",
-        status === "approved" && "bg-green-500",
-        status === "rejected" && "bg-red-500",
-        status === "enrolled" && "bg-purple-500"
+        status === "pending" && "bg-[hsl(var(--gsis-gold))]",
+        status === "under_review" && "bg-[hsl(var(--gsis-gold))]",
+        status === "approved" && "bg-[hsl(var(--gsis-status-good))]",
+        status === "rejected" && "bg-[hsl(var(--gsis-status-urgent))]",
+        status === "enrolled" && "bg-[hsl(var(--gsis-status-neutral))]"
       )} />
       {config.label}
     </span>
