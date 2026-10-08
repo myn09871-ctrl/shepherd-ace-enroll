@@ -1,110 +1,39 @@
-// NOTE: Several of these images are placeholders due to limited real photography.
-// Replace via the admin Gallery upload system as authentic photos of each specific
-// class/activity become available.
+// NOTE: Creative Arts and Fashion images are royalty-free object stock (no people).
+// Naval Corps uses a real GSIS cadet corps photo.
 import { Palette, Code, Scissors, Anchor } from "lucide-react";
 import computerLab from "@/assets/computer-lab.webp";
-// Naval Corps: licensed stock of a uniformed cadet drill line (Pexels #35319607, Pexels License).
-// These are not GSIS cadets; replace with a real GSIS corps photo when available.
-import cadetDrill from "@/assets/cadet-drill.webp";
-// Royalty-free stock (objects only, no people): art materials (Unsplash) and
-// sewing machine with fabric (Openverse / rawpixel, CC0).
+import navalCadets from "@/assets/gsis-naval-cadets.jpg.asset.json";
 import creativeArtsMaterials from "@/assets/creative-arts-materials.webp";
 import fashionSewingMaterials from "@/assets/fashion-sewing-materials.webp";
 
+const tracks = [
+  { icon: Palette, title: "Creative Arts", summary: "Visual art, music and drama", image: creativeArtsMaterials },
+  { icon: Code, title: "IT & Coding", summary: "Computing from Primary upward", image: computerLab },
+  { icon: Scissors, title: "Fashion Designing", summary: "Design and garment making", image: fashionSewingMaterials },
+  { icon: Anchor, title: "Naval Corps", summary: "Discipline, drill and leadership", image: navalCadets.url },
+];
+
 const BeyondClassroom = () => {
-  const tracks = [
-    {
-      icon: Palette,
-      title: "Creative Arts",
-      summary: "Visual art, music and drama",
-      body: "Pupils work with paint, craft and performance each week, and the school's annual events give every class a stage to present what they have made and rehearsed.",
-      image: creativeArtsMaterials,
-    },
-    {
-      icon: Code,
-      title: "IT & Coding",
-      summary: "Computing from Primary upward",
-      body: "Structured computer lab sessions cover keyboard fluency, office software and introductory programming, so pupils leave JHS already comfortable with a machine.",
-      image: computerLab,
-    },
-    {
-      icon: Scissors,
-      title: "Fashion Designing",
-      summary: "Design and garment construction",
-      body: "A practical vocational track covering measurement, pattern work and basic garment construction — real skills a pupil can carry beyond the classroom.",
-      image: fashionSewingMaterials,
-    },
-    {
-      icon: Anchor,
-      title: "Naval Corps",
-      summary: "Discipline, drill and leadership",
-      body: "The school's cadet corps trains punctuality, bearing and teamwork through drill, parade and physical training, and represents GSIS at ceremonial occasions.",
-      image: cadetDrill,
-      position: "object-[center_70%]",
-    },
-  ];
-
-
+  const loop = [...tracks, ...tracks];
   return (
-    <section
-      id="beyond-classroom"
-      className="bg-background py-16 lg:py-24 scroll-mt-20"
-    >
+    <section id="beyond-classroom" className="bg-background py-14 lg:py-20 scroll-mt-20 overflow-hidden">
       <div className="container mx-auto px-4">
-        {/* Editorial header */}
-        <div className="grid lg:grid-cols-12 gap-6 lg:gap-16 items-end border-b border-border pb-10">
-          <div className="lg:col-span-7">
-            <p className="eyebrow">Learning Beyond the Classroom</p>
-            <h2 className="mt-4 font-heading text-2xl sm:text-3xl lg:text-4xl font-semibold text-foreground leading-tight">
-              What a pupil learns here
-              <br className="hidden sm:block" /> is not only examinable
-            </h2>
-          </div>
-          <div className="lg:col-span-5">
-            <p className="text-sm lg:text-base text-muted-foreground leading-relaxed">
-              Alongside the Ghana Education Service curriculum, every GSIS pupil
-              takes part in practical and character training. Four tracks run
-              through the school year, timetabled rather than optional.
-            </p>
-          </div>
-        </div>
-
-        {/* Alternating editorial rows */}
-        <div className="divide-y divide-border">
-          {tracks.map((track, index) => (
-            <article
-              key={track.title}
-              className="grid lg:grid-cols-12 gap-5 lg:gap-12 py-8 lg:py-12 items-center group"
-            >
-              <div
-                className={`lg:col-span-5 order-first ${
-                  index % 2 === 1 ? "lg:order-last" : ""
-                }`}
-              >
-                <div className="overflow-hidden">
-                  <img
-                    src={track.image}
-                    alt={`${track.title} at Good Shepherd International School`}
-                    loading="lazy"
-                    className={`w-full h-48 lg:h-64 object-cover ${(track as { position?: string }).position ?? ""} group-hover:scale-105 transition-transform duration-700`}
-                  />
+        <p className="eyebrow">Learning Beyond the Classroom</p>
+        <h2 className="mt-3 font-heading text-2xl sm:text-3xl font-semibold text-foreground">
+          What pupils learn here
+        </h2>
+      </div>
+      <div className="mt-8 group">
+        <div className="flex w-max gap-4 animate-marquee group-hover:[animation-play-state:paused]">
+          {loop.map((t, i) => (
+            <article key={i} className="w-64 sm:w-72 shrink-0 border border-border bg-card" aria-hidden={i >= tracks.length}>
+              <img src={t.image} alt={t.title} loading="lazy" className="h-40 sm:h-44 w-full object-cover" />
+              <div className="p-4">
+                <div className="flex items-center gap-2">
+                  <t.icon className="h-4 w-4 text-accent" />
+                  <h3 className="font-heading text-base font-semibold text-foreground">{t.title}</h3>
                 </div>
-              </div>
-
-              <div className="lg:col-span-7">
-                <div className="flex items-center gap-3">
-                  <track.icon className="h-4 w-4 text-accent" />
-                  <span className="eyebrow !text-muted-foreground">
-                    {track.summary}
-                  </span>
-                </div>
-                <h3 className="mt-3 font-heading text-xl lg:text-2xl font-semibold text-foreground">
-                  {track.title}
-                </h3>
-                <div className="rule-gold my-4" />
-                <p className="text-sm lg:text-base text-muted-foreground leading-relaxed max-w-2xl">
-                  {track.body}
-                </p>
+                <p className="mt-1 text-xs text-muted-foreground">{t.summary}</p>
               </div>
             </article>
           ))}
